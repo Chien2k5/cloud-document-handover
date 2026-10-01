@@ -1,0 +1,35 @@
+# Cấu hình riêng và secret
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.key
+
+# Dữ liệu chạy và backup: dùng đúng các đường dẫn này khi setup
+/runtime-data/
+/backups/
+/logs/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node.js
+node_modules/
+dist/
+build/
+
+# Công cụ và hệ điều hành
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Terraform nếu được lựa chọn sau
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
