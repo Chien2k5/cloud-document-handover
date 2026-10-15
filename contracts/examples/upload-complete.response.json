@@ -1,0 +1,16 @@
+{
+  "uploadId": "10000000-0000-0000-0000-000000000004",
+  "fileVersion": {
+    "id": "10000000-0000-0000-0000-000000000003",
+    "fileId": "10000000-0000-0000-0000-000000000002",
+    "filename": "hello.txt",
+    "contentType": "text/plain",
+    "size": 5,
+    "versionId": "example-version-v1",
+    "expectedSha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+    "actualSha256": null,
+    "uploadStatus": "AVAILABLE",
+    "integrityStatus": "INTEGRITY_PENDING"
+  },
+  "expiresAt": "2026-10-15T15:05:00Z"
+}

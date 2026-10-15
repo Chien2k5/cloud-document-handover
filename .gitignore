@@ -33,3 +33,7 @@ Thumbs.db
 *.tfstate
 *.tfstate.*
 *.tfvars
+
+# Maven output
+target/
+*.log

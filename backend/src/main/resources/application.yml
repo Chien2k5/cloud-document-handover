@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: document-handover
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  flyway:
+    enabled: true
+    clean-disabled: true
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+  servlet:
+    session:
+      timeout: 30m
+      tracking-modes: cookie
+      cookie:
+        http-only: true
+        secure: ${SESSION_COOKIE_SECURE:true}
+        same-site: lax
+app:
+  project-quota-bytes: ${PROJECT_QUOTA_BYTES:1073741824}

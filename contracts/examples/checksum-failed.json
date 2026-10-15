@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "bucket": "example-private-bucket",
+  "objectKey": "uploads/10000000-0000-0000-0000-000000000001/10000000-0000-0000-0000-000000000004",
+  "versionId": "example-version-v1",
+  "size": 5,
+  "status": "FAILED",
+  "actualSha256": null,
+  "errorCode": "OBJECT_UNREADABLE",
+  "processedAt": "2026-10-15T15:00:01Z"
+}

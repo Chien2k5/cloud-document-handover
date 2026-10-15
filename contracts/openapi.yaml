@@ -1,0 +1,1419 @@
+"openapi": "3.0.3"
+"info":
+  "title": "Group 5 Document Handover API"
+  "version": "0.1.0"
+  "description": "Week 1 integration draft by Dung. Implemented operations are tagged explicitly. S3/Lambda/handover operations are CONTRACT ONLY and require Dang/Nam review. Session-cookie auth; same-origin React proxy recommended. UTC timestamps. Errors use code/message/requestId. See docs/week-01 for policy and source precedence."
+"servers":
+  -
+    "url": "http://localhost:8080"
+    "description": "Local development only; use HTTPS in shared/AWS environment"
+"tags":
+  -
+    "name": "Implemented week 1"
+  -
+    "name": "Contract only"
+"security":
+  -
+    "sessionCookie": []
+"paths":
+  "/api/v1/health":
+    "get":
+      "operationId": "health"
+      "summary": "Database readiness"
+      "tags":
+        - "Implemented week 1"
+      "x-implementation-status": "implemented"
+      "description": "SELECT 1 against PostgreSQL. 200 UP; 503 DB_UNAVAILABLE if connection/query fails. No database identity or credentials in response."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Health"
+        "503":
+          "description": "Database unavailable (DB_UNAVAILABLE)"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Error"
+      "security": []
+  "/api/v1/auth/csrf":
+    "get":
+      "operationId": "csrf"
+      "summary": "Get CSRF token"
+      "tags":
+        - "Implemented week 1"
+      "x-implementation-status": "implemented"
+      "description": "Implemented and covered by PostgreSQL integration tests."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Csrf"
+      "security": []
+  "/api/v1/auth/login":
+    "post":
+      "operationId": "login"
+      "summary": "Login with form encoded credentials"
+      "tags":
+        - "Implemented week 1"
+      "x-implementation-status": "implemented"
+      "description": "Uses Spring Security form authentication, NOT JSON. Returns HttpOnly JSESSIONID; session ID and CSRF token rotate on success. Invalid credentials return 401 INVALID_CREDENTIALS. No registration endpoint in week 1."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/User"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+      "security": []
+      "requestBody":
+        "required": true
+        "content":
+          "application/x-www-form-urlencoded":
+            "schema":
+              "$ref": "#/components/schemas/Login"
+      "parameters":
+        -
+          "name": "X-CSRF-TOKEN"
+          "in": "header"
+          "required": true
+          "description": "Obtain masked token from GET /auth/csrf with the same cookie jar. Fetch a fresh token after login/logout."
+          "schema":
+            "type": "string"
+  "/api/v1/auth/me":
+    "get":
+      "operationId": "me"
+      "summary": "Current account"
+      "tags":
+        - "Implemented week 1"
+      "x-implementation-status": "implemented"
+      "description": "Implemented and covered by PostgreSQL integration tests."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/User"
+        "401":
+          "$ref": "#/components/responses/Error401"
+  "/api/v1/auth/logout":
+    "post":
+      "operationId": "logout"
+      "summary": "Invalidate session"
+      "tags":
+        - "Implemented week 1"
+      "x-implementation-status": "implemented"
+      "description": "Implemented and covered by PostgreSQL integration tests."
+      "responses":
+        "204":
+          "description": "No content"
+        "403":
+          "$ref": "#/components/responses/Error403"
+      "parameters":
+        -
+          "name": "X-CSRF-TOKEN"
+          "in": "header"
+          "required": true
+          "description": "Obtain masked token from GET /auth/csrf with the same cookie jar. Fetch a fresh token after login/logout."
+          "schema":
+            "type": "string"
+  "/api/v1/projects":
+    "post":
+      "operationId": "createProject"
+      "summary": "Create project and own membership"
+      "tags":
+        - "Implemented week 1"
+      "x-implementation-status": "implemented"
+      "description": "Owner is derived from authenticated principal. Quota is server configured. Request cannot set role, createdBy, projectId or quotaBytes."
+      "responses":
+        "201":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Project"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/CreateProject"
+      "parameters":
+        -
+          "name": "X-CSRF-TOKEN"
+          "in": "header"
+          "required": true
+          "description": "Obtain masked token from GET /auth/csrf with the same cookie jar. Fetch a fresh token after login/logout."
+          "schema":
+            "type": "string"
+    "get":
+      "operationId": "listProjects"
+      "summary": "List only current memberships"
+      "tags":
+        - "Implemented week 1"
+      "x-implementation-status": "implemented"
+      "description": "Implemented and covered by PostgreSQL integration tests."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/ProjectPage"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+      "parameters":
+        -
+          "name": "page"
+          "in": "query"
+          "schema":
+            "type": "integer"
+            "minimum": 0
+            "default": 0
+        -
+          "name": "size"
+          "in": "query"
+          "schema":
+            "type": "integer"
+            "minimum": 1
+            "maximum": 100
+            "default": 20
+  "/api/v1/projects/{id}":
+    "get":
+      "operationId": "getProject"
+      "summary": "Read accessible project"
+      "tags":
+        - "Implemented week 1"
+      "x-implementation-status": "implemented"
+      "description": "All current project roles can read. Missing project and nonmember both receive 404 PROJECT_NOT_FOUND; no cross-project existence leak."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Project"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+      "parameters":
+        -
+          "name": "id"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+  "/api/v1/projects/{id}/members":
+    "get":
+      "operationId": "listMembers"
+      "summary": "List current project members"
+      "tags":
+        - "Implemented week 1"
+      "x-implementation-status": "implemented"
+      "description": "Implemented and covered by PostgreSQL integration tests."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "type": "array"
+                "items":
+                  "$ref": "#/components/schemas/Member"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+      "parameters":
+        -
+          "name": "id"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+  "/api/v1/projects/{id}/members/{userId}":
+    "put":
+      "operationId": "setMember"
+      "summary": "Owner adds or changes Editor/Viewer"
+      "tags":
+        - "Implemented week 1"
+      "x-implementation-status": "implemented"
+      "description": "Target must be an existing enabled account. Owner cannot be changed or removed in week 1. No invitation/email delivery or user-directory API yet; use fixture IDs or an agreed provisioning process."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Member"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/SetMember"
+      "parameters":
+        -
+          "name": "id"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "userId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "X-CSRF-TOKEN"
+          "in": "header"
+          "required": true
+          "description": "Obtain masked token from GET /auth/csrf with the same cookie jar. Fetch a fresh token after login/logout."
+          "schema":
+            "type": "string"
+    "delete":
+      "operationId": "removeMember"
+      "summary": "Owner removes Editor/Viewer"
+      "tags":
+        - "Implemented week 1"
+      "x-implementation-status": "implemented"
+      "description": "Implemented and covered by PostgreSQL integration tests."
+      "responses":
+        "204":
+          "description": "No content"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+      "parameters":
+        -
+          "name": "id"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "userId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "X-CSRF-TOKEN"
+          "in": "header"
+          "required": true
+          "description": "Obtain masked token from GET /auth/csrf with the same cookie jar. Fetch a fresh token after login/logout."
+          "schema":
+            "type": "string"
+  "/api/v1/projects/{id}/files/uploads":
+    "post":
+      "operationId": "initUpload"
+      "summary": "Reserve quota and request a presigned PUT"
+      "tags":
+        - "Contract only"
+      "x-implementation-status": "contract-only"
+      "description": "CONTRACT ONLY. Owner/Editor; atomic project lock reserves size. Server generates object key under uploads/. PUT Content-Type must match signed headers. Size limit 100 MiB is a proposed local MVP policy pending AWS measurement; frontend does not set role/key/bucket. A presigned PUT does not by itself enforce content length; complete must HEAD exact version. Initial PENDING + INTEGRITY_PENDING."
+      "responses":
+        "201":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/UploadCreated"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/UploadRequest"
+      "parameters":
+        -
+          "name": "id"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "X-CSRF-TOKEN"
+          "in": "header"
+          "required": true
+          "description": "Obtain masked token from GET /auth/csrf with the same cookie jar. Fetch a fresh token after login/logout."
+          "schema":
+            "type": "string"
+  "/api/v1/projects/{id}/files/uploads/{uploadId}/complete":
+    "post":
+      "operationId": "completeUpload"
+      "summary": "Validate the uploaded S3 version"
+      "tags":
+        - "Contract only"
+      "x-implementation-status": "contract-only"
+      "description": "CONTRACT ONLY. Owner/Editor and initiating user; verify project/upload association and reserved quota; HEAD exact server-owned bucket/key + claimed version, size and content type. Reject absent/delete marker/null version or different metadata. Set AVAILABLE, keep INTEGRITY_PENDING. Repeated complete of same version is safe; different version is 409. Never mark VERIFIED from client hash, ETag or complete alone. Commit quota reservation to used once."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/UploadState"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/CompleteUpload"
+      "parameters":
+        -
+          "name": "id"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "uploadId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "X-CSRF-TOKEN"
+          "in": "header"
+          "required": true
+          "description": "Obtain masked token from GET /auth/csrf with the same cookie jar. Fetch a fresh token after login/logout."
+          "schema":
+            "type": "string"
+  "/api/v1/projects/{id}/files/uploads/{uploadId}":
+    "get":
+      "operationId": "uploadState"
+      "summary": "Observe upload and independent integrity state"
+      "tags":
+        - "Contract only"
+      "x-implementation-status": "contract-only"
+      "description": "CONTRACT ONLY. Membership required. Backend reads results JSON from S3, matches bucket/key/version/size and compares actual vs stored expected SHA-256. Missing result stays INTEGRITY_PENDING; invalid/error JSON is FAILED, never VERIFIED. Poll boundedly (e.g. 2 seconds, max 30 attempts) then allow manual refresh."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/UploadState"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "503":
+          "$ref": "#/components/responses/Error503"
+      "parameters":
+        -
+          "name": "id"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "uploadId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+  "/api/v1/projects/{id}/files":
+    "get":
+      "operationId": "listFiles"
+      "summary": "List file versions visible in this project"
+      "tags":
+        - "Contract only"
+      "x-implementation-status": "contract-only"
+      "description": "Design only; no runtime controller. Pending Nam/Dang review. Do not call this a completed integration."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/FilePage"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+      "parameters":
+        -
+          "name": "id"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "page"
+          "in": "query"
+          "schema":
+            "type": "integer"
+            "minimum": 0
+            "default": 0
+        -
+          "name": "size"
+          "in": "query"
+          "schema":
+            "type": "integer"
+            "minimum": 1
+            "maximum": 100
+            "default": 20
+  "/api/v1/projects/{id}/files/{fileVersionId}/download":
+    "get":
+      "operationId": "downloadFile"
+      "summary": "Issue a short lived URL for an exact version"
+      "tags":
+        - "Contract only"
+      "x-implementation-status": "contract-only"
+      "description": "CONTRACT ONLY. Membership on file version project; AVAILABLE + VERIFIED and object retrievable. GET URL pins versionId; proposed TTL <= 300 seconds. Presigned URLs must not be logged."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Download"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
+      "parameters":
+        -
+          "name": "id"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "fileVersionId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+  "/api/v1/projects/{id}/handovers":
+    "post":
+      "operationId": "createHandover"
+      "summary": "Owner creates a draft with pinned versions"
+      "tags":
+        - "Contract only"
+      "x-implementation-status": "contract-only"
+      "description": "Design only; no runtime controller. Pending Nam/Dang review. Do not call this a completed integration."
+      "responses":
+        "201":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Handover"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/CreateHandover"
+      "parameters":
+        -
+          "name": "id"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "X-CSRF-TOKEN"
+          "in": "header"
+          "required": true
+          "description": "Obtain masked token from GET /auth/csrf with the same cookie jar. Fetch a fresh token after login/logout."
+          "schema":
+            "type": "string"
+  "/api/v1/handovers/{handoverId}":
+    "get":
+      "operationId": "getHandover"
+      "summary": "Read a handover manifest"
+      "tags":
+        - "Contract only"
+      "x-implementation-status": "contract-only"
+      "description": "CONTRACT ONLY. Project Owner or named authenticated active recipient (inside/outside project). External recipient cannot list the whole project. Recipients can access only READY/CONFIRMED, unexpired, unrevoked packages."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Handover"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+      "parameters":
+        -
+          "name": "handoverId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+  "/api/v1/handovers/{handoverId}/publish":
+    "post":
+      "operationId": "publishHandover"
+      "summary": "Owner publishes only verified exact versions"
+      "tags":
+        - "Contract only"
+      "x-implementation-status": "contract-only"
+      "description": "CONTRACT ONLY. Lock DRAFT; require nonempty items and recipients, future expiry, active access, every version belongs to project, AVAILABLE + VERIFIED and exact version still retrievable. Freeze manifest and recipients at READY. Repeat publish returns same manifest; source v2 never changes pinned v1. No body."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Handover"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
+      "parameters":
+        -
+          "name": "handoverId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "X-CSRF-TOKEN"
+          "in": "header"
+          "required": true
+          "description": "Obtain masked token from GET /auth/csrf with the same cookie jar. Fetch a fresh token after login/logout."
+          "schema":
+            "type": "string"
+  "/api/v1/handovers/{handoverId}/confirm":
+    "post":
+      "operationId": "confirmHandover"
+      "summary": "Named recipient confirms after login"
+      "tags":
+        - "Contract only"
+      "x-implementation-status": "contract-only"
+      "description": "CONTRACT ONLY. Actor is the session principal and must be an ACTIVE named recipient; READY/CONFIRMED, future expiresAt, handover ACTIVE required. Idempotently record own confirmedAt + audit; client cannot supply actor/time. CONFIRMED means all active named recipients confirmed. No body."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Confirmation"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+      "parameters":
+        -
+          "name": "handoverId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "X-CSRF-TOKEN"
+          "in": "header"
+          "required": true
+          "description": "Obtain masked token from GET /auth/csrf with the same cookie jar. Fetch a fresh token after login/logout."
+          "schema":
+            "type": "string"
+  "/api/v1/handovers/{handoverId}/items/{fileVersionId}/download":
+    "get":
+      "operationId": "downloadHandoverItem"
+      "summary": "Download a pinned package item"
+      "tags":
+        - "Contract only"
+      "x-implementation-status": "contract-only"
+      "description": "CONTRACT ONLY. Owner or named active recipient; check package and recipient access and expiry before URL. Version must be in frozen manifest; never resolve latest. Cap TTL at min(300 seconds, remaining handover lifetime)."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Download"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
+      "parameters":
+        -
+          "name": "handoverId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "fileVersionId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+  "/api/v1/handovers/{handoverId}/revoke":
+    "post":
+      "operationId": "revokeHandover"
+      "summary": "Owner revokes access and new URLs"
+      "tags":
+        - "Contract only"
+      "x-implementation-status": "contract-only"
+      "description": "CONTRACT ONLY. Idempotently set accessStatus REVOKED; preserve workflow and confirmations and audit. Already issued S3 URLs may work until TTL expiry. No body."
+      "responses":
+        "200":
+          "description": "Success"
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Handover"
+        "400":
+          "$ref": "#/components/responses/Error400"
+        "401":
+          "$ref": "#/components/responses/Error401"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "404":
+          "$ref": "#/components/responses/Error404"
+        "409":
+          "$ref": "#/components/responses/Error409"
+      "parameters":
+        -
+          "name": "handoverId"
+          "in": "path"
+          "required": true
+          "schema":
+            "type": "string"
+            "format": "uuid"
+        -
+          "name": "X-CSRF-TOKEN"
+          "in": "header"
+          "required": true
+          "description": "Obtain masked token from GET /auth/csrf with the same cookie jar. Fetch a fresh token after login/logout."
+          "schema":
+            "type": "string"
+"components":
+  "securitySchemes":
+    "sessionCookie":
+      "type": "apiKey"
+      "in": "cookie"
+      "name": "JSESSIONID"
+      "description": "HttpOnly session cookie. State-changing operations also need X-CSRF-TOKEN, including login/logout."
+  "schemas":
+    "Error":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "code"
+        - "message"
+        - "requestId"
+      "properties":
+        "code":
+          "type": "string"
+        "message":
+          "type": "string"
+        "requestId":
+          "type": "string"
+          "format": "uuid"
+    "Health":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "status"
+      "properties":
+        "status":
+          "type": "string"
+          "enum":
+            - "UP"
+    "Csrf":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "headerName"
+        - "token"
+      "properties":
+        "headerName":
+          "type": "string"
+          "example": "X-CSRF-TOKEN"
+        "token":
+          "type": "string"
+    "User":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "id"
+        - "email"
+        - "displayName"
+      "properties":
+        "id":
+          "type": "string"
+          "format": "uuid"
+        "email":
+          "type": "string"
+          "format": "email"
+        "displayName":
+          "type": "string"
+    "Login":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "email"
+        - "password"
+      "properties":
+        "email":
+          "type": "string"
+          "format": "email"
+        "password":
+          "type": "string"
+          "format": "password"
+    "CreateProject":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "name"
+      "properties":
+        "name":
+          "type": "string"
+          "minLength": 1
+          "maxLength": 150
+          "pattern": ".*\\S.*"
+        "description":
+          "type": "string"
+          "maxLength": 2000
+    "Project":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "id"
+        - "name"
+        - "description"
+        - "quotaBytes"
+        - "usedBytes"
+        - "reservedBytes"
+        - "role"
+        - "createdAt"
+      "properties":
+        "id":
+          "type": "string"
+          "format": "uuid"
+        "name":
+          "type": "string"
+        "description":
+          "type": "string"
+        "quotaBytes":
+          "type": "integer"
+          "format": "int64"
+          "minimum": 1
+        "usedBytes":
+          "type": "integer"
+          "format": "int64"
+          "minimum": 0
+        "reservedBytes":
+          "type": "integer"
+          "format": "int64"
+          "minimum": 0
+        "role":
+          "type": "string"
+          "enum":
+            - "OWNER"
+            - "EDITOR"
+            - "VIEWER"
+        "createdAt":
+          "type": "string"
+          "format": "date-time"
+    "ProjectPage":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "items"
+        - "page"
+        - "size"
+      "properties":
+        "items":
+          "type": "array"
+          "items":
+            "$ref": "#/components/schemas/Project"
+        "page":
+          "type": "integer"
+          "minimum": 0
+        "size":
+          "type": "integer"
+          "minimum": 1
+          "maximum": 100
+    "SetMember":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "role"
+      "properties":
+        "role":
+          "type": "string"
+          "enum":
+            - "EDITOR"
+            - "VIEWER"
+    "Member":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "userId"
+        - "displayName"
+        - "role"
+      "properties":
+        "userId":
+          "type": "string"
+          "format": "uuid"
+        "displayName":
+          "type": "string"
+        "role":
+          "type": "string"
+          "enum":
+            - "OWNER"
+            - "EDITOR"
+            - "VIEWER"
+    "UploadRequest":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "filename"
+        - "contentType"
+        - "size"
+        - "expectedSha256"
+      "properties":
+        "filename":
+          "type": "string"
+          "minLength": 1
+          "maxLength": 255
+        "contentType":
+          "type": "string"
+          "minLength": 1
+          "maxLength": 255
+        "size":
+          "type": "integer"
+          "format": "int64"
+          "minimum": 1
+          "maximum": 104857600
+        "expectedSha256":
+          "type": "string"
+          "pattern": "^[0-9a-f]{64}$"
+          "minLength": 64
+          "maxLength": 64
+    "PresignedUpload":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "method"
+        - "url"
+        - "headers"
+        - "expiresAt"
+      "properties":
+        "method":
+          "type": "string"
+          "enum":
+            - "PUT"
+        "url":
+          "type": "string"
+          "format": "uri"
+        "headers":
+          "type": "object"
+          "additionalProperties":
+            "type": "string"
+        "expiresAt":
+          "type": "string"
+          "format": "date-time"
+    "UploadCreated":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "uploadId"
+        - "fileId"
+        - "fileVersionId"
+        - "uploadStatus"
+        - "integrityStatus"
+        - "presignedUpload"
+      "properties":
+        "uploadId":
+          "type": "string"
+          "format": "uuid"
+        "fileId":
+          "type": "string"
+          "format": "uuid"
+        "fileVersionId":
+          "type": "string"
+          "format": "uuid"
+        "uploadStatus":
+          "$ref": "#/components/schemas/UploadStatus"
+        "integrityStatus":
+          "$ref": "#/components/schemas/IntegrityStatus"
+        "presignedUpload":
+          "$ref": "#/components/schemas/PresignedUpload"
+    "UploadStatus":
+      "type": "string"
+      "enum":
+        - "PENDING"
+        - "AVAILABLE"
+        - "FAILED"
+        - "EXPIRED"
+    "IntegrityStatus":
+      "type": "string"
+      "enum":
+        - "INTEGRITY_PENDING"
+        - "VERIFIED"
+        - "MISMATCH"
+        - "FAILED"
+    "CompleteUpload":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "versionId"
+      "properties":
+        "versionId":
+          "type": "string"
+          "minLength": 1
+          "description": "Exact x-amz-version-id from S3 PUT; backend verifies it with HEAD, never trusts client claim. Literal null is rejected."
+    "FileVersion":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "id"
+        - "fileId"
+        - "filename"
+        - "contentType"
+        - "size"
+        - "versionId"
+        - "expectedSha256"
+        - "actualSha256"
+        - "uploadStatus"
+        - "integrityStatus"
+      "properties":
+        "id":
+          "type": "string"
+          "format": "uuid"
+        "fileId":
+          "type": "string"
+          "format": "uuid"
+        "filename":
+          "type": "string"
+        "contentType":
+          "type": "string"
+        "size":
+          "type": "integer"
+          "format": "int64"
+          "minimum": 1
+        "versionId":
+          "type": "string"
+          "nullable": true
+        "expectedSha256":
+          "type": "string"
+          "pattern": "^[0-9a-f]{64}$"
+          "minLength": 64
+          "maxLength": 64
+        "actualSha256":
+          "type": "string"
+          "pattern": "^[0-9a-f]{64}$"
+          "minLength": 64
+          "maxLength": 64
+          "nullable": true
+        "uploadStatus":
+          "$ref": "#/components/schemas/UploadStatus"
+        "integrityStatus":
+          "$ref": "#/components/schemas/IntegrityStatus"
+    "UploadState":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "uploadId"
+        - "fileVersion"
+        - "expiresAt"
+      "properties":
+        "uploadId":
+          "type": "string"
+          "format": "uuid"
+        "fileVersion":
+          "$ref": "#/components/schemas/FileVersion"
+        "expiresAt":
+          "type": "string"
+          "format": "date-time"
+    "FilePage":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "items"
+        - "page"
+        - "size"
+      "properties":
+        "items":
+          "type": "array"
+          "items":
+            "$ref": "#/components/schemas/FileVersion"
+        "page":
+          "type": "integer"
+          "minimum": 0
+        "size":
+          "type": "integer"
+          "minimum": 1
+          "maximum": 100
+    "Download":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "url"
+        - "versionId"
+        - "expiresAt"
+      "properties":
+        "url":
+          "type": "string"
+          "format": "uri"
+        "versionId":
+          "type": "string"
+        "expiresAt":
+          "type": "string"
+          "format": "date-time"
+    "CreateHandover":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "title"
+        - "fileVersionIds"
+        - "recipientUserIds"
+        - "expiresAt"
+      "properties":
+        "title":
+          "type": "string"
+          "minLength": 1
+          "maxLength": 200
+        "fileVersionIds":
+          "type": "array"
+          "items":
+            "type": "string"
+            "format": "uuid"
+          "minItems": 1
+          "uniqueItems": true
+        "recipientUserIds":
+          "type": "array"
+          "items":
+            "type": "string"
+            "format": "uuid"
+          "minItems": 1
+          "uniqueItems": true
+        "expiresAt":
+          "type": "string"
+          "format": "date-time"
+    "HandoverItem":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "fileVersionId"
+        - "filename"
+        - "versionId"
+        - "expectedSha256"
+      "properties":
+        "fileVersionId":
+          "type": "string"
+          "format": "uuid"
+        "filename":
+          "type": "string"
+        "versionId":
+          "type": "string"
+        "expectedSha256":
+          "type": "string"
+          "pattern": "^[0-9a-f]{64}$"
+          "minLength": 64
+          "maxLength": 64
+    "HandoverRecipient":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "userId"
+        - "accessStatus"
+        - "confirmedAt"
+      "properties":
+        "userId":
+          "type": "string"
+          "format": "uuid"
+        "accessStatus":
+          "type": "string"
+          "enum":
+            - "ACTIVE"
+            - "REVOKED"
+        "confirmedAt":
+          "type": "string"
+          "format": "date-time"
+          "nullable": true
+    "Handover":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "id"
+        - "projectId"
+        - "title"
+        - "status"
+        - "accessStatus"
+        - "expiresAt"
+        - "items"
+        - "recipients"
+      "properties":
+        "id":
+          "type": "string"
+          "format": "uuid"
+        "projectId":
+          "type": "string"
+          "format": "uuid"
+        "title":
+          "type": "string"
+        "status":
+          "type": "string"
+          "enum":
+            - "DRAFT"
+            - "READY"
+            - "CONFIRMED"
+        "accessStatus":
+          "type": "string"
+          "enum":
+            - "ACTIVE"
+            - "REVOKED"
+        "expiresAt":
+          "type": "string"
+          "format": "date-time"
+        "items":
+          "type": "array"
+          "items":
+            "$ref": "#/components/schemas/HandoverItem"
+        "recipients":
+          "type": "array"
+          "items":
+            "$ref": "#/components/schemas/HandoverRecipient"
+    "Confirmation":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "handoverId"
+        - "userId"
+        - "confirmedAt"
+        - "status"
+      "properties":
+        "handoverId":
+          "type": "string"
+          "format": "uuid"
+        "userId":
+          "type": "string"
+          "format": "uuid"
+        "confirmedAt":
+          "type": "string"
+          "format": "date-time"
+        "status":
+          "type": "string"
+          "enum":
+            - "CONFIRMED"
+  "responses":
+    "Error400":
+      "description": "Invalid payload, UUID, pagination or unknown fields"
+      "content":
+        "application/json":
+          "schema":
+            "$ref": "#/components/schemas/Error"
+          "example":
+            "code": "VALIDATION_ERROR"
+            "message": "Invalid payload, UUID, pagination or unknown fields"
+            "requestId": "10000000-0000-0000-0000-000000000099"
+    "Error401":
+      "description": "Missing or expired login session"
+      "content":
+        "application/json":
+          "schema":
+            "$ref": "#/components/schemas/Error"
+          "example":
+            "code": "UNAUTHENTICATED"
+            "message": "Missing or expired login session"
+            "requestId": "10000000-0000-0000-0000-000000000099"
+    "Error403":
+      "description": "Insufficient role or missing/invalid CSRF token"
+      "content":
+        "application/json":
+          "schema":
+            "$ref": "#/components/schemas/Error"
+          "example":
+            "code": "ACCESS_DENIED"
+            "message": "Insufficient role or missing/invalid CSRF token"
+            "requestId": "10000000-0000-0000-0000-000000000099"
+    "Error404":
+      "description": "Missing resource or resource hidden from this caller"
+      "content":
+        "application/json":
+          "schema":
+            "$ref": "#/components/schemas/Error"
+          "example":
+            "code": "NOT_FOUND"
+            "message": "Missing resource or resource hidden from this caller"
+            "requestId": "10000000-0000-0000-0000-000000000099"
+    "Error409":
+      "description": "Conflicting state, version, size, quota or immutable owner"
+      "content":
+        "application/json":
+          "schema":
+            "$ref": "#/components/schemas/Error"
+          "example":
+            "code": "STATE_CONFLICT"
+            "message": "Conflicting state, version, size, quota or immutable owner"
+            "requestId": "10000000-0000-0000-0000-000000000099"
+    "Error503":
+      "description": "Storage dependency unavailable; no fabricated success"
+      "content":
+        "application/json":
+          "schema":
+            "$ref": "#/components/schemas/Error"
+          "example":
+            "code": "STORAGE_UNAVAILABLE"
+            "message": "Storage dependency unavailable; no fabricated success"
+            "requestId": "10000000-0000-0000-0000-000000000099"

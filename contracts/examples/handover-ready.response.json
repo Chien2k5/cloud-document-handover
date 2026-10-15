@@ -1,0 +1,23 @@
+{
+  "id": "10000000-0000-0000-0000-000000000006",
+  "projectId": "10000000-0000-0000-0000-000000000001",
+  "title": "Bàn giao tuần 3",
+  "status": "READY",
+  "accessStatus": "ACTIVE",
+  "expiresAt": "2026-10-22T15:00:00Z",
+  "items": [
+    {
+      "fileVersionId": "10000000-0000-0000-0000-000000000003",
+      "filename": "hello.txt",
+      "versionId": "example-version-v1",
+      "expectedSha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+    }
+  ],
+  "recipients": [
+    {
+      "userId": "10000000-0000-0000-0000-000000000005",
+      "accessStatus": "ACTIVE",
+      "confirmedAt": null
+    }
+  ]
+}

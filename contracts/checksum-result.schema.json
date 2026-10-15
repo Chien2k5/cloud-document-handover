@@ -1,0 +1,101 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "bucket",
+    "objectKey",
+    "versionId",
+    "size",
+    "status",
+    "actualSha256",
+    "errorCode",
+    "processedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "enum": [
+        1
+      ]
+    },
+    "bucket": {
+      "type": "string",
+      "minLength": 1
+    },
+    "objectKey": {
+      "type": "string",
+      "pattern": "^uploads/"
+    },
+    "versionId": {
+      "type": "string",
+      "minLength": 1,
+      "not": {
+        "const": "null"
+      }
+    },
+    "size": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "SUCCEEDED",
+        "FAILED"
+      ]
+    },
+    "actualSha256": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "errorCode": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "processedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lambda checksum result v1 integration draft",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "SUCCEEDED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "actualSha256": {
+            "type": "string"
+          },
+          "errorCode": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "actualSha256": {
+            "type": "null"
+          },
+          "errorCode": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  ]
+}

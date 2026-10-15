@@ -1,0 +1,10 @@
+{
+  "id": "10000000-0000-0000-0000-000000000001",
+  "name": "Dự án nhóm 5",
+  "description": "Tài liệu thử nghiệm",
+  "quotaBytes": 1073741824,
+  "usedBytes": 0,
+  "reservedBytes": 0,
+  "role": "OWNER",
+  "createdAt": "2026-10-15T15:00:00Z"
+}

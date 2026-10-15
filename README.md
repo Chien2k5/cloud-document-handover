@@ -1,3 +1,15 @@
+# Backend tuần 1 trên nhánh dung
+
+Phần triển khai hiện tại dùng **Spring Boot, PostgreSQL, Flyway** theo báo cáo tiến độ và kế hoạch 5 tuần mới do Dũng cung cấp. Phần S3/Lambda/bàn giao đang ở mức hợp đồng API, chưa tích hợp AWS.
+
+- [Chạy và kiểm thử backend](backend/README.md)
+- [Bàn giao tuần 1 và các điểm cần nhóm review](docs/week-01/README.md)
+- [OpenAPI cho Nam và Đăng](contracts/openapi.yaml)
+- [ERD sửa được bằng Mermaid](docs/week-01/erd.mmd)
+- [Kết quả thực tế và phần còn thiếu](docs/week-01/report.md)
+
+Nội dung phía dưới là mô tả **kiến trúc Nextcloud cũ**, được giữ lại để đối chiếu; không dùng làm hướng dẫn chạy backend tuần 1. Tài liệu cũ trong `docs/tv3/` cũng chưa được chuyển sang kế hoạch S3 mới.
+
 # cloud-document-handover
 Dịch vụ lưu trữ, phân quyền và bàn giao tài liệu cho nhóm nhỏ trên AWS
 # Dịch vụ lưu trữ và bàn giao tài liệu trên AWS

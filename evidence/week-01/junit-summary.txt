@@ -1,0 +1,16 @@
+JUnit results from Maven verify on 2026-10-15 23:00:52-23:01:03 UTC+07
+Java 25, release target 21; PostgreSQL 17.9; RUN_DB_TESTS=true
+
+vn.edu.uet.handover.BackendIntegrationTest: tests=5 failures=0 errors=0 skipped=0
+  PASS membershipMutationRequiresOwnerAndCannotRemoveOwner
+  PASS migrationHealthAndAuthentication
+  PASS databaseConstraintsProtectVersionAndCrossProjectReferences
+  PASS projectsAreIsolatedAndOwnerIsAssignedByServer
+  PASS validationCsrfAndUnimplementedRoutes
+vn.edu.uet.handover.ContractTest: tests=3 failures=0 errors=0 skipped=0
+  PASS checksumSchemaAcceptsResultsAndRejectsMissingIdentityAndFalseSuccess
+  PASS openApiResolvesWithoutErrorsAndMarksScope
+  PASS examplesMatchOpenApiSchemas
+
+BUILD SUCCESS; 8 tests, 0 failures, 0 errors, 0 skipped.
+Only test names and aggregate counts retained; no raw environment or payloads.
