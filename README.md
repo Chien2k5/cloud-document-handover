@@ -1,6 +1,8 @@
-# Backend tuần 2 trên nhánh dung
+# Backend tuần 3 trên nhánh dung
 
-Phần triển khai hiện tại dùng **Spring Boot, PostgreSQL, Flyway** theo báo cáo tiến độ và kế hoạch 5 tuần. Đã có auth/Project/Membership và nghiệp vụ upload: session, quota, complete, list/download, đối soát checksum qua StoragePort. Adapter S3/Lambda thật và môi trường AWS chưa được cung cấp; phần bàn giao tuần 3 vẫn là hợp đồng API.
+Phần triển khai hiện tại dùng **Spring Boot, PostgreSQL, Flyway** theo báo cáo tiến độ và kế hoạch 5 tuần. Đã có auth/Project/Membership, upload/quota/checksum và nghiệp vụ bàn giao DRAFT → READY → CONFIRMED, download đúng phiên bản, thu hồi cơ bản. StoragePort chưa có adapter S3/Lambda thật hoặc môi trường AWS được xác nhận.
+
+Cập nhật 29/10/2026: [báo cáo backend tuần 3](docs/week-03/backend-report.md), [hướng dẫn Dũng tự kiểm tra và ghép nhóm](docs/week-03/huong-dan-cho-dung.md), [bằng chứng hiện tại](evidence/week-03/backend/README.md). Các báo cáo tuần 1/2 bên dưới là lịch sử của các lần triển khai trước.
 
 Cập nhật ngày 28/10/2026: [báo cáo backend tuần 2](docs/week-02/backend-completion.md), [câu hỏi gửi Đăng/Chiến/Nam](docs/week-02/team-integration-questions.md). Các báo cáo Phase 1 ngày 22/10 là snapshot lịch sử, không đại diện trạng thái triển khai mới.
 

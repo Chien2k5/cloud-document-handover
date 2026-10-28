@@ -1,6 +1,6 @@
 # Backend lưu trữ và bàn giao tài liệu
 
-Backend của Dũng: một ứng dụng Spring Boot 3.5.16, Maven Wrapper 3.9.12, PostgreSQL/Flyway, Spring Security session/CSRF, API Project/Membership và UploadService. Java target 21; kiểm thử bằng Java 25 và PostgreSQL 17. Chưa có S3 SDK adapter, Lambda, frontend hoặc service bàn giao. StoragePort là ranh giới để Đăng tích hợp; mặc định trả 503 khi storage chưa sẵn sàng.
+Backend của Dũng: một ứng dụng Spring Boot 3.5.16, Maven Wrapper 3.9.12, PostgreSQL/Flyway, Spring Security session/CSRF, API Project/Membership, UploadService và HandoverService. Java target 21; kiểm thử bằng Java 25 và PostgreSQL 17. Chưa có S3 SDK adapter, Lambda hoặc frontend. StoragePort là ranh giới để Đăng tích hợp; mặc định trả 503 khi storage chưa sẵn sàng.
 
 Cập nhật tuần 2 phase 1: Project JSON không ép số/boolean thành string, explicit null bị 400 (description bỏ qua vẫn thành chuỗi rỗng); Content-Type sai trả 415, Accept không hỗ trợ trả 406. Account disabled/xóa bị 401 ACCOUNT_DISABLED và hủy session ở request tiếp theo; DB lookup account lỗi trả 503 AUTH_UNAVAILABLE, không cấp quyền mặc định. Không có migration mới hoặc admin UI. Xem [quyết định upload/version và review gates](../docs/week-02/phase-01-upload-contract.md).
 
@@ -77,7 +77,7 @@ Lấy lại `/auth/csrf` sau login/logout vì Spring Security xoay token. Không
 | PUT | /projects/{id}/members/{userId} | Owner gán EDITOR/VIEWER cho user có sẵn |
 | DELETE | /projects/{id}/members/{userId} | Owner gỡ Editor/Viewer, 204 |
 
-Các API upload/complete/status/list/download bên dưới đã triển khai; handover còn **contract-only**. Caller ngoài project nhận 404 để không lộ tài nguyên. Không có session nhận 401; CSRF thiếu/sai có thể bị 403 trước. Role được đọc từ Membership hiện tại, không nằm trong request hoặc quyền global.
+Các API upload và handover đã triển khai. Caller ngoài project nhận 404 khi truy cập project/file. Người nhận được chỉ định có quyền riêng trên gói bàn giao, không có quyền xem project. Không có session nhận 401; CSRF thiếu/sai có thể bị 403 trước. Role được đọc từ Membership hiện tại, không nằm trong request hoặc quyền global.
 
 | Method | Endpoint dưới `/api/v1` | Ý nghĩa |
 | --- | --- | --- |
@@ -90,6 +90,21 @@ Các API upload/complete/status/list/download bên dưới đã triển khai; ha
 `UPLOAD_BUCKET` không có giá trị mặc định; chưa cấu hình trả 503. `UPLOAD_TTL_SECONDS` mặc định 300, chỉ cho 1..300; `UPLOAD_EXPIRY_DELAY_MS` mặc định 30000. Init không idempotent; fileId bỏ qua tạo tài liệu mới, có fileId thêm version và giữ filename. Quota logic tính used của mọi version đã hoàn tất + reserved của PENDING. Expiry scheduler giới hạn 20 project x 100 session/lượt, cùng khóa project với init/complete. V1 được giữ nguyên; không có migration mới.
 
 Đăng cung cấp bean `StoragePort` theo `../contracts/s3-adapter-contract.md`; nhánh này không chứa AWS SDK implementation. Signer PUT phải trả signed Content-Type và If-None-Match: *, URL HTTPS và hạn không vượt session; backend không tự chứng minh AWS đã enforce header. HEAD/GET luôn nhận exact bucket/key/versionId, không latest. Đọc checksum giới hạn 64 KiB và timeout hữu hạn ở adapter; schema/identity được backend kiểm lại. Không đưa fake vào profile local/AWS. Hướng dẫn và câu hỏi phối hợp ở `../docs/week-02/team-integration-questions.md`.
+
+## API bàn giao tuần 3
+
+Tuần 3 có thêm:
+
+| Method | Endpoint dưới `/api/v1` | Ý nghĩa |
+| --- | --- | --- |
+| POST | /projects/{id}/handovers | Owner tạo DRAFT với phiên bản AVAILABLE và người nhận hiện có |
+| GET | /handovers/{handoverId} | Owner xem lịch sử; người nhận xem gói phát hành còn quyền |
+| POST | /handovers/{handoverId}/publish | Owner phát hành, chỉ AVAILABLE + VERIFIED và exact HEAD hợp lệ |
+| POST | /handovers/{handoverId}/confirm | Người nhận xác nhận chính mình; không body |
+| GET | /handovers/{handoverId}/items/{fileVersionId}/download | Đúng item, đúng version, URL không vượt hạn gói/300 giây |
+| POST | /handovers/{handoverId}/revoke | Owner thu hồi cơ bản, giữ lịch sử; không body |
+
+Publish cũng không nhận body. Tạo gói cần title, fileVersionIds/recipientUserIds không rỗng và không lặp, expiresAt là chuỗi ISO có timezone trong tương lai. Không có API sửa manifest/recipient. Đọc [hướng dẫn tuần 3](../docs/week-03/huong-dan-cho-dung.md) để tự kiểm và lấy đầu vào ghép nhóm. Các thay đổi dùng bảng V1 hiện có, không thêm migration/config/dependency.
 
 ## Build và test
 
@@ -130,6 +145,8 @@ Kiểm tra cuối Phase 1 mở rộng script trên để thử public CSRF/login
 
 - `auth/`: user lookup, BCrypt, session login/logout/CSRF, local demo users.
 - `project/`: controller/DTO/service/repository, membership và audit transaction.
+- `upload/`: session, quota/expiry, complete exact version, checksum và StoragePort.
+- `handover/`: DRAFT/READY/CONFIRMED, quyền người nhận, download và revoke cơ bản.
 - `common/`: health, requestId server sinh, lỗi JSON an toàn.
 - `src/main/resources/db/migration/`: schema Flyway.
 - `src/test/java/`: kiểm tra PostgreSQL/API và hợp đồng; dependency validator chỉ scope test.

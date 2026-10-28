@@ -1,8 +1,8 @@
 "openapi": "3.0.3"
 "info":
   "title": "Group 5 Document Handover API"
-  "version": "0.3.0-week2-backend"
-  "description": "Week 2 backend: auth, projects, upload sessions, quota, complete, integrity reconciliation, list and download are implemented. StoragePort has no real AWS adapter in this branch: unconfigured storage returns 503. Tests use a test-only fake plus real PostgreSQL; AWS integration is NOT RUN. Handover remains CONTRACT ONLY. Nam/Dang/Chien approval and AWS POC are NOT recorded. Session-cookie auth with CSRF; UTC timestamps. See docs/week-02/phase-01-upload-contract.md for decisions, review gates, state transitions and compatibility."
+  "version": "0.4.0-week3-backend"
+  "description": "Week 2 backend: auth, projects, upload sessions, quota, complete, integrity reconciliation, list and download are implemented. StoragePort has no real AWS adapter in this branch: unconfigured storage returns 503. Tests use a test-only fake plus real PostgreSQL; AWS integration is NOT RUN. Handover create/read/publish/confirm/download/revoke are implemented with PostgreSQL and test-only storage fixtures. AWS handover integration is NOT RUN. Nam/Dang/Chien approval and AWS POC are NOT recorded. Session-cookie auth with CSRF; UTC timestamps. See docs/week-02/phase-01-upload-contract.md for decisions, review gates, state transitions and compatibility."
 "servers":
   -
     "url": "http://localhost:8080"
@@ -659,9 +659,9 @@
       "operationId": "createHandover"
       "summary": "Owner creates a draft with pinned versions"
       "tags":
-        - "Contract only"
-      "x-implementation-status": "contract-only"
-      "description": "CONTRACT ONLY. Owner creates DRAFT from project-owned AVAILABLE versions (fixed non-null S3 identities) and existing recipient accounts. Integrity may be pending in DRAFT, but publish requires VERIFIED + retrievable. No filename/latest lookup or manifest changes after READY. No handover service is implemented in phase 1."
+        - "Implemented week 3"
+      "x-implementation-status": "implemented"
+      "description": "Implemented backend; AWS adapter and UI integration pending. Owner creates DRAFT from project-owned AVAILABLE versions (fixed non-null S3 identities) and existing recipient accounts. Integrity may be pending in DRAFT, but publish requires VERIFIED + retrievable. No filename/latest lookup or manifest changes after READY. Draft creation is transactional, rejects duplicate IDs, and requires enabled recipient accounts. No draft editing endpoint is provided."
       "responses":
         "201":
           "description": "Success"
@@ -681,6 +681,8 @@
           "$ref": "#/components/responses/Error409"
         "503":
           "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
         "415":
           "$ref": "#/components/responses/Error415"
       "requestBody":
@@ -709,9 +711,9 @@
       "operationId": "getHandover"
       "summary": "Read a handover manifest"
       "tags":
-        - "Contract only"
-      "x-implementation-status": "contract-only"
-      "description": "CONTRACT ONLY. Project Owner or named authenticated active recipient (inside/outside project). External recipient cannot list the whole project. Recipients can access only READY/CONFIRMED, unexpired, unrevoked packages."
+        - "Implemented week 3"
+      "x-implementation-status": "implemented"
+      "description": "Implemented backend; AWS adapter and UI integration pending. Project Owner or named authenticated active recipient (inside/outside project). External recipient cannot list the whole project. Recipients can access only READY/CONFIRMED, unexpired, unrevoked packages."
       "responses":
         "200":
           "description": "Success"
@@ -731,6 +733,8 @@
           "$ref": "#/components/responses/Error409"
         "503":
           "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "parameters":
         -
           "name": "handoverId"
@@ -744,9 +748,9 @@
       "operationId": "publishHandover"
       "summary": "Owner publishes only verified exact versions"
       "tags":
-        - "Contract only"
-      "x-implementation-status": "contract-only"
-      "description": "CONTRACT ONLY. Lock DRAFT; require nonempty items and recipients, future expiry, active access, every version belongs to project, AVAILABLE + VERIFIED and exact version still retrievable. Freeze manifest and recipients at READY. Repeat publish returns same manifest; source v2 never changes pinned v1. No body."
+        - "Implemented week 3"
+      "x-implementation-status": "implemented"
+      "description": "Implemented backend; AWS adapter and UI integration pending. Lock DRAFT; require nonempty items and recipients, future expiry, active access, every version belongs to project, AVAILABLE + VERIFIED and exact version still retrievable. Freeze manifest and recipients at READY. Repeat publish returns same manifest; source v2 never changes pinned v1. No request body; nonempty bodies are rejected with 400."
       "responses":
         "200":
           "description": "Success"
@@ -766,6 +770,8 @@
           "$ref": "#/components/responses/Error409"
         "503":
           "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "parameters":
         -
           "name": "handoverId"
@@ -786,9 +792,9 @@
       "operationId": "confirmHandover"
       "summary": "Named recipient confirms after login"
       "tags":
-        - "Contract only"
-      "x-implementation-status": "contract-only"
-      "description": "CONTRACT ONLY. Session actor must be an ACTIVE named recipient; package READY/CONFIRMED, future expiry and ACTIVE access required. Record own confirmedAt idempotently with server actor/time and audit. Response Confirmation.status means this recipient confirmed; aggregate Handover.status becomes CONFIRMED only when every ACTIVE named recipient confirms. Recipient UI policy requires Nam review."
+        - "Implemented week 3"
+      "x-implementation-status": "implemented"
+      "description": "Implemented backend; AWS adapter and UI integration pending. Session actor must be an ACTIVE named recipient; package READY/CONFIRMED, future expiry and ACTIVE access required. Record own confirmedAt idempotently with server actor/time and audit. Response Confirmation.status means this recipient confirmed; aggregate Handover.status becomes CONFIRMED only when every ACTIVE named recipient confirms. Recipient UI policy requires Nam review."
       "responses":
         "200":
           "description": "Success"
@@ -808,6 +814,8 @@
           "$ref": "#/components/responses/Error409"
         "503":
           "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "parameters":
         -
           "name": "handoverId"
@@ -828,9 +836,9 @@
       "operationId": "downloadHandoverItem"
       "summary": "Download a pinned package item"
       "tags":
-        - "Contract only"
-      "x-implementation-status": "contract-only"
-      "description": "CONTRACT ONLY. Owner or named active recipient; check package and recipient access and expiry before URL. Version must be in frozen manifest; never resolve latest. Cap TTL at min(300 seconds, remaining handover lifetime)."
+        - "Implemented week 3"
+      "x-implementation-status": "implemented"
+      "description": "Implemented backend; AWS adapter and UI integration pending. Owner or named active recipient; check package and recipient access and expiry before URL. Version must be in frozen manifest; never resolve latest. Cap TTL at min(300 seconds, remaining handover lifetime)."
       "responses":
         "200":
           "description": "Success"
@@ -850,6 +858,8 @@
           "$ref": "#/components/responses/Error409"
         "503":
           "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "parameters":
         -
           "name": "handoverId"
@@ -870,9 +880,9 @@
       "operationId": "revokeHandover"
       "summary": "Owner revokes access and new URLs"
       "tags":
-        - "Contract only"
-      "x-implementation-status": "contract-only"
-      "description": "CONTRACT ONLY. Idempotently set accessStatus REVOKED; preserve workflow and confirmations and audit. Already issued S3 URLs may work until TTL expiry. No body."
+        - "Implemented week 3"
+      "x-implementation-status": "implemented"
+      "description": "Implemented backend; AWS adapter and UI integration pending. Idempotently set accessStatus REVOKED; preserve workflow and confirmations and audit. Already issued S3 URLs may work until TTL expiry. No request body; nonempty bodies are rejected with 400."
       "responses":
         "200":
           "description": "Success"
@@ -892,6 +902,8 @@
           "$ref": "#/components/responses/Error409"
         "503":
           "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "parameters":
         -
           "name": "handoverId"
@@ -1347,7 +1359,7 @@
           "pattern": "^[0-9a-f]{64}$"
           "minLength": 64
           "maxLength": 64
-      "description": "Draft selection is limited to AVAILABLE versions with a fixed S3 identity; integrity may still be pending. Publish additionally requires VERIFIED and retrievable. Drafts cannot select a PENDING version with null versionId. Contract only; recipient/UI review pending."
+      "description": "Draft selection is limited to AVAILABLE versions with a fixed S3 identity; integrity may still be pending. Publish additionally requires VERIFIED and retrievable. Drafts cannot select a PENDING version with null versionId. Backend implemented; recipient/UI review pending."
     "HandoverRecipient":
       "type": "object"
       "additionalProperties": false
@@ -1516,7 +1528,7 @@
             "message": "Requested response media type is not supported; API error envelope is JSON"
             "requestId": "10000000-0000-0000-0000-000000000099"
 "x-review-status":
-  "backend": "Backend upload service implemented; real PostgreSQL plus test-only fake; AWS adapter and team review pending"
+  "backend": "Backend upload and handover services implemented; PostgreSQL and test-only fake; AWS adapter and team review pending"
   "nam": "Pending API/UI and retry flow review; no approval claimed"
   "dang": "Pending adapter, checksum and conditional PUT POC; no approval claimed"
   "chien": "Pending bucket policy/CORS/IAM/limits/cleanup review; no approval claimed"
