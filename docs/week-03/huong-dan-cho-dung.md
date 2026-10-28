@@ -42,7 +42,7 @@ try {
 }
 ```
 
-Mong đợi: BUILD SUCCESS, 12 tests, 0 failures/errors/skipped. Test tự tạo người dùng, dự án, dữ liệu phiên bản mẫu và khởi động Tomcat cổng ngẫu nhiên. Không cần bật app thủ công hoặc có tài khoản AWS. HEAD/URL S3 trong test là fixture `.invalid`, không phải file tải thật.
+Mong đợi BUILD SUCCESS, 0 failures/errors/skipped; số ca của lớp có thể tăng sau các đợt bổ sung C06/C07. Đọc evidence tuần 5 cho bản chốt, con số 12 trong báo cáo tuần 3 là snapshot lịch sử. Test tự tạo người dùng, dự án, dữ liệu phiên bản mẫu và khởi động Tomcat cổng ngẫu nhiên. Không cần bật app thủ công hoặc có tài khoản AWS. HEAD/URL S3 trong test là fixture `.invalid`, không phải file tải thật.
 
 4. Để chạy toàn bộ hồi quy, dùng DB thử phù hợp, đặt lại RUN_DB_TESTS=true rồi chạy `mvnw.cmd -B -ntp verify`. Kết quả lần làm việc này nằm trong `evidence/week-03/backend/README.md`; đọc đúng kết quả thực tế nếu có sửa code sau đó.
 

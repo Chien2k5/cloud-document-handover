@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-10-29T01:42:08.184126+07:00",
+  "source": "GitHub connector API, branches and recursive B01 tree",
+  "branches": {
+    "main": "0e70ee2716f912dc3a7b433cb88dd99e1a81a615",
+    "dungBeforeFinalCommit": "3a2c32f4451aeae70a9e89f78c18a411cc15cb86",
+    "task/B01-nextcloud-local": "c83f36ac40f663c509afb4beb599b9a85d2873d4"
+  },
+  "b01Files": [
+    ".env.example",
+    ".gitignore",
+    "PRINCIPLE.MD",
+    "README.md",
+    "deploy/README.md",
+    "infra/README.md",
+    "nextcloud/.env.example",
+    "nextcloud/README.md",
+    "nextcloud/compose.nextcloud.yml",
+    "nextcloud/notes/decisions.md",
+    "nextcloud/notes/permissions.md",
+    "ops/README.md"
+  ],
+  "newAwsAdapterOrFrontendObserved": false,
+  "limitation": "Does not inspect work that teammates have not pushed or provided"
+}

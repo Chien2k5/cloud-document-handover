@@ -10,6 +10,7 @@
 /runtime-data/
 /backups/
 /logs/
+/output/
 
 # Python
 .venv/

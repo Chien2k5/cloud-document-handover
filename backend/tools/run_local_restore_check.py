@@ -79,7 +79,8 @@ class RestoreCheck:
         self.run_id = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S') + '_' + uuid.uuid4().hex[:8]
         self.runtime = self.root / 'runtime-data' / ('week4-restore-' + self.run_id)
         self.runtime.mkdir(parents=True, exist_ok=False)
-        self.output = self.root / 'evidence/week-04/local-restore'
+        self.output = (self.root / args.evidence_dir).resolve()
+        require(self.output.is_relative_to((self.root / 'evidence').resolve()), 'Evidence directory must stay inside the repository evidence folder')
         self.output.mkdir(parents=True, exist_ok=True)
         self.source = 'handover_restore_' + self.run_id + '_src'
         self.target = 'handover_restore_' + self.run_id + '_dst'
@@ -132,7 +133,8 @@ class RestoreCheck:
         env.update(DB_URL=f'jdbc:postgresql://{self.args.host}:{self.args.port}/{database}',
                    DB_USERNAME=self.args.user, DB_PASSWORD=self.env.get('PGPASSWORD', ''),
                    SERVER_PORT=str(port), SPRING_PROFILES_ACTIVE='local', SESSION_COOKIE_SECURE='false',
-                   UPLOAD_BUCKET='fixture-bucket', UPLOAD_EXPIRY_DELAY_MS='3600000')
+                   UPLOAD_BUCKET='fixture-bucket', UPLOAD_EXPIRY_DELAY_MS='3600000',
+                   SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE='3', SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE='1')
         env.pop('RUN_DB_TESTS', None)
         # Restoration must authenticate restored users; seeding the target could mask data loss.
         env.pop('LOCAL_DEMO_PASSWORD', None)
@@ -310,6 +312,8 @@ def main():
     parser.add_argument('--user', required=True)
     parser.add_argument('--source-port', type=int, default=18086)
     parser.add_argument('--target-port', type=int, default=18087)
+    parser.add_argument('--evidence-dir', default='evidence/week-04/local-restore',
+                        help='Repository-relative destination under evidence/, default preserves the week-4 workflow')
     args = parser.parse_args()
     check = RestoreCheck(args)
     try:

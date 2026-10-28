@@ -186,6 +186,37 @@ class HandoverIntegrationTest {
         assertThat(service.get(h.id(),owner).recipients().stream().filter(r->r.userId().equals(recipient)).findFirst().orElseThrow().confirmedAt()).isEqualTo(confirmed.confirmedAt());
         assertThat(audits("HANDOVER_REVOKED")).isEqualTo(1);
     }
+    @Test void concurrentRevokePreservesConfirmedWorkflowAndWritesOneAudit() throws Exception {
+        var h=ready();service.confirm(h.id(),recipient,requestId);service.confirm(h.id(),recipient2,requestId);
+        var before=service.get(h.id(),owner);CyclicBarrier start=new CyclicBarrier(5);
+        try(var pool=Executors.newFixedThreadPool(5)) {
+            List<Future<Handover>> jobs=new ArrayList<>();
+            for(int i=0;i<5;i++)jobs.add(pool.submit(()->{await(start);return service.revoke(h.id(),owner,requestId);}));
+            for(var job:jobs){var result=job.get(20,TimeUnit.SECONDS);assertThat(result.status()).isEqualTo("CONFIRMED");assertThat(result.accessStatus()).isEqualTo("REVOKED");}
+        }
+        assertThat(service.get(h.id(),owner).recipients()).isEqualTo(before.recipients());
+        assertThat(audits("HANDOVER_REVOKED")).isEqualTo(1);assertThat(audits("HANDOVER_CONFIRMED")).isEqualTo(2);
+        code(()->service.download(h.id(),version,recipient),"HANDOVER_REVOKED");
+    }
+    @Test void failedRevokeAuditRollsBackAccessBeforeSuccessfulRetry() {
+        var h=ready();
+        assertThatThrownBy(()->service.revoke(h.id(),owner,"x".repeat(37))).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+        assertThat(service.get(h.id(),owner).accessStatus()).isEqualTo("ACTIVE");assertThat(audits("HANDOVER_REVOKED")).isZero();
+        assertThat(service.download(h.id(),version,recipient).versionId()).isEqualTo("v1+opaque/=");
+        service.revoke(h.id(),owner,requestId);code(()->service.download(h.id(),version,recipient),"HANDOVER_REVOKED");
+        assertThat(audits("HANDOVER_REVOKED")).isEqualTo(1);
+    }
+    @Test void revokeHttpAuditUsesAuthenticatedActorAndServerRequestId() throws Exception {
+        var h=ready();MockHttpSession session=login("owner");String supplied=UUID.randomUUID().toString();
+        var response=mvc.perform(post("/api/v1/handovers/"+h.id()+"/revoke").session(session).with(csrf()).header("X-Request-Id",supplied))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.accessStatus").value("REVOKED")).andReturn().getResponse();
+        String generated=response.getHeader("X-Request-Id");assertThat(generated).isNotEqualTo(supplied);assertThat(UUID.fromString(generated)).isNotNull();
+        var audit=jdbc.queryForMap("SELECT actor_id,target_id,request_id,created_at FROM audit_events WHERE project_id=? AND action='HANDOVER_REVOKED'",project);
+        assertThat(audit.get("actor_id")).isEqualTo(owner);assertThat(audit.get("target_id")).isEqualTo(h.id());assertThat(audit.get("request_id")).isEqualTo(generated);
+        assertThat(audit.get("created_at")).isNotNull();
+        mvc.perform(post("/api/v1/handovers/"+h.id()+"/revoke").session(login("stranger")).with(csrf())).andExpect(status().isNotFound());
+        assertThat(audits("HANDOVER_REVOKED")).isEqualTo(1);
+    }
     @Test void concurrentPublishAndConfirmRemainIdempotent() throws Exception {
         var h=draft();CyclicBarrier head=new CyclicBarrier(4);storage.onHead=()->await(head);
         try(var pool=Executors.newFixedThreadPool(4)) {

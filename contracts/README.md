@@ -29,4 +29,4 @@ Login là form-urlencoded với email/password (password do người dùng nhậ
 
 Validation: từ `backend`, chạy `mvnw verify`; parser resolve toàn bộ OpenAPI không lỗi, validate các JSON API examples theo schema chuyển từ OpenAPI và validate schema Lambda thành công/lỗi cùng các ca phản ví dụ. Đây là kiểm tra contract/schema, không phải test S3 hoặc UI thật.
 
-Bằng chứng hiện tại: `../evidence/week-03/backend/README.md`; hướng dẫn cho Dũng: `../docs/week-03/huong-dan-cho-dung.md`. Bằng chứng tuần 2 là lịch sử. Các snapshot Phase 1 ngày 22/10 là lịch sử. Chưa có xác nhận Nam/Đăng/Chiến; xem `../docs/week-02/team-integration-questions.md`.
+Bằng chứng chốt hiện tại: `../evidence/week-05/backend/README.md`; hướng dẫn bàn giao: `../docs/week-05/final-handover.md`. Bằng chứng tuần 2–4 là lịch sử. Các snapshot Phase 1 ngày 22/10 là lịch sử. Chưa có xác nhận Nam/Đăng/Chiến; xem `../docs/week-02/team-integration-questions.md`.

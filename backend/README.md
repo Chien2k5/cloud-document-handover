@@ -4,6 +4,12 @@ Backend của Dũng: một ứng dụng Spring Boot 3.5.16, Maven Wrapper 3.9.12
 
 Cập nhật tuần 2 phase 1: Project JSON không ép số/boolean thành string, explicit null bị 400 (description bỏ qua vẫn thành chuỗi rỗng); Content-Type sai trả 415, Accept không hỗ trợ trả 406. Account disabled/xóa bị 401 ACCOUNT_DISABLED và hủy session ở request tiếp theo; DB lookup account lỗi trả 503 AUTH_UNAVAILABLE, không cấp quyền mặc định. Không có migration mới hoặc admin UI. Xem [quyết định upload/version và review gates](../docs/week-02/phase-01-upload-contract.md).
 
+## Bản chốt tuần 5
+
+Đọc [hướng dẫn bàn giao](../docs/week-05/final-handover.md), [checklist C07](../docs/week-05/acceptance-checklist.md) và [evidence tuần 5](../evidence/week-05/backend/README.md) cho trạng thái hiện tại. Các số liệu tuần 1–4 phía dưới là lịch sử; test có thể tăng khi bổ sung coverage.
+
+Đóng gói từ repo root bằng `python backend/tools/build_handover_bundle.py` sau khi commit. Gói có manifest nguồn/commit/SHA, chỉ chứa tracked files được chọn, không runtime/JAR/secret. Khi chạy restore cho bản chốt, thêm `--evidence-dir evidence/week-05/local-restore`; mặc định script vẫn dùng đường dẫn tuần 4 để giữ tương thích lệnh cũ.
+
 ## Chuẩn bị PostgreSQL
 
 Cần JDK 21–25, kết nối Maven Central ở lần build đầu, PostgreSQL 17 (đã thử). Docker không bắt buộc. Không tạo/sửa DB đang có của người khác. Tạo role/database riêng bằng tài khoản PostgreSQL quản trị trong `psql`:
