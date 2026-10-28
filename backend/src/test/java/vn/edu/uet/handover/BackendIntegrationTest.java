@@ -5,9 +5,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.UUID;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -108,7 +108,74 @@ class BackendIntegrationTest {
         mvc.perform(put("/api/v1/projects/"+id+"/members/"+editor).session(a).with(csrf()).contentType("application/json").content("{\"role\":\"OWNER\"}"))
                 .andExpect(status().isBadRequest());
         mvc.perform(post("/api/v1/projects/"+id+"/files/uploads").session(a).with(csrf()).contentType("application/json").content("{}"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest());
+    }
+    @Test void projectJsonStringsAndNullsMatchContract() throws Exception {
+        MockHttpSession session=login("owner");
+        String[] invalid={
+            "{}", "{\"name\":null}", "{\"name\":123}", "{\"name\":1.5}",
+            "{\"name\":true}", "{\"name\":[]}", "{\"name\":{}}", "{\"name\":\"\"}",
+            "{\"name\":\" \"}", "{\"name\":\"valid\",\"description\":null}",
+            "{\"name\":\"valid\",\"description\":123}", "{\"name\":\"valid\",\"description\":1.5}",
+            "{\"name\":\"valid\",\"description\":false}", "{\"name\":\"valid\",\"description\":[]}",
+            "{\"name\":\"valid\",\"description\":{}}", "{\"name\":\"valid\",\"quotaBytes\":1}"
+        };
+        for (String body:invalid) {
+            mvc.perform(post("/api/v1/projects").session(session).with(csrf()).contentType("application/json").content(body))
+                    .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                    .andExpect(jsonPath("$.requestId").isNotEmpty());
+        }
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM projects",Integer.class)).isZero();
+        mvc.perform(post("/api/v1/projects").session(session).with(csrf()).contentType("application/json").content("{\"name\":\"omitted description\"}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.description").value(""));
+        mvc.perform(post("/api/v1/projects").session(session).with(csrf()).contentType("application/json").content("{\"name\":\"description present\",\"description\":\"  text  \"}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.description").value("text"));
+    }
+    @Test void unsupportedMediaTypeIsAClientError() throws Exception {
+        MockHttpSession session=login("owner");
+        for (String type:new String[]{"text/plain","application/x-www-form-urlencoded"}) {
+            mvc.perform(post("/api/v1/projects").session(session).with(csrf()).contentType(type).content("name=invalid"))
+                    .andExpect(status().isUnsupportedMediaType()).andExpect(jsonPath("$.code").value("UNSUPPORTED_MEDIA_TYPE"))
+                    .andExpect(jsonPath("$.requestId").isNotEmpty());
+        }
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM projects",Integer.class)).isZero();
+        mvc.perform(get("/api/v1/auth/me").session(session).accept("text/plain"))
+                .andExpect(status().isNotAcceptable()).andExpect(jsonPath("$.code").value("NOT_ACCEPTABLE"));
+    }
+    @Test void disabledAccountLosesExistingReadAndWriteSessions() throws Exception {
+        MockHttpSession reader=login("owner"), writer=login("owner");
+        UUID id=project(reader);
+        jdbc.update("UPDATE app_users SET enabled=false WHERE id=?",owner);
+        mvc.perform(get("/api/v1/health").session(reader)).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/projects/"+id).session(reader))
+                .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("ACCOUNT_DISABLED"))
+                .andExpect(header().string("X-Content-Type-Options","nosniff"));
+        mvc.perform(post("/api/v1/projects").session(writer).with(csrf()).contentType("application/json").content("{\"name\":\"must not exist\"}"))
+                .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("ACCOUNT_DISABLED"));
+        assertThat(reader.isInvalid()).isTrue();
+        assertThat(writer.isInvalid()).isTrue();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM projects",Integer.class)).isEqualTo(1);
+        mvc.perform(post("/api/v1/auth/login").with(csrf()).param("email","owner@example.test").param("password",password))
+                .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
+        mvc.perform(get("/api/v1/auth/me")).andExpect(status().isUnauthorized());
+        jdbc.update("UPDATE app_users SET enabled=true WHERE id=?",owner);
+        mvc.perform(get("/api/v1/auth/me").session(login("owner"))).andExpect(status().isOk());
+    }
+    @Test void strictProjectDeserializerDoesNotChangeOtherStringsOrFormLogin() throws Exception {
+        assertThat(json.readValue("123",String.class)).isEqualTo("123");
+        assertThat(json.readValue("{\"role\":\"VIEWER\"}",vn.edu.uet.handover.project.ProjectDtos.SetMember.class).role()).isEqualTo("VIEWER");
+        assertThatThrownBy(() -> json.readValue("{\"name\":123}",vn.edu.uet.handover.project.ProjectDtos.CreateProject.class))
+                .isInstanceOf(MismatchedInputException.class);
+        mvc.perform(get("/api/v1/auth/me").session(login("owner"))).andExpect(status().isOk());
+    }
+    @Test void disabledSessionCanGetPublicCsrfAndLogoutNormally() throws Exception {
+        MockHttpSession session=login("owner");
+        jdbc.update("UPDATE app_users SET enabled=false WHERE id=?",owner);
+        mvc.perform(get("/api/v1/auth/csrf").session(session)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty()).andExpect(jsonPath("$.id").doesNotExist());
+        mvc.perform(post("/api/v1/auth/logout").session(session).with(csrf())).andExpect(status().isNoContent());
+        assertThat(session.isInvalid()).isTrue();
+        mvc.perform(get("/api/v1/auth/me")).andExpect(status().isUnauthorized());
     }
     @Test void databaseConstraintsProtectVersionAndCrossProjectReferences() throws Exception {
         UUID a=project(login("owner")), b=project(login("outsider"));

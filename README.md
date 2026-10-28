@@ -1,6 +1,10 @@
-# Backend tuần 1 trên nhánh dung
+# Backend tuần 2 trên nhánh dung
 
-Phần triển khai hiện tại dùng **Spring Boot, PostgreSQL, Flyway** theo báo cáo tiến độ và kế hoạch 5 tuần mới do Dũng cung cấp. Phần S3/Lambda/bàn giao đang ở mức hợp đồng API, chưa tích hợp AWS.
+Phần triển khai hiện tại dùng **Spring Boot, PostgreSQL, Flyway** theo báo cáo tiến độ và kế hoạch 5 tuần. Đã có auth/Project/Membership và nghiệp vụ upload: session, quota, complete, list/download, đối soát checksum qua StoragePort. Adapter S3/Lambda thật và môi trường AWS chưa được cung cấp; phần bàn giao tuần 3 vẫn là hợp đồng API.
+
+Cập nhật ngày 28/10/2026: [báo cáo backend tuần 2](docs/week-02/backend-completion.md), [câu hỏi gửi Đăng/Chiến/Nam](docs/week-02/team-integration-questions.md). Các báo cáo Phase 1 ngày 22/10 là snapshot lịch sử, không đại diện trạng thái triển khai mới.
+
+Khi chưa có adapter thật, ứng dụng trả 503 STORAGE_UNAVAILABLE, không cấp URL giả. Storage fixture chỉ nằm trong test. Chưa nghiệm thu upload S3, conditional PUT, Lambda, IAM/CORS hoặc browser AWS. Xem [hợp đồng adapter để Đăng review](contracts/s3-adapter-contract.md) và [bằng chứng tuần 2](evidence/week-02/backend/README.md).
 
 - [Chạy và kiểm thử backend](backend/README.md)
 - [Bàn giao tuần 1 và các điểm cần nhóm review](docs/week-01/README.md)

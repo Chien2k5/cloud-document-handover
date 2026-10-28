@@ -1,5 +1,7 @@
 # Hợp đồng upload checksum quota và bàn giao
 
+**Cập nhật 22/10/2026:** Đây là bản thiết kế tuần 1 được giữ để đối chiếu. Khi triển khai tuần 2, dùng [thiết kế phase 1](../week-02/phase-01-upload-contract.md) cho optional fileId, quota/PUT lặp, complete/expiry và integrity retry. Không coi các đề xuất AWS dưới đây là đã được nhóm duyệt.
+
 Phần này là quyết định thiết kế của nhánh tuần 1 để Nam/Đăng review. Chưa có S3 adapter, Lambda, polling đối soát hoặc service bàn giao đang chạy. Không có endpoint stub trả thành công cho các thao tác chưa triển khai.
 
 ## Upload và quota

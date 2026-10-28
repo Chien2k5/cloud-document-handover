@@ -34,6 +34,7 @@ class ContractTest {
         Map<String,String> cases=new LinkedHashMap<>();
         cases.put("project-create.request.json","CreateProject"); cases.put("project-create.response.json","Project");
         cases.put("upload-init.request.json","UploadRequest"); cases.put("upload-init.response.json","UploadCreated");
+        cases.put("upload-new-version.request.json","UploadRequest");
         cases.put("upload-complete.request.json","CompleteUpload");
         cases.put("upload-complete.response.json","UploadState"); cases.put("upload-verified.response.json","UploadState");
         cases.put("upload-mismatch.response.json","UploadState"); cases.put("handover-create.request.json","CreateHandover");
@@ -59,6 +60,32 @@ class ContractTest {
         bad.remove("versionId"); assertThat(validator.validate(bad)).isNotEmpty();
         bad.put("versionId","null"); assertThat(validator.validate(bad)).isNotEmpty();
         bad.put("versionId","v1"); bad.putNull("actualSha256"); assertThat(validator.validate(bad)).isNotEmpty();
+    }
+    @Test void phaseOneSchemasRejectInvalidTypesNullsAndVersions() throws Exception {
+        var project=schema("CreateProject");
+        for (String body:new String[]{"{\"name\":123}","{\"name\":true}","{\"name\":null}","{\"name\":\"x\",\"description\":null}"}) {
+            assertThat(project.validate(json.readTree(body))).as(body).isNotEmpty();
+        }
+        assertThat(project.validate(json.readTree("{\"name\":\"valid\"}"))).isEmpty();
+        var upload=schema("UploadRequest");
+        ObjectNode request=(ObjectNode)json.readTree(contracts.resolve("examples/upload-new-version.request.json").toFile());
+        assertThat(upload.validate(request)).isEmpty();
+        request.putNull("fileId"); assertThat(upload.validate(request)).isNotEmpty();
+        request.remove("fileId"); assertThat(upload.validate(request)).isEmpty();
+        request.put("role","OWNER"); assertThat(upload.validate(request)).isNotEmpty();
+        var complete=schema("CompleteUpload");
+        for (String body:new String[]{"{\"versionId\":\"null\"}","{\"versionId\":\" \"}","{\"versionId\":null}","{\"versionId\":123}","{\"versionId\":\"v1\",\"integrityStatus\":\"VERIFIED\"}"}) {
+            assertThat(complete.validate(json.readTree(body))).as(body).isNotEmpty();
+        }
+        assertThat(complete.validate(json.readTree("{\"versionId\":\"opaque+version/v1=\"}"))).isEmpty();
+    }
+    com.networknt.schema.JsonSchema schema(String name) throws Exception {
+        JsonNode api=new ObjectMapper(new YAMLFactory()).readTree(contracts.resolve("openapi.yaml").toFile());
+        ObjectNode definitions=json.createObjectNode();
+        api.at("/components/schemas").fields().forEachRemaining(e -> definitions.set(e.getKey(),convert(e.getValue())));
+        ObjectNode schema=((ObjectNode)definitions.get(name)).deepCopy();
+        schema.set("definitions",definitions);
+        return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7).getSchema(schema);
     }
     private JsonNode convert(JsonNode source) {
         if (source.isArray()) {

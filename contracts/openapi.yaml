@@ -1,8 +1,8 @@
 "openapi": "3.0.3"
 "info":
   "title": "Group 5 Document Handover API"
-  "version": "0.1.0"
-  "description": "Week 1 integration draft by Dung. Implemented operations are tagged explicitly. S3/Lambda/handover operations are CONTRACT ONLY and require Dang/Nam review. Session-cookie auth; same-origin React proxy recommended. UTC timestamps. Errors use code/message/requestId. See docs/week-01 for policy and source precedence."
+  "version": "0.3.0-week2-backend"
+  "description": "Week 2 backend: auth, projects, upload sessions, quota, complete, integrity reconciliation, list and download are implemented. StoragePort has no real AWS adapter in this branch: unconfigured storage returns 503. Tests use a test-only fake plus real PostgreSQL; AWS integration is NOT RUN. Handover remains CONTRACT ONLY. Nam/Dang/Chien approval and AWS POC are NOT recorded. Session-cookie auth with CSRF; UTC timestamps. See docs/week-02/phase-01-upload-contract.md for decisions, review gates, state transitions and compatibility."
 "servers":
   -
     "url": "http://localhost:8080"
@@ -37,6 +37,8 @@
             "application/json":
               "schema":
                 "$ref": "#/components/schemas/Error"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "security": []
   "/api/v1/auth/csrf":
     "get":
@@ -45,7 +47,7 @@
       "tags":
         - "Implemented week 1"
       "x-implementation-status": "implemented"
-      "description": "Implemented and covered by PostgreSQL integration tests."
+      "description": "Public masked CSRF token endpoint, including with disabled or expired prior sessions. No enabled-account lookup here. Keep the same cookie jar and fetch a fresh token after login/logout or session expiry. Protected endpoints still reject disabled accounts."
       "responses":
         "200":
           "description": "Success"
@@ -53,6 +55,8 @@
             "application/json":
               "schema":
                 "$ref": "#/components/schemas/Csrf"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "security": []
   "/api/v1/auth/login":
     "post":
@@ -95,7 +99,7 @@
       "tags":
         - "Implemented week 1"
       "x-implementation-status": "implemented"
-      "description": "Implemented and covered by PostgreSQL integration tests."
+      "description": "Implemented. Re-check account enabled status from PostgreSQL on every request before protected handlers. Disabled/deleted accounts receive 401 ACCOUNT_DISABLED and session invalidation. Database lookup failure receives 503 AUTH_UNAVAILABLE, never permission by fallback."
       "responses":
         "200":
           "description": "Success"
@@ -105,6 +109,10 @@
                 "$ref": "#/components/schemas/User"
         "401":
           "$ref": "#/components/responses/Error401"
+        "503":
+          "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
   "/api/v1/auth/logout":
     "post":
       "operationId": "logout"
@@ -112,12 +120,13 @@
       "tags":
         - "Implemented week 1"
       "x-implementation-status": "implemented"
-      "description": "Implemented and covered by PostgreSQL integration tests."
+      "description": "Invalidate session and clear cookie; no enabled-account lookup, so disabled accounts can logout. Also allows anonymous logout with a valid CSRF token. Expired-session tokens receive 403; obtain a fresh public CSRF token and retry."
       "responses":
         "204":
           "description": "No content"
         "403":
           "$ref": "#/components/responses/Error403"
+      "security": []
       "parameters":
         -
           "name": "X-CSRF-TOKEN"
@@ -133,7 +142,7 @@
       "tags":
         - "Implemented week 1"
       "x-implementation-status": "implemented"
-      "description": "Owner is derived from authenticated principal. Quota is server configured. Request cannot set role, createdBy, projectId or quotaBytes."
+      "description": "Implemented: Owner derives from the enabled session principal; quota is server configured. name/description must be JSON strings; omitted description becomes empty string, explicit null is rejected. No client role, createdBy, projectId or quotaBytes. Unsupported media types return 415."
       "responses":
         "201":
           "description": "Success"
@@ -151,6 +160,12 @@
           "$ref": "#/components/responses/Error404"
         "409":
           "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
+        "415":
+          "$ref": "#/components/responses/Error415"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "requestBody":
         "required": true
         "content":
@@ -189,6 +204,10 @@
           "$ref": "#/components/responses/Error404"
         "409":
           "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "parameters":
         -
           "name": "page"
@@ -230,6 +249,10 @@
           "$ref": "#/components/responses/Error404"
         "409":
           "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "parameters":
         -
           "name": "id"
@@ -265,6 +288,10 @@
           "$ref": "#/components/responses/Error404"
         "409":
           "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "parameters":
         -
           "name": "id"
@@ -298,6 +325,12 @@
           "$ref": "#/components/responses/Error404"
         "409":
           "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
+        "415":
+          "$ref": "#/components/responses/Error415"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "requestBody":
         "required": true
         "content":
@@ -346,6 +379,10 @@
           "$ref": "#/components/responses/Error404"
         "409":
           "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "parameters":
         -
           "name": "id"
@@ -373,9 +410,9 @@
       "operationId": "initUpload"
       "summary": "Reserve quota and request a presigned PUT"
       "tags":
-        - "Contract only"
-      "x-implementation-status": "contract-only"
-      "description": "CONTRACT ONLY. Owner/Editor; atomic project lock reserves size. Server generates object key under uploads/. PUT Content-Type must match signed headers. Size limit 100 MiB is a proposed local MVP policy pending AWS measurement; frontend does not set role/key/bucket. A presigned PUT does not by itself enforce content length; complete must HEAD exact version. Initial PENDING + INTEGRITY_PENDING."
+        - "Implemented week 2"
+      "x-implementation-status": "implemented"
+      "description": "Implemented backend; real AWS adapter/integration pending. Owner/Editor; omit fileId for a new document, supply a project-owned fileId for a new version. Each init uses fresh uploadId/fileVersionId and server key uploads/{projectId}/{uploadId}. Same filename is not identity. Reserve requested size under project lock; reject over size/quota. Init retry is not idempotent and creates another reservation; client must not blindly retry. Return PENDING + INTEGRITY_PENDING. Write-once S3 PUT/physical storage accounting is an unresolved external review gate; no AWS integration approval is claimed."
       "responses":
         "201":
           "description": "Success"
@@ -395,6 +432,10 @@
           "$ref": "#/components/responses/Error409"
         "503":
           "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
+        "415":
+          "$ref": "#/components/responses/Error415"
       "requestBody":
         "required": true
         "content":
@@ -421,9 +462,9 @@
       "operationId": "completeUpload"
       "summary": "Validate the uploaded S3 version"
       "tags":
-        - "Contract only"
-      "x-implementation-status": "contract-only"
-      "description": "CONTRACT ONLY. Owner/Editor and initiating user; verify project/upload association and reserved quota; HEAD exact server-owned bucket/key + claimed version, size and content type. Reject absent/delete marker/null version or different metadata. Set AVAILABLE, keep INTEGRITY_PENDING. Repeated complete of same version is safe; different version is 409. Never mark VERIFIED from client hash, ETag or complete alone. Commit quota reservation to used once."
+        - "Implemented week 2"
+      "x-implementation-status": "implemented"
+      "description": "Implemented backend; real AWS adapter/integration pending. Initiating user must still be Owner/Editor. Lock project then upload/version; if already AVAILABLE, same version returns the persisted state (including integrity), even after session expiry, with no HEAD/reset/quota transfer; different version is 409 UPLOAD_ALREADY_COMPLETED. For PENDING, expiry is checked before completion: expired -> EXPIRED, release quota once, 409 UPLOAD_EXPIRED. HEAD exact server-owned bucket/key + claimed version; missing object -> 409 OBJECT_NOT_READY, keep reservation until expiry; storage error -> 503; wrong size/type -> FAILED, release once, 409 UPLOAD_OBJECT_INVALID. Re-check PENDING/expiry after HEAD under the same lock order before commit. Only successful HEAD sets AVAILABLE and moves reserved to used once; integrity remains INTEGRITY_PENDING. Never trust client hash/status or ETag; no latest lookup."
       "responses":
         "200":
           "description": "Success"
@@ -443,6 +484,10 @@
           "$ref": "#/components/responses/Error409"
         "503":
           "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
+        "415":
+          "$ref": "#/components/responses/Error415"
       "requestBody":
         "required": true
         "content":
@@ -476,9 +521,9 @@
       "operationId": "uploadState"
       "summary": "Observe upload and independent integrity state"
       "tags":
-        - "Contract only"
-      "x-implementation-status": "contract-only"
-      "description": "CONTRACT ONLY. Membership required. Backend reads results JSON from S3, matches bucket/key/version/size and compares actual vs stored expected SHA-256. Missing result stays INTEGRITY_PENDING; invalid/error JSON is FAILED, never VERIFIED. Poll boundedly (e.g. 2 seconds, max 30 attempts) then allow manual refresh."
+        - "Implemented week 2"
+      "x-implementation-status": "implemented"
+      "description": "Implemented backend; real AWS adapter/integration pending. Current project membership required. Reconcile only AVAILABLE versions. Match checksum schema and exact bucket/key/version/size against stored identity and compare actual vs stored expected SHA-256. Missing JSON keeps INTEGRITY_PENDING; malformed/mismatched/FAILED result sets integrity FAILED, never VERIFIED. FAILED may re-read on a later bounded poll; VERIFIED/MISMATCH are terminal for this immutable version. Concurrent polls use conditional update and never downgrade a valid terminal result. No client-supplied actual hash or VERIFIED status; suggested UI polling bounds require Nam review."
       "responses":
         "200":
           "description": "Success"
@@ -496,6 +541,8 @@
           "$ref": "#/components/responses/Error404"
         "503":
           "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "parameters":
         -
           "name": "id"
@@ -516,9 +563,9 @@
       "operationId": "listFiles"
       "summary": "List file versions visible in this project"
       "tags":
-        - "Contract only"
-      "x-implementation-status": "contract-only"
-      "description": "Design only; no runtime controller. Pending Nam/Dang review. Do not call this a completed integration."
+        - "Implemented week 2"
+      "x-implementation-status": "implemented"
+      "description": "Implemented backend; real AWS adapter/integration pending. Return project-scoped FileVersion records with fileId as logical document ID, one item per version, ordered by created_at then id. Same filename can belong to different fileIds. No filename lookup or latest substitution. Existing page/size shape is retained; exact UI display review pending."
       "responses":
         "200":
           "description": "Success"
@@ -536,6 +583,10 @@
           "$ref": "#/components/responses/Error404"
         "409":
           "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "parameters":
         -
           "name": "id"
@@ -564,9 +615,9 @@
       "operationId": "downloadFile"
       "summary": "Issue a short lived URL for an exact version"
       "tags":
-        - "Contract only"
-      "x-implementation-status": "contract-only"
-      "description": "CONTRACT ONLY. Membership on file version project; AVAILABLE + VERIFIED and object retrievable. GET URL pins versionId; proposed TTL <= 300 seconds. Presigned URLs must not be logged."
+        - "Implemented week 2"
+      "x-implementation-status": "implemented"
+      "description": "Implemented backend; real AWS adapter/integration pending. Check enabled session and current membership on the version project; require AVAILABLE + VERIFIED and exact object retrievable. Issue URL for server-owned bucket/key/version, never latest. TTL <= 300 seconds is proposed pending Dang/Chien measurement. Do not log URLs."
       "responses":
         "200":
           "description": "Success"
@@ -586,6 +637,8 @@
           "$ref": "#/components/responses/Error409"
         "503":
           "$ref": "#/components/responses/Error503"
+        "406":
+          "$ref": "#/components/responses/Error406"
       "parameters":
         -
           "name": "id"
@@ -608,7 +661,7 @@
       "tags":
         - "Contract only"
       "x-implementation-status": "contract-only"
-      "description": "Design only; no runtime controller. Pending Nam/Dang review. Do not call this a completed integration."
+      "description": "CONTRACT ONLY. Owner creates DRAFT from project-owned AVAILABLE versions (fixed non-null S3 identities) and existing recipient accounts. Integrity may be pending in DRAFT, but publish requires VERIFIED + retrievable. No filename/latest lookup or manifest changes after READY. No handover service is implemented in phase 1."
       "responses":
         "201":
           "description": "Success"
@@ -626,6 +679,10 @@
           "$ref": "#/components/responses/Error404"
         "409":
           "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
+        "415":
+          "$ref": "#/components/responses/Error415"
       "requestBody":
         "required": true
         "content":
@@ -672,6 +729,8 @@
           "$ref": "#/components/responses/Error404"
         "409":
           "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
       "parameters":
         -
           "name": "handoverId"
@@ -729,7 +788,7 @@
       "tags":
         - "Contract only"
       "x-implementation-status": "contract-only"
-      "description": "CONTRACT ONLY. Actor is the session principal and must be an ACTIVE named recipient; READY/CONFIRMED, future expiresAt, handover ACTIVE required. Idempotently record own confirmedAt + audit; client cannot supply actor/time. CONFIRMED means all active named recipients confirmed. No body."
+      "description": "CONTRACT ONLY. Session actor must be an ACTIVE named recipient; package READY/CONFIRMED, future expiry and ACTIVE access required. Record own confirmedAt idempotently with server actor/time and audit. Response Confirmation.status means this recipient confirmed; aggregate Handover.status becomes CONFIRMED only when every ACTIVE named recipient confirms. Recipient UI policy requires Nam review."
       "responses":
         "200":
           "description": "Success"
@@ -747,6 +806,8 @@
           "$ref": "#/components/responses/Error404"
         "409":
           "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
       "parameters":
         -
           "name": "handoverId"
@@ -829,6 +890,8 @@
           "$ref": "#/components/responses/Error404"
         "409":
           "$ref": "#/components/responses/Error409"
+        "503":
+          "$ref": "#/components/responses/Error503"
       "parameters":
         -
           "name": "handoverId"
@@ -932,6 +995,8 @@
         "description":
           "type": "string"
           "maxLength": 2000
+          "default": ""
+      "description": "name is a nonblank JSON string. description may be omitted (defaults to empty string), but explicit null, numbers, booleans, arrays and objects are rejected. Unknown fields are rejected."
     "Project":
       "type": "object"
       "additionalProperties": false
@@ -1049,6 +1114,11 @@
           "pattern": "^[0-9a-f]{64}$"
           "minLength": 64
           "maxLength": 64
+        "fileId":
+          "type": "string"
+          "format": "uuid"
+          "description": "Optional existing FileMetadata ID. Omit to create a new logical document. If present, it must belong to the path project and filename must equal its current metadata filename (no rename operation). Never identify an existing document by filename. Explicit null is invalid. Backend design; Nam/Dang review pending."
+      "description": "Each init creates a new UploadSession and FileVersion, including when fileId is supplied. Same filename without fileId creates a distinct logical document. Init is not idempotent; after an ambiguous timeout a retry may reserve a second session until expiry. See phase-01 contract before integration."
     "PresignedUpload":
       "type": "object"
       "additionalProperties": false
@@ -1069,6 +1139,7 @@
           "type": "object"
           "additionalProperties":
             "type": "string"
+          "description": "Client must send every returned signed header exactly. Content-Type is required. Backend requires If-None-Match: * in the adapter signing response and fails closed without it. Actual signed conditional PUT, policy and CORS remain subject to Dang/Chien AWS POC; no single-use or physical byte quota guarantee is claimed."
         "expiresAt":
           "type": "string"
           "format": "date-time"
@@ -1121,7 +1192,11 @@
         "versionId":
           "type": "string"
           "minLength": 1
-          "description": "Exact x-amz-version-id from S3 PUT; backend verifies it with HEAD, never trusts client claim. Literal null is rejected."
+          "description": "Exact opaque x-amz-version-id from S3 PUT. Must contain a non-whitespace character and cannot be literal null. Do not trim, decode again, normalize or substitute latest. Backend HEADs the server-owned bucket/key at this exact ID."
+          "not":
+            "enum":
+              - "null"
+          "pattern": "\\S"
     "FileVersion":
       "type": "object"
       "additionalProperties": false
@@ -1169,6 +1244,7 @@
           "$ref": "#/components/schemas/UploadStatus"
         "integrityStatus":
           "$ref": "#/components/schemas/IntegrityStatus"
+      "description": "Identity bucket/objectKey/S3 Version ID is server-owned. After AVAILABLE it is immutable; a new version is a new row. AVAILABLE only means exact object was checked, not VERIFIED. actualSha256 is populated only by backend reconciliation of the matching Lambda result."
     "UploadState":
       "type": "object"
       "additionalProperties": false
@@ -1271,6 +1347,7 @@
           "pattern": "^[0-9a-f]{64}$"
           "minLength": 64
           "maxLength": 64
+      "description": "Draft selection is limited to AVAILABLE versions with a fixed S3 identity; integrity may still be pending. Publish additionally requires VERIFIED and retrievable. Drafts cannot select a PENDING version with null versionId. Contract only; recipient/UI review pending."
     "HandoverRecipient":
       "type": "object"
       "additionalProperties": false
@@ -1356,6 +1433,7 @@
           "type": "string"
           "enum":
             - "CONFIRMED"
+          "description": "Status of this recipient acknowledgement, not the aggregate package. Fetch Handover.status to see whether all active named recipients have confirmed."
   "responses":
     "Error400":
       "description": "Invalid payload, UUID, pagination or unknown fields"
@@ -1368,7 +1446,7 @@
             "message": "Invalid payload, UUID, pagination or unknown fields"
             "requestId": "10000000-0000-0000-0000-000000000099"
     "Error401":
-      "description": "Missing or expired login session"
+      "description": "Missing/expired session (UNAUTHENTICATED), invalid login (INVALID_CREDENTIALS), or disabled/deleted account (ACCOUNT_DISABLED; session invalidated)."
       "content":
         "application/json":
           "schema":
@@ -1408,7 +1486,7 @@
             "message": "Conflicting state, version, size, quota or immutable owner"
             "requestId": "10000000-0000-0000-0000-000000000099"
     "Error503":
-      "description": "Storage dependency unavailable; no fabricated success"
+      "description": "Dependency unavailable: AUTH_UNAVAILABLE for account lookup, DB_UNAVAILABLE for readiness, STORAGE_UNAVAILABLE for storage operations. No protected operation runs on failed account lookup."
       "content":
         "application/json":
           "schema":
@@ -1417,3 +1495,28 @@
             "code": "STORAGE_UNAVAILABLE"
             "message": "Storage dependency unavailable; no fabricated success"
             "requestId": "10000000-0000-0000-0000-000000000099"
+    "Error415":
+      "description": "Unsupported Content-Type; JSON business requests require application/json"
+      "content":
+        "application/json":
+          "schema":
+            "$ref": "#/components/schemas/Error"
+          "example":
+            "code": "UNSUPPORTED_MEDIA_TYPE"
+            "message": "Unsupported Content-Type; JSON business requests require application/json"
+            "requestId": "10000000-0000-0000-0000-000000000099"
+    "Error406":
+      "description": "Requested response media type is not supported; API error envelope is JSON"
+      "content":
+        "application/json":
+          "schema":
+            "$ref": "#/components/schemas/Error"
+          "example":
+            "code": "NOT_ACCEPTABLE"
+            "message": "Requested response media type is not supported; API error envelope is JSON"
+            "requestId": "10000000-0000-0000-0000-000000000099"
+"x-review-status":
+  "backend": "Backend upload service implemented; real PostgreSQL plus test-only fake; AWS adapter and team review pending"
+  "nam": "Pending API/UI and retry flow review; no approval claimed"
+  "dang": "Pending adapter, checksum and conditional PUT POC; no approval claimed"
+  "chien": "Pending bucket policy/CORS/IAM/limits/cleanup review; no approval claimed"

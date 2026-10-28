@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-22",
+  "branch": "dung",
+  "head": "ef79ee3e0019e63b030fd5c405e2ac15ef5252b9",
+  "candidateFiles": 41,
+  "modifiedTracked": 12,
+  "newCandidates": 29,
+  "excludedExistingDocsTv3": [
+    "docs/tv3/Ke_hoach_TV3_backend_5_tuan.docx",
+    "docs/tv3/Tai_lieu_thiet_ke_backend_TV3_da_dinh_dang.docx",
+    "docs/tv3/ke-hoach-tv3-5-tuan.md",
+    "docs/tv3/so-do/ERD_C01_portal.drawio",
+    "docs/tv3/so-do/ERD_C01_portal.png",
+    "docs/tv3/so-do/ERD_C01_portal.svg"
+  ],
+  "expandedWorkingTreePaths": 47,
+  "stagedFiles": 0,
+  "gitDiffCheck": "PASS",
+  "migrationDiff": [],
+  "originDungStillAtHead": true,
+  "ignoredPathsChecked": [
+    "runtime-data/build_contract.py",
+    "runtime-data/update_phase1_contract.py",
+    "runtime-data/finalize_phase1_evidence.py",
+    "runtime-data/audit-week1-20261022",
+    "backend/target"
+  ],
+  "strictDeserializerAnnotationLocations": [
+    "backend/src/main/java/vn/edu/uet/handover/project/ProjectDtos.java",
+    "backend/src/main/java/vn/edu/uet/handover/project/ProjectDtos.java"
+  ],
+  "openApiOperations": {
+    "implemented": 11,
+    "contract-only": 11
+  },
+  "secretScan": {
+    "filesRead": 41,
+    "patterns": [
+      "aws_access_key",
+      "private_key",
+      "github_token",
+      "jwt",
+      "live_signed_url",
+      "embedded_db_password",
+      "literal_aws_secret"
+    ],
+    "findings": [],
+    "limitation": "Pattern scan plus manual diff/file review; not a guarantee against every secret format"
+  },
+  "runtimeArtifactsInCandidates": false,
+  "awsIntegration": "NOT RUN",
+  "phase2BusinessImplementation": "NOT IMPLEMENTED"
+}

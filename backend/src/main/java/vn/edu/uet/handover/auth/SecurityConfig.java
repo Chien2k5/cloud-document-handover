@@ -10,17 +10,20 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.HeaderWriterFilter;
 import vn.edu.uet.handover.common.ApiError;
 import vn.edu.uet.handover.common.RequestIdFilter;
 
 @Configuration
 public class SecurityConfig {
     private final ObjectMapper json;
-    public SecurityConfig(ObjectMapper json) { this.json = json; }
+    private final UserRepository users;
+    public SecurityConfig(ObjectMapper json, UserRepository users) { this.json = json; this.users = users; }
     @Bean
     PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(12); }
     @Bean
     SecurityFilterChain security(HttpSecurity http) throws Exception {
+        http.addFilterAfter(new ActiveAccountFilter(users, json), HeaderWriterFilter.class);
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/health", "/api/v1/auth/csrf", "/api/v1/auth/login").permitAll()
                 .anyRequest().authenticated());

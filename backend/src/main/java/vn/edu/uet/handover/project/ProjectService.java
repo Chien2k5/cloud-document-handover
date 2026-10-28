@@ -30,7 +30,7 @@ public class ProjectService {
     @Transactional
     public ProjectView create(UUID actor, CreateProject input, String requestId) {
         UUID id=UUID.randomUUID();
-        projects.create(id,input.name().trim(),input.description()==null ? "" : input.description().trim(),actor,quota);
+        projects.create(id,input.name().trim(),input.description().trim(),actor,quota);
         projects.audit(id,actor,"PROJECT_CREATED",id,requestId);
         return get(id,actor);
     }

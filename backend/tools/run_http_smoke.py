@@ -113,6 +113,20 @@ def run():
             assert len(listing['items']) == 1
             for person,role in ((people[1],'EDITOR'),(people[2],'VIEWER')):
                 owner.request('PUT',f'/projects/{project}/members/'+person['id'],200,{'role':role},token=owner.csrf)
+            if os.environ.get('CHECK_WEEK2_UPLOAD') == 'true':
+                files = f'/projects/{project}/files'
+                upload = {'filename':'fixture.txt','contentType':'text/plain','size':10,'expectedSha256':'a'*64}
+                viewer.request('POST',files+'/uploads',403,upload,token=viewer.csrf)
+                outsider.request('POST',files+'/uploads',404,upload,token=outsider.csrf)
+                failure=owner.request('POST',files+'/uploads',503,upload,token=owner.csrf)
+                assert failure['code']=='STORAGE_UNAVAILABLE'
+                state=owner.request('GET','/projects/'+project,200)
+                assert state['reservedBytes']==0 and state['usedBytes']==0
+                versions=editor.request('GET',files,200)['items']
+                # With UPLOAD_BUCKET set the unavailable signer must compensate the reservation.
+                assert len(versions)==1 and versions[0]['uploadStatus']=='FAILED'
+                owner.request('GET',files+'/'+versions[0]['id']+'/download',409)
+                outsider.request('GET',files,404)
             for client in (editor,viewer):
                 client.request('GET','/projects/'+project,200)
                 client.request('PUT',f'/projects/{project}/members/'+people[3]['id'],403,{'role':'EDITOR'},token=client.csrf)
@@ -121,11 +135,12 @@ def run():
             owner.request('POST','/projects',403,{'name':'No CSRF'})
             owner.request('DELETE',f'/projects/{project}/members/'+people[2]['id'],204,token=owner.csrf)
             viewer.request('GET','/projects/'+project,404)
-            owner.request('POST',f'/projects/{project}/files/uploads',404,{},token=owner.csrf)
+            owner.request('POST',f'/projects/{project}/files/uploads',400,{},token=owner.csrf)
             owner.request('POST','/auth/logout',204,token=owner.csrf)
             owner.request('GET','/auth/me',401)
             print(json.dumps({'status':'PASS','httpChecks':sum(c.checks for c in (owner,editor,viewer,outsider)),
-                              'sessionIdRotation':True,'staleCsrfRejected':True,'secretsRetained':False}))
+                              'sessionIdRotation':True,'staleCsrfRejected':True,'secretsRetained':False,
+                              'storageUnavailableChecks':os.environ.get('CHECK_WEEK2_UPLOAD')=='true'}))
     finally:
         if process is not None and process.poll() is None:
             process.terminate()

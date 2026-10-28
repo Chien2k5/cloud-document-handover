@@ -1,0 +1,5 @@
+2026-10-22T13:28:16.744+07:00  INFO 33896 --- [document-handover] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": << Empty Schema >>
+2026-10-22T13:28:16.758+07:00  INFO 33896 --- [document-handover] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "1 - initial schema"
+2026-10-22T13:28:16.834+07:00  INFO 33896 --- [document-handover] [           main] o.f.core.internal.command.DbMigrate      : Successfully applied 1 migration to schema "public", now at version v1 (execution time 00:00.061s)
+2026-10-22T13:28:17.395+07:00  INFO 33896 --- [document-handover] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 18082 (http) with context path '/'
+2026-10-22T13:28:17.401+07:00  INFO 33896 --- [document-handover] [           main] v.edu.uet.handover.HandoverApplication   : Started HandoverApplication in 2.812 seconds (process running for 3.19)

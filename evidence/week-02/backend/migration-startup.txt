@@ -1,0 +1,5 @@
+2026-10-28T23:51:36.057+07:00  INFO 44896 --- [document-handover] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 1 migration (execution time 00:00.029s)
+2026-10-28T23:51:36.197+07:00  INFO 44896 --- [document-handover] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": << Empty Schema >>
+2026-10-28T23:51:36.222+07:00  INFO 44896 --- [document-handover] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "1 - initial schema"
+2026-10-28T23:51:36.405+07:00  INFO 44896 --- [document-handover] [           main] o.f.core.internal.command.DbMigrate      : Successfully applied 1 migration to schema "public", now at version v1 (execution time 00:00.170s)
+2026-10-28T23:51:37.487+07:00  INFO 44896 --- [document-handover] [           main] v.edu.uet.handover.HandoverApplication   : Started HandoverApplication in 5.489 seconds (process running for 6.104)

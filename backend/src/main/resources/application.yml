@@ -26,3 +26,7 @@ server:
         same-site: lax
 app:
   project-quota-bytes: ${PROJECT_QUOTA_BYTES:1073741824}
+  upload:
+    bucket: ${UPLOAD_BUCKET:}
+    ttl-seconds: ${UPLOAD_TTL_SECONDS:300}
+    expiry-delay-ms: ${UPLOAD_EXPIRY_DELAY_MS:30000}
