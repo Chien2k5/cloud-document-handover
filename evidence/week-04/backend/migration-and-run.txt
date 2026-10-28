@@ -1,0 +1,9 @@
+2026-10-29T01:03:58.571+07:00  INFO 46968 --- [document-handover] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 1 migration (execution time 00:00.017s)
+2026-10-29T01:03:58.677+07:00  INFO 46968 --- [document-handover] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": << Empty Schema >>
+2026-10-29T01:03:58.698+07:00  INFO 46968 --- [document-handover] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "1 - initial schema"
+2026-10-29T01:03:58.838+07:00  INFO 46968 --- [document-handover] [           main] o.f.core.internal.command.DbMigrate      : Successfully applied 1 migration to schema "public", now at version v1 (execution time 00:00.127s)
+2026-10-29T01:04:08.930+07:00  INFO 46968 --- [document-handover] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 1 migration (execution time 00:00.011s)
+2026-10-29T01:04:09.399+07:00  INFO 46968 --- [document-handover] [           main] v.e.u.handover.HandoverIntegrationTest   : Started HandoverIntegrationTest in 1.283 seconds (process running for 16.437)
+2026-10-29T01:04:18.638+07:00  INFO 46968 --- [document-handover] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 1 migration (execution time 00:00.006s)
+[INFO] Tests run: 48, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Finished at: 2026-10-29T01:04:30+07:00

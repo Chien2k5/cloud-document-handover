@@ -212,6 +212,56 @@ class HandoverIntegrationTest {
         storage.insecure=false;storage.onGet=()->service.revoke(h.id(),owner,requestId);
         code(()->service.download(h.id(),version,recipient),"HANDOVER_REVOKED");assertThat(service.get(h.id(),owner).accessStatus()).isEqualTo("REVOKED");
     }
+    @Test void httpForeignHandoverAndFileIdsCannotReadOrMutateAnotherProject() throws Exception {
+        var own=ready();UUID foreignVersion=version(other,UUID.randomUUID(),"foreign","VERIFIED");
+        var foreign=service.create(other,stranger,input(List.of(foreignVersion),List.of(stranger)),requestId);
+        service.publish(foreign.id(),stranger,requestId);MockHttpSession session=login("owner");
+        int published=audits("HANDOVER_PUBLISHED"),confirmed=audits("HANDOVER_CONFIRMED"),revoked=audits("HANDOVER_REVOKED");
+        String base="/api/v1/handovers/"+foreign.id();
+        mvc.perform(get(base).session(session)).andExpect(status().isNotFound());
+        mvc.perform(get(base+"/items/"+foreignVersion+"/download").session(session)).andExpect(status().isNotFound());
+        for(String action:List.of("publish","confirm","revoke"))
+            mvc.perform(post(base+"/"+action).session(session).with(csrf())).andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/handovers/"+own.id()+"/items/"+foreignVersion+"/download").session(session)).andExpect(status().isNotFound());
+        mvc.perform(post("/api/v1/projects/"+project+"/handovers").session(session).with(csrf()).contentType("application/json")
+                .content(json.writeValueAsString(input(List.of(foreignVersion),List.of(recipient))))).andExpect(status().isNotFound());
+        assertThat(service.get(foreign.id(),stranger).status()).isEqualTo("READY");
+        assertThat(service.get(foreign.id(),stranger).accessStatus()).isEqualTo("ACTIVE");
+        assertThat(audits("HANDOVER_PUBLISHED")).isEqualTo(published);assertThat(audits("HANDOVER_CONFIRMED")).isEqualTo(confirmed);assertThat(audits("HANDOVER_REVOKED")).isEqualTo(revoked);
+    }
+    @Test void failedConfirmationAuditRollsBackAcknowledgementAndAggregateStatus() {
+        var h=ready();service.confirm(h.id(),recipient,requestId);
+        assertThatThrownBy(()->service.confirm(h.id(),recipient2,"x".repeat(37))).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+        var after=service.get(h.id(),owner);assertThat(after.status()).isEqualTo("READY");
+        assertThat(after.recipients().stream().filter(r->r.userId().equals(recipient2)).findFirst().orElseThrow().confirmedAt()).isNull();
+        assertThat(audits("HANDOVER_CONFIRMED")).isEqualTo(1);
+        service.confirm(h.id(),recipient2,requestId);assertThat(service.get(h.id(),owner).status()).isEqualTo("CONFIRMED");assertThat(audits("HANDOVER_CONFIRMED")).isEqualTo(2);
+    }
+    @Test void multiItemPublicationIsAtomicWhenOneHeadIsMissing() {
+        UUID second=version(project,UUID.randomUUID(),"second","VERIFIED");
+        var ref=repository.version(project,second).orElseThrow().ref();VersionHead missing=storage.heads.remove(ref);
+        var h=service.create(project,owner,input(List.of(version,second),List.of(recipient)),requestId);
+        code(()->service.publish(h.id(),owner,requestId),"OBJECT_NOT_READY");
+        assertThat(service.get(h.id(),owner).status()).isEqualTo("DRAFT");assertThat(audits("HANDOVER_PUBLISHED")).isZero();
+        assertThat(jdbc.queryForObject("SELECT published_at IS NULL FROM handovers WHERE id=?",Boolean.class,h.id())).isTrue();
+        storage.heads.put(ref,missing);assertThat(service.publish(h.id(),owner,requestId).items()).hasSize(2);assertThat(audits("HANDOVER_PUBLISHED")).isEqualTo(1);
+    }
+    @Test void individualRecipientRevocationDuringSigningBlocksTheResponse() {
+        var h=ready();storage.onGet=()->jdbc.update("UPDATE handover_recipients SET access_status='REVOKED' WHERE handover_id=? AND user_id=?",h.id(),recipient);
+        code(()->service.download(h.id(),version,recipient),"HANDOVER_NOT_FOUND");
+        assertThat(service.get(h.id(),owner).accessStatus()).isEqualTo("ACTIVE");
+        code(()->service.get(h.id(),recipient),"HANDOVER_NOT_FOUND");
+    }
+    @Test void expiryDuringSigningPreventsReturningAnExpiredUrl() {
+        var h=ready();storage.onGet=()->clock.advance(120);
+        code(()->service.download(h.id(),version,recipient),"HANDOVER_EXPIRED");
+        assertThat(service.get(h.id(),owner).status()).isEqualTo("READY");assertThat(audits("HANDOVER_CONFIRMED")).isZero();
+    }
+    @Test void ownerDemotionDuringHeadPreventsPublication() {
+        var h=draft();storage.onHead=()->jdbc.update("UPDATE memberships SET role='EDITOR' WHERE project_id=? AND user_id=?",project,owner);
+        code(()->service.publish(h.id(),owner,requestId),"OWNER_REQUIRED");
+        assertThat(repository.header(h.id()).orElseThrow().status()).isEqualTo("DRAFT");assertThat(audits("HANDOVER_PUBLISHED")).isZero();
+    }
     @Test void httpRejectsForgedFieldsBadTypesNoBodyCsrfAndDisabledSession() throws Exception {
         MockHttpSession session=login("owner");String path="/api/v1/projects/"+project+"/handovers";String valid=json.writeValueAsString(input(List.of(version),List.of(recipient)));
         for(String bad:List.of("{}",valid.replace("\"title\":\"Goi ban giao\"","\"title\":12"),valid.replace("\"title\":\"Goi ban giao\"","\"title\":null"),

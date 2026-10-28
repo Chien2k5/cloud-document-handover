@@ -1,4 +1,6 @@
-# Backend tuần 3 trên nhánh dung
+# Backend tuần 4 trên nhánh dung
+
+Cập nhật 29/10/2026: [báo cáo tuần 4 độc lập](docs/week-04/report.md), [ma trận C06](docs/week-04/c06-test-matrix.md), [runbook backup/restore local](docs/week-04/local-restore-runbook.md). Đã kiểm thử 48/48 JUnit và phục hồi PostgreSQL local với 11 bảng khớp, 51 HTTP request checks; G4 AWS chung còn chờ nhóm.
 
 Phần triển khai hiện tại dùng **Spring Boot, PostgreSQL, Flyway** theo báo cáo tiến độ và kế hoạch 5 tuần. Đã có auth/Project/Membership, upload/quota/checksum và nghiệp vụ bàn giao DRAFT → READY → CONFIRMED, download đúng phiên bản, thu hồi cơ bản. StoragePort chưa có adapter S3/Lambda thật hoặc môi trường AWS được xác nhận.
 

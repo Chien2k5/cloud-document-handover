@@ -108,6 +108,10 @@ Publish cũng không nhận body. Tạo gói cần title, fileVersionIds/recipie
 
 ## Build và test
 
+Tuần 4: bộ hồi quy hiện có 48 JUnit khi RUN_DB_TESTS=true, gồm 7 ca C06 mới. [Ma trận](../docs/week-04/c06-test-matrix.md) ánh xạ yêu cầu/ca lỗi tới test; [bằng chứng](../evidence/week-04/backend/README.md) ghi lần chạy hiện tại. Các kết quả tuần 2/3 bên dưới là lịch sử.
+
+Backup/restore local chạy bằng `python tools/run_local_restore_check.py --pg-bin '<thu muc PostgreSQL bin>' --host 127.0.0.1 --port 5432 --user <role local co CREATEDB>`, dùng PGPASSWORD trong môi trường. Script tự tạo hai DB mới, khởi động JAR, dump/restore và đối chiếu dữ liệu/API; không cần AWS. Đọc [runbook](../docs/week-04/local-restore-runbook.md) trước khi chạy. Archive/raw log chỉ ở runtime-data bị ignore, evidence ở evidence/week-04/local-restore. Không chạy công cụ này như backup production hoặc đưa archive có password hashes vào Git.
+
 ```powershell
 .\mvnw.cmd -B -ntp verify
 ```

@@ -169,6 +169,9 @@ class UploadIntegrationTest {
         UploadCreated u=init();complete(u,"v1");ObjectRef ref=object(u,"v1");
         String valid=new String(result(ref,sha),StandardCharsets.UTF_8);
         for(String bad:List.of("{}","null",valid.replace("\"versionId\":\"v1\"","\"versionId\":\"v2\""),
+                valid.replace("\"bucket\":\"fixture-bucket\"","\"bucket\":\"wrong-bucket\""),
+                valid.replace(ref.objectKey(),"uploads/wrong-key"),
+                valid.replace(clock.instant().toString(),"not-a-timestamp"),
                 valid.replace("\"size\":10","\"size\":11"),valid.replace("\"schemaVersion\":1","\"schemaVersion\":4294967297"),
                 valid.replace("\"status\":\"SUCCEEDED\"","\"status\":\"FAILED\""),valid+"{}",
                 valid.replace("\"schemaVersion\":1","\"schemaVersion\":1,\"schemaVersion\":1")," ".repeat(65537))) {
@@ -305,6 +308,20 @@ class UploadIntegrationTest {
             http(client,"POST","/api/v1/auth/logout","","application/x-www-form-urlencoded",csrf,204);
             http(client,"GET",base(),null,null,null,401);
         }
+    }
+    @Test void httpCrossProjectUploadAndFileIdsAreHiddenWithoutStateChanges() throws Exception {
+        UploadCreated u=init();MockHttpSession otherSession=login("outsider"),session=login("owner");
+        String foreign="/api/v1/projects/"+other+"/files";
+        mvc.perform(get(foreign+"/uploads/"+u.uploadId()).session(otherSession)).andExpect(status().isNotFound());
+        mvc.perform(post(foreign+"/uploads/"+u.uploadId()+"/complete").session(otherSession).with(csrf()).contentType("application/json").content("{\"versionId\":\"v1\"}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(get(foreign+"/"+u.fileVersionId()+"/download").session(otherSession)).andExpect(status().isNotFound());
+        mvc.perform(post(foreign+"/uploads").session(otherSession).with(csrf()).contentType("application/json").content(json.writeValueAsString(request(10,u.fileId()))))
+                .andExpect(status().isNotFound());
+        mvc.perform(get(foreign).session(session)).andExpect(status().isNotFound());
+        assertThat(repository.session(project,u.uploadId()).orElseThrow().version().uploadStatus()).isEqualTo("PENDING");counters(0,10);
+        assertThat(projects.get(other,outsider).reservedBytes()).isZero();assertThat(projects.get(other,outsider).usedBytes()).isZero();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM upload_sessions",Integer.class)).isEqualTo(1);
     }
     JsonNode http(java.net.http.HttpClient client,String method,String path,String body,String type,String token,int expected) throws Exception {
         var b=java.net.http.HttpRequest.newBuilder(java.net.URI.create("http://127.0.0.1:"+serverPort+path)).timeout(Duration.ofSeconds(10));
