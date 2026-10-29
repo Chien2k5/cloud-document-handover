@@ -8,7 +8,8 @@
     "method": "PUT",
     "url": "https://storage.example.invalid/presigned-upload-placeholder",
     "headers": {
-      "Content-Type": "text/plain"
+      "Content-Type": "text/plain",
+      "If-None-Match": "*"
     },
     "expiresAt": "2026-10-15T15:05:00Z"
   }

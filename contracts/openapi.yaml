@@ -2,7 +2,7 @@
 "info":
   "title": "Group 5 Document Handover API"
   "version": "0.4.0-week3-backend"
-  "description": "Week 2 backend: auth, projects, upload sessions, quota, complete, integrity reconciliation, list and download are implemented. StoragePort has no real AWS adapter in this branch: unconfigured storage returns 503. Tests use a test-only fake plus real PostgreSQL; AWS integration is NOT RUN. Handover create/read/publish/confirm/download/revoke are implemented with PostgreSQL and test-only storage fixtures. AWS handover integration is NOT RUN. Nam/Dang/Chien approval and AWS POC are NOT recorded. Session-cookie auth with CSRF; UTC timestamps. See docs/week-02/phase-01-upload-contract.md for decisions, review gates, state transitions and compatibility."
+  "description": "Week 2 backend: auth, projects, upload sessions, quota, complete, integrity reconciliation, list and download are implemented. StoragePort has no real AWS adapter in this branch: unconfigured storage returns 503. Tests use a test-only fake plus real PostgreSQL; AWS integration is NOT RUN. Handover create/read/publish/confirm/download/revoke are implemented with PostgreSQL and test-only storage fixtures. AWS handover integration is NOT RUN. Nam agreed to the high-level upload flow in a user-supplied chat screenshot recorded on 2026-10-29; no full contract, detailed error/retry approval, Dang/Chien approval or AWS POC is recorded. Session-cookie auth with CSRF; UTC timestamps. See docs/week-02/phase-01-upload-contract.md for design history and docs/week-02/nam-upload-flow-review.md for current review scope."
 "servers":
   -
     "url": "http://localhost:8080"
@@ -1529,6 +1529,6 @@
             "requestId": "10000000-0000-0000-0000-000000000099"
 "x-review-status":
   "backend": "Backend upload and handover services implemented; PostgreSQL and test-only fake; AWS adapter and team review pending"
-  "nam": "Pending API/UI and retry flow review; no approval claimed"
+  "nam": "High-level upload flow agreed in user-supplied chat evidence recorded 2026-10-29; exact contract commit/schema, errors/retry/polling and UI integration remain unconfirmed. See evidence/week-01/nam-upload-flow-confirmation.md"
   "dang": "Pending adapter, checksum and conditional PUT POC; no approval claimed"
   "chien": "Pending bucket policy/CORS/IAM/limits/cleanup review; no approval claimed"

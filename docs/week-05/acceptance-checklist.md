@@ -8,7 +8,7 @@ Ngày 29/10/2026. PASS LOCAL là kết quả kiểm trên máy với PostgreSQL/
 | Thu hồi gói đã CONFIRMED đồng thời | PASS LOCAL | concurrentRevokePreservesConfirmedWorkflowAndWritesOneAudit: 5 request, 1 audit, timestamps giữ nguyên |
 | Lỗi audit rollback thu hồi | PASS LOCAL | failedRevokeAuditRollsBackAccessBeforeSuccessfulRetry |
 | Audit đúng actor/target/requestId/thời điểm server | PASS LOCAL | revokeHttpAuditUsesAuthenticatedActorAndServerRequestId; không tin X-Request-Id client |
-| C06 quyền, checksum, quota, phiên bản, race và rollback | PASS LOCAL | Ma trận tuần 4 và bộ 51 test chốt |
+| C06 quyền, checksum, quota, phiên bản, race và rollback | Bộ test hiện tại PASS LOCAL; chưa đủ chốt C06 theo PDF | Còn thiếu điều kiện VERIFIED ngay ở create-handover theo process2.pdf trang 8–9; test hiện cho phép unverified trong DRAFT. Cần sửa logic/contract/test riêng |
 | HTTP JAR, CSRF/login/logout/disabled/session expiry thật | PASS LOCAL | 48 smoke + 70 regression request checks; token/cookie/password không giữ trong evidence |
 | Backup/restore DB local bản chốt | PASS LOCAL | run-status.json PASS/complete; 11 bảng/hash, 18 FK và 51 HTTP checks |
 | README/config/OpenAPI/hướng dẫn chạy | Đã rà soát | README bỏ hướng dẫn Nextcloud cũ gây nhầm; backend/.env.example và root tên biến upload đồng bộ |
@@ -19,7 +19,7 @@ Ngày 29/10/2026. PASS LOCAL là kết quả kiểm trên máy với PostgreSQL/
 
 | Mục | Trạng thái | Người xử lý/đầu vào cần có |
 | --- | --- | --- |
-| Review OpenAPI/StoragePort và retry UX | Chưa có phê duyệt được ghi nhận | Nam/Đăng xác nhận commit, signatures, states, signed headers và error mapping |
+| Review OpenAPI/StoragePort và retry UX | Nam đồng ý luồng upload tổng thể; review chi tiết còn mở | [Minh chứng 29/10](../../evidence/week-01/nam-upload-flow-confirmation.md); Nam chưa chỉ định commit/schema, error/retry/polling; Đăng/Chiến chưa xác nhận |
 | S3 adapter/Lambda thật, checksum đúng Version ID | NOT RUN | Đăng gửi nhánh/commit và hướng dẫn; JSON/result-key/schema parity, event lặp/trễ/timeout |
 | Beanstalk/HTTPS/IAM/DB/private bucket/CORS | NOT RUN | Chiến cung cấp môi trường, region/bucket, runbook và log; không đưa secret vào Git |
 | Tài khoản người dùng/người nhận trên môi trường chung | Chưa được xác nhận | Nhóm chốt provisioning tài khoản enabled; backend chưa có registration/invitation, không bật local demo seed trên AWS |

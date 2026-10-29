@@ -2,6 +2,8 @@
 
 Ngày 28/10/2026. Chưa có xác nhận từ các thành viên. Đây là nội dung để Dũng gửi; công cụ không tự gửi tin nhắn.
 
+Cập nhật 29/10/2026: [Nam đã phản hồi đồng ý luồng upload tổng thể](../../evidence/week-01/nam-upload-flow-confirmation.md). Câu mở đầu và danh sách dưới đây ghi bối cảnh ngày 28/10; những mục chưa được xác nhận chi tiết vẫn còn mở. Xem [đối chiếu source, lỗi và retry](nam-upload-flow-review.md); chưa có xác nhận toàn bộ OpenAPI, Đăng/Chiến hoặc AWS E2E.
+
 ## Đăng — S3 adapter và Lambda
 
 Dũng đang hoàn thiện backend tuần 2. Bạn đã có S3 adapter cấp presigned PUT/GET, HEAD đúng Version ID và đọc JSON checksum chưa? Nếu có, gửi giúp tên nhánh/commit, vị trí mã và hướng dẫn tích hợp. Mình cần chốt:

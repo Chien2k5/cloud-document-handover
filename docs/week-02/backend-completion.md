@@ -2,6 +2,8 @@
 
 Ngày 28/10/2026, nhánh `dung`. GitHub trước cập nhật ở `ef79ee3` (tuần 1). Lần cập nhật này gồm các sửa Phase 1 đang có trên máy và phần UploadService mới; không sửa phần AWS, S3 adapter, Lambda hoặc frontend của thành viên khác.
 
+Bổ sung 29/10/2026: Nam đồng ý luồng upload tổng thể theo [minh chứng hội thoại](../../evidence/week-01/nam-upload-flow-confirmation.md). [Bản đối chiếu sau xác nhận](nam-upload-flow-review.md) ghi các field/path hiện tại và phần lỗi/retry còn cần review. Đây là cập nhật phối hợp, không đổi kết quả kiểm thử lịch sử hoặc tự nghiệm thu G2.
+
 ## Kết luận tiến độ
 
 Đã triển khai phần backend độc lập để ghép tuần 2: auth/quyền, UploadSession/FileVersion, quota, init/complete/state/list/download và đối soát checksum qua StoragePort. PostgreSQL, Spring Security và HTTP chạy thật; storage/JSON trong kiểm thử là fixture ở test source.

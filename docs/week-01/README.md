@@ -2,6 +2,8 @@
 
 Phần backend/database cho kế hoạch 5 tuần của Nhóm 5, INT3319. Đây là nền tảng local và bản hợp đồng để Nam/Đăng review; không phải biên bản nghiệm thu AWS hay xác nhận nhóm đã duyệt API.
 
+Cập nhật phối hợp 29/10/2026: Nam đã đồng ý luồng upload tổng thể trong ảnh Dũng cung cấp. Đây là bổ sung cho C01; chưa phải duyệt toàn bộ OpenAPI/mã lỗi/retry hoặc nghiệm thu tích hợp. Xem [minh chứng](../../evidence/week-01/nam-upload-flow-confirmation.md) và [đối chiếu hiện tại](../week-02/nam-upload-flow-review.md). Các đầu ra/giới hạn tuần 1 dưới đây giữ bối cảnh lịch sử của lần bàn giao ban đầu.
+
 ## Căn cứ và cách xử lý tài liệu khác nhau
 
 - Đã đọc toàn bộ báo cáo `BAO_CAO_TIEN_DO_DU_AN.pdf` (14 trang) và `KE_HOACH_5_TUAN_NHOM_5_BAN_DE_DOC.docx` do Dũng cung cấp. Báo cáo thiết kế Spring Boot/PostgreSQL/React/S3/Lambda; kế hoạch mới rút lịch 8 tuần xuống 5 tuần và ưu tiên tuần 1: DB/migration, API/quyền/trạng thái, khung auth/project.
