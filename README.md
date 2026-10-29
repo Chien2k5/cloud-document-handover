@@ -36,6 +36,8 @@ Từ `backend`, chạy `mvnw.cmd -B -ntp verify`. Mặc định integration suit
 
 Đăng cung cấp bean [StoragePort](backend/src/main/java/vn/edu/uet/handover/upload/StoragePort.java) và Lambda theo [hợp đồng adapter](contracts/s3-adapter-contract.md); Nam ghép [OpenAPI](contracts/openapi.yaml); Chiến phụ trách môi trường/triển khai AWS. Ngày 29/10/2026, [Nam đã đồng ý luồng upload tổng thể](evidence/week-01/nam-upload-flow-confirmation.md). [Đối chiếu luồng và phần còn mở](docs/week-02/nam-upload-flow-review.md) ghi rõ review API/mã lỗi/retry chi tiết và xác nhận Đăng/Chiến còn thiếu; G2–G5 Cloud chưa được nghiệm thu.
 
+Đăng đã gửi bản POC Python/boto3 ngày 29/10; xem [phân tích adapter và thứ tự tích hợp](docs/week-02/dang-s3-adapter-review.md). POC chưa tương thích trực tiếp StoragePort/JSON checksum và chưa có bean AWS thật trong ứng dụng. Review offline đã thực hiện, AWS/browser vẫn chưa được kiểm chứng trong lần này.
+
 Đọc [câu hỏi phối hợp](docs/week-03/huong-dan-cho-dung.md) và [các mục còn cần nhóm](docs/week-05/acceptance-checklist.md). Không sửa trực tiếp hoặc copy đè phần của thành viên khác; [PRINCIPLE.MD](PRINCIPLE.MD) giữ quy tắc review/merge và TV1 triển khai. Những chỗ trong quy tắc còn nhắc Nextcloud cần nhóm đồng bộ với kế hoạch S3 mới.
 
 ## Đóng gói phần Dũng

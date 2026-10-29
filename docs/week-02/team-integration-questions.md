@@ -6,6 +6,8 @@ Cập nhật 29/10/2026: [Nam đã phản hồi đồng ý luồng upload tổng
 
 ## Đăng — S3 adapter và Lambda
 
+Cập nhật 29/10: đã nhận s3_adapter.py, test_adapter.py và README_S3_ADAPTER.md. [Bảng đối chiếu và hướng ghép](dang-s3-adapter-review.md) thay câu hỏi “đã có code chưa” bằng các điểm cụ thể: Java StoragePort, signed PUT headers, HEAD exact version, schema/result key và source/log Lambda. Chưa có xác nhận các điểm này đã thống nhất.
+
 Dũng đang hoàn thiện backend tuần 2. Bạn đã có S3 adapter cấp presigned PUT/GET, HEAD đúng Version ID và đọc JSON checksum chưa? Nếu có, gửi giúp tên nhánh/commit, vị trí mã và hướng dẫn tích hợp. Mình cần chốt:
 
 - Bốn operation của `backend/.../upload/StoragePort.java`, cách đăng ký bean và timeout hữu hạn.

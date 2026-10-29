@@ -19,8 +19,8 @@ Ngày 29/10/2026. PASS LOCAL là kết quả kiểm trên máy với PostgreSQL/
 
 | Mục | Trạng thái | Người xử lý/đầu vào cần có |
 | --- | --- | --- |
-| Review OpenAPI/StoragePort và retry UX | Nam đồng ý luồng upload tổng thể; review chi tiết còn mở | [Minh chứng 29/10](../../evidence/week-01/nam-upload-flow-confirmation.md); Nam chưa chỉ định commit/schema, error/retry/polling; Đăng/Chiến chưa xác nhận |
-| S3 adapter/Lambda thật, checksum đúng Version ID | NOT RUN | Đăng gửi nhánh/commit và hướng dẫn; JSON/result-key/schema parity, event lặp/trễ/timeout |
+| Review OpenAPI/StoragePort và retry UX | Nam đồng ý luồng upload tổng thể; Đăng gửi POC, review chi tiết còn mở | [Nam](../../evidence/week-01/nam-upload-flow-confirmation.md), [review Đăng](../week-02/dang-s3-adapter-review.md); chưa duyệt commit/schema/error/retry chung, Chiến chưa xác nhận |
+| S3 adapter/Lambda thật, checksum đúng Version ID | Đã nhận POC Python; Java/Lambda/AWS integration NOT RUN | [Khác biệt và hướng ghép](../week-02/dang-s3-adapter-review.md): Java port, HEAD exact version, signed headers, JSON/result key; cần source Lambda/commit/log thật |
 | Beanstalk/HTTPS/IAM/DB/private bucket/CORS | NOT RUN | Chiến cung cấp môi trường, region/bucket, runbook và log; không đưa secret vào Git |
 | Tài khoản người dùng/người nhận trên môi trường chung | Chưa được xác nhận | Nhóm chốt provisioning tài khoản enabled; backend chưa có registration/invitation, không bật local demo seed trên AWS |
 | Upload → VERIFIED → READY → CONFIRMED trên browser | NOT RUN | Nam ghép UI, Dũng/Đăng/Chiến hỗ trợ; lưu commit, thời điểm và PASS/FAIL |

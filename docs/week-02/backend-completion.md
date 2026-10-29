@@ -4,6 +4,8 @@ Ngày 28/10/2026, nhánh `dung`. GitHub trước cập nhật ở `ef79ee3` (tu�
 
 Bổ sung 29/10/2026: Nam đồng ý luồng upload tổng thể theo [minh chứng hội thoại](../../evidence/week-01/nam-upload-flow-confirmation.md). [Bản đối chiếu sau xác nhận](nam-upload-flow-review.md) ghi các field/path hiện tại và phần lỗi/retry còn cần review. Đây là cập nhật phối hợp, không đổi kết quả kiểm thử lịch sử hoặc tự nghiệm thu G2.
 
+Bổ sung từ Đăng cùng ngày: đã nhận POC Python PUT/GET/checksum và [lập bảng khác biệt, thứ tự tích hợp](dang-s3-adapter-review.md). Chưa có adapter Java hoạt động trong Spring Boot; cấu hình fallback vẫn trả 503. Các nhận xét “chưa nhận adapter” bên dưới thuộc thời điểm báo cáo cũ; trạng thái hiện tại là đã nhận POC nhưng chưa ghép/kiểm AWS.
+
 ## Kết luận tiến độ
 
 Đã triển khai phần backend độc lập để ghép tuần 2: auth/quyền, UploadSession/FileVersion, quota, init/complete/state/list/download và đối soát checksum qua StoragePort. PostgreSQL, Spring Security và HTTP chạy thật; storage/JSON trong kiểm thử là fixture ở test source.

@@ -1,5 +1,7 @@
 # Đề xuất hợp đồng S3 adapter cho tuần 2
 
+**Cập nhật 29/10/2026:** Dũng đã nhận ba tệp Python/README từ Đăng và [đối chiếu với StoragePort](../docs/week-02/dang-s3-adapter-review.md). Có POC PUT/GET/checksum, nhưng chưa có bean Java, HEAD exact version, signed headers và checksum schema/result key tương thích. Việc gửi tệp chưa xác nhận Đăng duyệt hợp đồng bên dưới. [Evidence review offline](../evidence/week-02/dang-adapter-review/README.md) không thay lượt kiểm AWS; các gate AWS vẫn NOT RUN.
+
 **Cập nhật 28/10/2026:** Dũng đã viết `backend/src/main/java/vn/edu/uet/handover/upload/StoragePort.java` và UploadService sử dụng port. Đăng vẫn cần review và cung cấp adapter thật. Bản mô tả ngày 22/10 bên dưới là thiết kế gốc. Port hiện dùng Optional cho Missing; lỗi hạ tầng ném `StoragePort.Unavailable`; JSON bytes quá 64 KiB/hỏng/sai identity thành integrity FAILED. Chỉ hỗ trợ PUT yêu cầu signed If-None-Match: *, không có chế độ replayable. Không có AWS SDK, Lambda hay xác nhận của thành viên khác trong lần cập nhật này.
 
 Ngày 22/10/2026. Dũng đề xuất để Đăng review; **chưa được Đăng/Nam/Chiến xác nhận, chưa có interface hoặc adapter được viết trong task này**. Phạm vi MVP: single PUT, HEAD exact version, đọc kết quả checksum, presigned GET. Không multipart, recovery API, proxy upload, hàng đợi hoặc nghiệp vụ bàn giao.

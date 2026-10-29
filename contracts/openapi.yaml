@@ -1530,5 +1530,5 @@
 "x-review-status":
   "backend": "Backend upload and handover services implemented; PostgreSQL and test-only fake; AWS adapter and team review pending"
   "nam": "High-level upload flow agreed in user-supplied chat evidence recorded 2026-10-29; exact contract commit/schema, errors/retry/polling and UI integration remain unconfirmed. See evidence/week-01/nam-upload-flow-confirmation.md"
-  "dang": "Pending adapter, checksum and conditional PUT POC; no approval claimed"
+  "dang": "Python/boto3 POC files received and reviewed offline on 2026-10-29. Java StoragePort, exact-version HEAD, signed headers and checksum schema/result-key agreement remain pending; no AWS or full-contract approval is inferred. See docs/week-02/dang-s3-adapter-review.md"
   "chien": "Pending bucket policy/CORS/IAM/limits/cleanup review; no approval claimed"
