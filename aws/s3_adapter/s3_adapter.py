@@ -1,6 +1,7 @@
 import boto3
 import hashlib
 import json
+import urllib.parse
 from botocore.config import Config
 
 BUCKET = "nhom5-document-storage-2026-dang"
@@ -99,7 +100,8 @@ def get_checksum_result(key, version_id):
     validate_version_id(version_id)
 
     key_hash = hashlib.sha256(key.encode("utf-8")).hexdigest()
-    result_key = f"results/{key_hash}/{version_id}.json"
+    encoded_version = urllib.parse.quote(version_id, safe="")
+    result_key = f"results/{key_hash}/{encoded_version}.json"
 
     response = s3.get_object(
         Bucket=BUCKET,
