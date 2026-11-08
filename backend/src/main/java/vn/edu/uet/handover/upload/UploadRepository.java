@@ -68,6 +68,6 @@ public class UploadRepository {
         return new Session(r.getObject("upload_id",UUID.class),r.getObject("project_id",UUID.class),r.getObject("initiated_by",UUID.class),
             r.getString("bucket"),r.getString("object_key"),r.getTimestamp("expires_at").toInstant(),
             new FileVersion(r.getObject("id",UUID.class),r.getObject("file_id",UUID.class),r.getString("filename"),r.getString("content_type"),r.getLong("size_bytes"),
-                r.getString("s3_version_id"),r.getString("expected_sha256"),r.getString("actual_sha256"),r.getString("upload_status"),r.getString("integrity_status")));
+                r.getString("s3_version_id"),r.getString("expected_sha256"),r.getString("actual_sha256"),r.getString("upload_status"),r.getString("integrity_status"),r.getObject("upload_id",UUID.class)));
     }
 }

@@ -1,6 +1,8 @@
 # Backend lưu trữ và bàn giao tài liệu
 
-Backend của Dũng: một ứng dụng Spring Boot 3.5.16, Maven Wrapper 3.9.12, PostgreSQL/Flyway, Spring Security session/CSRF, API Project/Membership, UploadService và HandoverService. Java target 21; kiểm thử bằng Java 25 và PostgreSQL 17. Chưa có S3 SDK adapter, Lambda hoặc frontend. StoragePort là ranh giới để Đăng tích hợp; mặc định trả 503 khi storage chưa sẵn sàng.
+Contract hiện hành: OpenAPI `0.5.0-backend-integration`. Xem [bàn giao tích hợp](../docs/backend-integration-2026-11-08.md) cho uploadId sau reload, điều kiện DRAFT, JSON Lambda và công việc Nam/Đăng. Các số liệu tuần 1–5 bên dưới là snapshot lịch sử.
+
+Backend của Dũng: một ứng dụng Spring Boot 3.5.16, Maven Wrapper 3.9.12, PostgreSQL/Flyway, Spring Security session/CSRF, API Project/Membership, UploadService và HandoverService. Java target 21; kiểm thử bằng Java 25 và PostgreSQL 17. Adapter AWS SDK triển khai StoragePort và mặc định tắt. Nhánh này chứa phần backend.
 
 Cập nhật tuần 2 phase 1: Project JSON không ép số/boolean thành string, explicit null bị 400 (description bỏ qua vẫn thành chuỗi rỗng); Content-Type sai trả 415, Accept không hỗ trợ trả 406. Account disabled/xóa bị 401 ACCOUNT_DISABLED và hủy session ở request tiếp theo; DB lookup account lỗi trả 503 AUTH_UNAVAILABLE, không cấp quyền mặc định. Không có migration mới hoặc admin UI. Xem [quyết định upload/version và review gates](../docs/week-02/phase-01-upload-contract.md).
 
@@ -90,12 +92,16 @@ Các API upload và handover đã triển khai. Caller ngoài project nhận 404
 | POST | /projects/{id}/files/uploads | Owner/Editor tạo session và giữ quota; cần storage signer thật để trả 201 |
 | POST | /projects/{id}/files/uploads/{uploadId}/complete | Người khởi tạo còn quyền ghi; HEAD đúng version trước AVAILABLE |
 | GET | /projects/{id}/files/uploads/{uploadId} | Thành viên xem trạng thái; đối soát checksum của version AVAILABLE |
-| GET | /projects/{id}/files | Một item mỗi version; page/size, thứ tự created_at/id |
+| GET | /projects/{id}/files | Một item mỗi version, gồm uploadId bền vững để polling sau reload; page/size, thứ tự created_at/id |
 | GET | /projects/{id}/files/{fileVersionId}/download | AVAILABLE + VERIFIED, kiểm HEAD rồi ký GET đúng version |
 
 `UPLOAD_BUCKET` không có giá trị mặc định; chưa cấu hình trả 503. `UPLOAD_TTL_SECONDS` mặc định 300, chỉ cho 1..300; `UPLOAD_EXPIRY_DELAY_MS` mặc định 30000. Init không idempotent; fileId bỏ qua tạo tài liệu mới, có fileId thêm version và giữ filename. Quota logic tính used của mọi version đã hoàn tất + reserved của PENDING. Expiry scheduler giới hạn 20 project x 100 session/lượt, cùng khóa project với init/complete. V1 được giữ nguyên; không có migration mới.
 
-Đăng cung cấp bean `StoragePort` theo `../contracts/s3-adapter-contract.md`; nhánh này không chứa AWS SDK implementation. Signer PUT phải trả signed Content-Type và If-None-Match: *, URL HTTPS và hạn không vượt session; backend không tự chứng minh AWS đã enforce header. HEAD/GET luôn nhận exact bucket/key/versionId, không latest. Đọc checksum giới hạn 64 KiB và timeout hữu hạn ở adapter; schema/identity được backend kiểm lại. Không đưa fake vào profile local/AWS. Hướng dẫn và câu hỏi phối hợp ở `../docs/week-02/team-integration-questions.md`.
+## Kết nối S3
+
+Đặt `UPLOAD_S3_ENABLED=true`, `UPLOAD_BUCKET` và `AWS_REGION` để bật adapter. SDK dùng chuỗi thông tin xác thực mặc định. Bucket cần bật Versioning, role backend cần quyền ký PUT, đọc đúng phiên bản từ `uploads/` và đọc kết quả dưới `results/`. Kiểm quyền thực tế để phân biệt kết quả chưa xuất hiện với lỗi IAM. Với trình duyệt, CORS cần cho phép PUT cùng `Content-Type`, `If-None-Match` và expose `x-amz-version-id` cho origin ứng dụng.
+
+Adapter ký hai header PUT, HEAD/GET theo đúng Version ID và giới hạn đọc checksum ở 64 KiB. Backend kiểm lại schema, identity, size và hash. Lambda phải ghi [checksum schema v1](../contracts/checksum-result.schema.json) theo [quy tắc result key](../contracts/s3-adapter-contract.md#checksum-identity-và-result-key). PR #2 dùng đường dẫn và payload riêng. Chờ đồng bộ Lambda trước khi bật adapter cho luồng tích hợp.
 
 ## API bàn giao tuần 3
 
@@ -103,7 +109,7 @@ Tuần 3 có thêm:
 
 | Method | Endpoint dưới `/api/v1` | Ý nghĩa |
 | --- | --- | --- |
-| POST | /projects/{id}/handovers | Owner tạo DRAFT với phiên bản AVAILABLE và người nhận hiện có |
+| POST | /projects/{id}/handovers | Owner tạo DRAFT chỉ với phiên bản AVAILABLE + VERIFIED và người nhận enabled hiện có |
 | GET | /handovers/{handoverId} | Owner xem lịch sử; người nhận xem gói phát hành còn quyền |
 | POST | /handovers/{handoverId}/publish | Owner phát hành, chỉ AVAILABLE + VERIFIED và exact HEAD hợp lệ |
 | POST | /handovers/{handoverId}/confirm | Người nhận xác nhận chính mình; không body |

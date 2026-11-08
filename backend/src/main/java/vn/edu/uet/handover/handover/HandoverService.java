@@ -44,6 +44,7 @@ public class HandoverService {
             for(UUID id:input.fileVersionIds()) {
                 Version v=handovers.version(project,id).orElseThrow(()->error(404,"FILE_NOT_FOUND"));
                 if(!available(v)) throw error(409,"FILE_NOT_AVAILABLE");
+                if(!"VERIFIED".equals(v.integrityStatus())) throw error(409,"FILE_NOT_VERIFIED");
             }
             for(UUID recipient:input.recipientUserIds()) if(!users.exists(recipient)) throw error(404,"USER_NOT_FOUND");
             UUID id=UUID.randomUUID();handovers.create(id,project,actor,input,now,expires);

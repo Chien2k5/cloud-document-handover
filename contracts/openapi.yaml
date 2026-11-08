@@ -1,8 +1,8 @@
 "openapi": "3.0.3"
 "info":
   "title": "Group 5 Document Handover API"
-  "version": "0.4.0-week3-backend"
-  "description": "Week 2 backend: auth, projects, upload sessions, quota, complete, integrity reconciliation, list and download are implemented. StoragePort has no real AWS adapter in this branch: unconfigured storage returns 503. Tests use a test-only fake plus real PostgreSQL; AWS integration is NOT RUN. Handover create/read/publish/confirm/download/revoke are implemented with PostgreSQL and test-only storage fixtures. AWS handover integration is NOT RUN. Nam agreed to the high-level upload flow in a user-supplied chat screenshot recorded on 2026-10-29; no full contract, detailed error/retry approval, Dang/Chien approval or AWS POC is recorded. Session-cookie auth with CSRF; UTC timestamps. See docs/week-02/phase-01-upload-contract.md for design history and docs/week-02/nam-upload-flow-review.md for current review scope."
+  "version": "0.5.0-backend-integration"
+  "description": "Backend auth, projects, upload, checksum reconciliation and handover are implemented. The local AWS SDK adapter is opt-in through UPLOAD_S3_ENABLED; AWS execution remains unverified. Every FileVersion response includes its persistent uploadId so an authorized project member can recover polling through the existing upload-state endpoint after reload. Draft creation requires AVAILABLE + VERIFIED; publishing rechecks integrity and exact object retrievability. PostgreSQL tests use a test-only storage fixture. API timestamps use UTC; authentication uses session cookies and CSRF. Lambda must write checksum schema v1 and the shared result key. Team integration approval is not implied."
 "servers":
   -
     "url": "http://localhost:8080"
@@ -412,7 +412,7 @@
       "tags":
         - "Implemented week 2"
       "x-implementation-status": "implemented"
-      "description": "Implemented backend; real AWS adapter/integration pending. Owner/Editor; omit fileId for a new document, supply a project-owned fileId for a new version. Each init uses fresh uploadId/fileVersionId and server key uploads/{projectId}/{uploadId}. Same filename is not identity. Reserve requested size under project lock; reject over size/quota. Init retry is not idempotent and creates another reservation; client must not blindly retry. Return PENDING + INTEGRITY_PENDING. Write-once S3 PUT/physical storage accounting is an unresolved external review gate; no AWS integration approval is claimed."
+      "description": "Implemented backend with an opt-in AWS SDK adapter; AWS integration unverified. Owner/Editor; omit fileId for a new document, supply a project-owned fileId for a new version. Each init uses fresh uploadId/fileVersionId and server key uploads/{projectId}/{uploadId}. Same filename is not identity. Reserve requested size under project lock; reject over size/quota. Init retry is not idempotent and creates another reservation; client must not blindly retry. Return PENDING + INTEGRITY_PENDING. Write-once S3 PUT/physical storage accounting is an unresolved external review gate; no AWS integration approval is claimed."
       "responses":
         "201":
           "description": "Success"
@@ -464,7 +464,7 @@
       "tags":
         - "Implemented week 2"
       "x-implementation-status": "implemented"
-      "description": "Implemented backend; real AWS adapter/integration pending. Initiating user must still be Owner/Editor. Lock project then upload/version; if already AVAILABLE, same version returns the persisted state (including integrity), even after session expiry, with no HEAD/reset/quota transfer; different version is 409 UPLOAD_ALREADY_COMPLETED. For PENDING, expiry is checked before completion: expired -> EXPIRED, release quota once, 409 UPLOAD_EXPIRED. HEAD exact server-owned bucket/key + claimed version; missing object -> 409 OBJECT_NOT_READY, keep reservation until expiry; storage error -> 503; wrong size/type -> FAILED, release once, 409 UPLOAD_OBJECT_INVALID. Re-check PENDING/expiry after HEAD under the same lock order before commit. Only successful HEAD sets AVAILABLE and moves reserved to used once; integrity remains INTEGRITY_PENDING. Never trust client hash/status or ETag; no latest lookup."
+      "description": "Implemented backend with an opt-in AWS SDK adapter; AWS integration unverified. Initiating user must still be Owner/Editor. Lock project then upload/version; if already AVAILABLE, same version returns the persisted state (including integrity), even after session expiry, with no HEAD/reset/quota transfer; different version is 409 UPLOAD_ALREADY_COMPLETED. For PENDING, expiry is checked before completion: expired -> EXPIRED, release quota once, 409 UPLOAD_EXPIRED. HEAD exact server-owned bucket/key + claimed version; missing object -> 409 OBJECT_NOT_READY, keep reservation until expiry; storage error -> 503; wrong size/type -> FAILED, release once, 409 UPLOAD_OBJECT_INVALID. Re-check PENDING/expiry after HEAD under the same lock order before commit. Only successful HEAD sets AVAILABLE and moves reserved to used once; integrity remains INTEGRITY_PENDING. Never trust client hash/status or ETag; no latest lookup."
       "responses":
         "200":
           "description": "Success"
@@ -523,7 +523,7 @@
       "tags":
         - "Implemented week 2"
       "x-implementation-status": "implemented"
-      "description": "Implemented backend; real AWS adapter/integration pending. Current project membership required. Reconcile only AVAILABLE versions. Match checksum schema and exact bucket/key/version/size against stored identity and compare actual vs stored expected SHA-256. Missing JSON keeps INTEGRITY_PENDING; malformed/mismatched/FAILED result sets integrity FAILED, never VERIFIED. FAILED may re-read on a later bounded poll; VERIFIED/MISMATCH are terminal for this immutable version. Concurrent polls use conditional update and never downgrade a valid terminal result. No client-supplied actual hash or VERIFIED status; suggested UI polling bounds require Nam review."
+      "description": "Implemented backend with an opt-in AWS SDK adapter; AWS integration unverified. Current project membership required. Reconcile only AVAILABLE versions. Match checksum schema and exact bucket/key/version/size against stored identity and compare actual vs stored expected SHA-256. Missing JSON keeps INTEGRITY_PENDING; malformed/mismatched/FAILED result sets integrity FAILED, never VERIFIED. FAILED may re-read on a later bounded poll; VERIFIED/MISMATCH are terminal for this immutable version. Concurrent polls use conditional update and never downgrade a valid terminal result. No client-supplied actual hash or VERIFIED status; suggested UI polling bounds require Nam review."
       "responses":
         "200":
           "description": "Success"
@@ -565,7 +565,7 @@
       "tags":
         - "Implemented week 2"
       "x-implementation-status": "implemented"
-      "description": "Implemented backend; real AWS adapter/integration pending. Return project-scoped FileVersion records with fileId as logical document ID, one item per version, ordered by created_at then id. Same filename can belong to different fileIds. No filename lookup or latest substitution. Existing page/size shape is retained; exact UI display review pending."
+      "description": "Implemented backend with an opt-in AWS SDK adapter; AWS integration unverified. Return project-scoped FileVersion records with fileId as logical document ID and persistent uploadId, one item per version, ordered by created_at then id. Recover polling after reload using GET /api/v1/projects/{id}/files/uploads/{uploadId} for AVAILABLE versions with INTEGRITY_PENDING or FAILED. List reads stored state and does not perform S3 I/O. PENDING uploads must not be completed by guessing latest or treating uploadId as an S3 Version ID. Same filename can belong to different fileIds. Page/size and current membership checks are retained; a session ID does not grant access."
       "responses":
         "200":
           "description": "Success"
@@ -617,7 +617,7 @@
       "tags":
         - "Implemented week 2"
       "x-implementation-status": "implemented"
-      "description": "Implemented backend; real AWS adapter/integration pending. Check enabled session and current membership on the version project; require AVAILABLE + VERIFIED and exact object retrievable. Issue URL for server-owned bucket/key/version, never latest. TTL <= 300 seconds is proposed pending Dang/Chien measurement. Do not log URLs."
+      "description": "Implemented backend with an opt-in AWS SDK adapter; AWS integration unverified. Check enabled session and current membership on the version project; require AVAILABLE + VERIFIED and exact object retrievable. Issue URL for server-owned bucket/key/version, never latest. TTL <= 300 seconds is proposed pending Dang/Chien measurement. Do not log URLs."
       "responses":
         "200":
           "description": "Success"
@@ -661,7 +661,7 @@
       "tags":
         - "Implemented week 3"
       "x-implementation-status": "implemented"
-      "description": "Implemented backend; AWS adapter and UI integration pending. Owner creates DRAFT from project-owned AVAILABLE versions (fixed non-null S3 identities) and existing recipient accounts. Integrity may be pending in DRAFT, but publish requires VERIFIED + retrievable. No filename/latest lookup or manifest changes after READY. Draft creation is transactional, rejects duplicate IDs, and requires enabled recipient accounts. No draft editing endpoint is provided."
+      "description": "Implemented backend with an opt-in AWS SDK adapter; team UI/AWS integration unverified. Owner creates DRAFT only from project-owned AVAILABLE + VERIFIED versions with fixed non-null S3 identities and existing enabled recipient accounts. Non-AVAILABLE versions return 409 FILE_NOT_AVAILABLE; pending, mismatched or failed integrity returns 409 FILE_NOT_VERIFIED with no partial package or creation audit. Creation checks stored metadata; publish rechecks VERIFIED and exact S3 retrievability outside database transactions before READY. No filename/latest lookup or manifest changes after READY. Draft creation is transactional, rejects duplicate IDs, and requires enabled recipient accounts. No draft editing endpoint is provided."
       "responses":
         "201":
           "description": "Success"
@@ -713,7 +713,7 @@
       "tags":
         - "Implemented week 3"
       "x-implementation-status": "implemented"
-      "description": "Implemented backend; AWS adapter and UI integration pending. Project Owner or named authenticated active recipient (inside/outside project). External recipient cannot list the whole project. Recipients can access only READY/CONFIRMED, unexpired, unrevoked packages."
+      "description": "Implemented backend with an opt-in AWS SDK adapter; team UI/AWS integration unverified. Project Owner or named authenticated active recipient (inside/outside project). External recipient cannot list the whole project. Recipients can access only READY/CONFIRMED, unexpired, unrevoked packages."
       "responses":
         "200":
           "description": "Success"
@@ -750,7 +750,7 @@
       "tags":
         - "Implemented week 3"
       "x-implementation-status": "implemented"
-      "description": "Implemented backend; AWS adapter and UI integration pending. Lock DRAFT; require nonempty items and recipients, future expiry, active access, every version belongs to project, AVAILABLE + VERIFIED and exact version still retrievable. Freeze manifest and recipients at READY. Repeat publish returns same manifest; source v2 never changes pinned v1. No request body; nonempty bodies are rejected with 400."
+      "description": "Implemented backend with an opt-in AWS SDK adapter; team UI/AWS integration unverified. Lock DRAFT; require nonempty items and recipients, future expiry, active access, every version belongs to project, AVAILABLE + VERIFIED and exact version still retrievable. Freeze manifest and recipients at READY. Repeat publish returns same manifest; source v2 never changes pinned v1. No request body; nonempty bodies are rejected with 400."
       "responses":
         "200":
           "description": "Success"
@@ -794,7 +794,7 @@
       "tags":
         - "Implemented week 3"
       "x-implementation-status": "implemented"
-      "description": "Implemented backend; AWS adapter and UI integration pending. Session actor must be an ACTIVE named recipient; package READY/CONFIRMED, future expiry and ACTIVE access required. Record own confirmedAt idempotently with server actor/time and audit. Response Confirmation.status means this recipient confirmed; aggregate Handover.status becomes CONFIRMED only when every ACTIVE named recipient confirms. Recipient UI policy requires Nam review."
+      "description": "Implemented backend with an opt-in AWS SDK adapter; team UI/AWS integration unverified. Session actor must be an ACTIVE named recipient; package READY/CONFIRMED, future expiry and ACTIVE access required. Record own confirmedAt idempotently with server actor/time and audit. Response Confirmation.status means this recipient confirmed; aggregate Handover.status becomes CONFIRMED only when every ACTIVE named recipient confirms. Recipient UI policy requires Nam review."
       "responses":
         "200":
           "description": "Success"
@@ -838,7 +838,7 @@
       "tags":
         - "Implemented week 3"
       "x-implementation-status": "implemented"
-      "description": "Implemented backend; AWS adapter and UI integration pending. Owner or named active recipient; check package and recipient access and expiry before URL. Version must be in frozen manifest; never resolve latest. Cap TTL at min(300 seconds, remaining handover lifetime)."
+      "description": "Implemented backend with an opt-in AWS SDK adapter; team UI/AWS integration unverified. Owner or named active recipient; check package and recipient access and expiry before URL. Version must be in frozen manifest; never resolve latest. Cap TTL at min(300 seconds, remaining handover lifetime)."
       "responses":
         "200":
           "description": "Success"
@@ -882,7 +882,7 @@
       "tags":
         - "Implemented week 3"
       "x-implementation-status": "implemented"
-      "description": "Implemented backend; AWS adapter and UI integration pending. Idempotently set accessStatus REVOKED; preserve workflow and confirmations and audit. Already issued S3 URLs may work until TTL expiry. No request body; nonempty bodies are rejected with 400."
+      "description": "Implemented backend with an opt-in AWS SDK adapter; team UI/AWS integration unverified. Idempotently set accessStatus REVOKED; preserve workflow and confirmations and audit. Already issued S3 URLs may work until TTL expiry. No request body; nonempty bodies are rejected with 400."
       "responses":
         "200":
           "description": "Success"
@@ -1214,6 +1214,7 @@
       "additionalProperties": false
       "required":
         - "id"
+        - "uploadId"
         - "fileId"
         - "filename"
         - "contentType"
@@ -1224,6 +1225,10 @@
         - "uploadStatus"
         - "integrityStatus"
       "properties":
+        "uploadId":
+          "type": "string"
+          "format": "uuid"
+          "description": "Persistent UploadSession ID for this exact FileVersion. Use the existing project-scoped upload-state endpoint to resume checksum polling after reload; never substitute this value for S3 Version ID."
         "id":
           "type": "string"
           "format": "uuid"
@@ -1359,7 +1364,7 @@
           "pattern": "^[0-9a-f]{64}$"
           "minLength": 64
           "maxLength": 64
-      "description": "Draft selection is limited to AVAILABLE versions with a fixed S3 identity; integrity may still be pending. Publish additionally requires VERIFIED and retrievable. Drafts cannot select a PENDING version with null versionId. Backend implemented; recipient/UI review pending."
+      "description": "Draft selection requires AVAILABLE + VERIFIED and a fixed S3 identity. Publish rechecks both states and exact object retrievability. PENDING uploads, failed or mismatched integrity, and foreign-project versions cannot enter the manifest. Published items keep their pinned FileVersion; no latest substitution."
     "HandoverRecipient":
       "type": "object"
       "additionalProperties": false
@@ -1528,7 +1533,7 @@
             "message": "Requested response media type is not supported; API error envelope is JSON"
             "requestId": "10000000-0000-0000-0000-000000000099"
 "x-review-status":
-  "backend": "Backend upload and handover services implemented; PostgreSQL and test-only fake; AWS adapter and team review pending"
+  "backend": "Backend and opt-in AWS SDK adapter implemented; draft requires VERIFIED; persistent uploadId enables recovery through the existing status endpoint. PostgreSQL tests use fake storage; team AWS verification pending."
   "nam": "High-level upload flow agreed in user-supplied chat evidence recorded 2026-10-29; exact contract commit/schema, errors/retry/polling and UI integration remain unconfirmed. See evidence/week-01/nam-upload-flow-confirmation.md"
-  "dang": "Python/boto3 POC files received and reviewed offline on 2026-10-29. Java StoragePort, exact-version HEAD, signed headers and checksum schema/result-key agreement remain pending; no AWS or full-contract approval is inferred. See docs/week-02/dang-s3-adapter-review.md"
+  "dang": "Python/boto3 POC files received and reviewed offline on 2026-10-29. Local Java StoragePort adapter implements exact-version HEAD and signed headers. Lambda checksum schema/result-key agreement and AWS verification remain pending; no team approval is inferred. See docs/week-02/dang-s3-adapter-review.md"
   "chien": "Pending bucket policy/CORS/IAM/limits/cleanup review; no approval claimed"

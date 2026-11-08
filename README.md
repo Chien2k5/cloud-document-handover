@@ -1,8 +1,10 @@
 # Backend lưu trữ và bàn giao tài liệu
 
+Bản backend local hiện hành: [hướng dẫn tích hợp ngày 08/11/2026](docs/backend-integration-2026-11-08.md), OpenAPI `0.5.0-backend-integration`. Tạo DRAFT yêu cầu AVAILABLE + VERIFIED; FileVersion trả uploadId để tiếp tục kiểm checksum sau reload. Tài liệu TV3/Nextcloud cũ được đối chiếu tại [bảng cập nhật tài liệu](docs/tv3/doi-chieu-tai-lieu-cu.md).
+
 Phần backend của Dũng cho dự án nhóm 5: Spring Boot, PostgreSQL/Flyway, auth/quyền theo dự án, upload theo phiên bản, đối soát SHA-256 và bàn giao DRAFT → READY → CONFIRMED. Nhánh làm việc: `dung`.
 
-Kiến trúc mục tiêu của nhóm dùng React, S3/Lambda và Elastic Beanstalk. Repo trên nhánh này hiện có backend và hợp đồng tích hợp; chưa có adapter S3/Lambda hoặc frontend mới được nhóm cung cấp. Các kết quả local không thay nghiệm thu AWS.
+Kiến trúc mục tiêu của nhóm dùng React, S3/Lambda và Elastic Beanstalk. Nhánh này có backend và adapter AWS SDK cho hợp đồng checksum v1. Adapter mặc định tắt. Lambda trên nhánh của Đăng cần đồng bộ đường dẫn và schema trước khi thử ghép trên AWS.
 
 ## Bản bàn giao tuần 5
 
@@ -22,7 +24,7 @@ cd backend
 
 Spring Boot không tự nạp `.env`. Các tên biến backend nằm trong [backend/.env.example](backend/.env.example); không đưa giá trị secret vào Git. Profile local chỉ phục vụ HTTP trên máy và seed demo tùy chọn, không dùng trên AWS.
 
-Khi chưa có storage adapter, auth/Project/Membership vẫn chạy; thao tác storage trả 503 STORAGE_UNAVAILABLE. Storage giả chỉ nằm trong test source.
+Khi S3 tắt, auth/Project/Membership vẫn chạy và thao tác storage trả 503 STORAGE_UNAVAILABLE. Cách bật adapter và yêu cầu với Lambda nằm trong [hướng dẫn backend](backend/README.md#kết-nối-s3).
 
 ## Kiểm thử và phục hồi
 

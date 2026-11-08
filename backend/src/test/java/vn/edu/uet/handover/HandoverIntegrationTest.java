@@ -135,16 +135,37 @@ class HandoverIntegrationTest {
         for(String table:List.of("handovers","handover_items","handover_recipients")) assertThat(jdbc.queryForObject("SELECT count(*) FROM "+table,Integer.class)).isZero();
         assertThat(audits("HANDOVER_CREATED")).isZero();
     }
-    @Test void publicationRejectsUnverifiedStatesAndDisabledRecipient() {
+    @Test void draftRejectsUnverifiedAndUnavailableVersionsWithoutPartialWrites() throws Exception {
+        MockHttpSession session=login("owner");
         for(String state:List.of("INTEGRITY_PENDING","MISMATCH","FAILED")) {
             UUID bad=version(project,UUID.randomUUID(),state,state);
-            Handover h=service.create(project,owner,input(List.of(bad),List.of(recipient)),requestId);
-            code(()->service.publish(h.id(),owner,requestId),"FILE_NOT_VERIFIED");assertThat(service.get(h.id(),owner).status()).isEqualTo("DRAFT");
+            var request=input(List.of(version,bad),List.of(recipient));
+            code(()->service.create(project,owner,request,requestId),"FILE_NOT_VERIFIED");
+            mvc.perform(post("/api/v1/projects/"+project+"/handovers").session(session).with(csrf())
+                    .contentType("application/json").content(json.writeValueAsString(request)))
+                    .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("FILE_NOT_VERIFIED"));
         }
-        UUID pending=version(project,UUID.randomUUID(),"pending","INTEGRITY_PENDING");
-        jdbc.update("UPDATE file_versions SET upload_status='PENDING',s3_version_id=NULL WHERE id=?",pending);
-        code(()->service.create(project,owner,input(List.of(pending),List.of(recipient)),requestId),"FILE_NOT_AVAILABLE");
-        var h=draft();jdbc.update("UPDATE app_users SET enabled=false WHERE id=?",recipient);
+        for(String state:List.of("PENDING","FAILED","EXPIRED")) {
+            UUID bad=version(project,UUID.randomUUID(),state,"INTEGRITY_PENDING");
+            jdbc.update("UPDATE file_versions SET upload_status=?,s3_version_id=NULL WHERE id=?",state,bad);
+            code(()->service.create(project,owner,input(List.of(version,bad),List.of(recipient)),requestId),"FILE_NOT_AVAILABLE");
+        }
+        for(String table:List.of("handovers","handover_items","handover_recipients"))
+            assertThat(jdbc.queryForObject("SELECT count(*) FROM "+table,Integer.class)).as(table).isZero();
+        assertThat(audits("HANDOVER_CREATED")).isZero();
+        assertThat(storage.headCalls.get()).isZero(); // Retrievability is checked at publish, outside the transaction.
+        assertThat(draft().status()).isEqualTo("DRAFT");
+    }
+    @Test void publicationRechecksIntegrityAndDisabledRecipient() {
+        var h=draft();
+        for(String state:List.of("INTEGRITY_PENDING","MISMATCH","FAILED")) {
+            jdbc.update("UPDATE file_versions SET integrity_status=?,actual_sha256=? WHERE id=?",
+                    state,state.equals("MISMATCH")?"b".repeat(64):null,version);
+            code(()->service.publish(h.id(),owner,requestId),"FILE_NOT_VERIFIED");
+            assertThat(service.get(h.id(),owner).status()).isEqualTo("DRAFT");
+        }
+        jdbc.update("UPDATE file_versions SET integrity_status='VERIFIED',actual_sha256=expected_sha256 WHERE id=?",version);
+        jdbc.update("UPDATE app_users SET enabled=false WHERE id=?",recipient);
         code(()->service.publish(h.id(),owner,requestId),"RECIPIENT_UNAVAILABLE");assertThat(audits("HANDOVER_PUBLISHED")).isZero();
     }
     @Test void publicationHeadFailuresNeverReportReady() {

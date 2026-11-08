@@ -149,6 +149,66 @@ class UploadIntegrationTest {
         assertThat(service.download(project,u.fileVersionId(),viewer).versionId()).isEqualTo("opaque+v1/="); counters(20,0);
         UploadCreated separate=init(); assertThat(separate.fileId()).isNotEqualTo(u.fileId()); counters(20,10);
     }
+    @Test void freshSessionRecoversPollingFromListForEachVersion() throws Exception {
+        UploadCreated v1=init();complete(v1,"opaque+v1/=");
+        UploadCreated v2=service.init(project,owner,request(10,v1.fileId()),requestId);complete(v2,"v2");
+        // No init/complete response or component state is retained by this new reader session.
+        MockHttpSession reader=login("viewer");
+        JsonNode page=json.readTree(mvc.perform(get(base()).session(reader)).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString());
+        assertThat(new ContractTest().schema("FilePage").validate(page)).isEmpty();
+        Map<UUID,UUID> recovered=new HashMap<>();
+        for(JsonNode item:page.get("items"))
+            recovered.put(UUID.fromString(item.get("id").asText()),UUID.fromString(item.get("uploadId").asText()));
+        assertThat(recovered).containsEntry(v1.fileVersionId(),v1.uploadId()).containsEntry(v2.fileVersionId(),v2.uploadId());
+        storage.results.put(object(v1,"opaque+v1/="),result(object(v1,"opaque+v1/="),sha));
+        storage.results.put(object(v2,"v2"),result(object(v2,"v2"),"b".repeat(64)));
+        clock.advance(301); // A completed version can still be reconciled after the PUT reservation expires.
+        for(UploadCreated upload:List.of(v1,v2)) {
+            String path=base()+"/uploads/"+recovered.get(upload.fileVersionId());
+            String expected=upload==v1?"VERIFIED":"MISMATCH";
+            for(int attempt=0;attempt<2;attempt++)
+                mvc.perform(get(path).session(reader)).andExpect(status().isOk())
+                        .andExpect(jsonPath("$.fileVersion.id").value(upload.fileVersionId().toString()))
+                        .andExpect(jsonPath("$.fileVersion.uploadId").value(upload.uploadId().toString()))
+                        .andExpect(jsonPath("$.fileVersion.integrityStatus").value(expected));
+        }
+        assertThat(storage.reads.get()).isEqualTo(2);counters(20,0);
+        mvc.perform(get(base()).session(login("outsider"))).andExpect(status().isNotFound());
+        mvc.perform(get(base()+"/uploads/"+v1.uploadId()).session(login("outsider"))).andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/projects/"+other+"/files/uploads/"+v1.uploadId()).session(login("outsider")))
+                .andExpect(status().isNotFound());
+    }
+    @Test void recoveredPendingAndFailedPollingOnlyVerifiesMatchingLateResult() throws Exception {
+        UploadCreated upload=init();UUID recovered=service.list(project,viewer,0,20).items().getFirst().uploadId();
+        assertThat(recovered).isEqualTo(upload.uploadId());
+        assertThat(service.state(project,recovered,viewer).fileVersion().uploadStatus()).isEqualTo("PENDING");
+        assertThat(storage.reads.get()).isZero();
+        complete(upload,"v1");ObjectRef ref=object(upload,"v1");
+        assertThat(service.state(project,recovered,viewer).fileVersion().integrityStatus()).isEqualTo("INTEGRITY_PENDING");
+        storage.fail=true;code(()->service.state(project,recovered,viewer),"STORAGE_UNAVAILABLE");storage.fail=false;
+        assertThat(repository.session(project,recovered).orElseThrow().version().integrityStatus()).isEqualTo("INTEGRITY_PENDING");
+        var failed=json.readTree(result(ref,sha));
+        ((com.fasterxml.jackson.databind.node.ObjectNode)failed).put("status","FAILED").putNull("actualSha256");
+        ((com.fasterxml.jackson.databind.node.ObjectNode)failed).put("errorCode","OBJECT_UNREADABLE");
+        storage.results.put(ref,json.writeValueAsBytes(failed));
+        assertThat(service.state(project,recovered,viewer).fileVersion().integrityStatus()).isEqualTo("FAILED");
+        storage.results.remove(ref);
+        assertThat(service.state(project,recovered,viewer).fileVersion().integrityStatus()).isEqualTo("FAILED");
+        storage.results.put(ref,result(new ObjectRef(ref.bucket(),ref.objectKey(),"another-version"),sha));
+        assertThat(service.state(project,recovered,viewer).fileVersion().integrityStatus()).isEqualTo("FAILED");
+        storage.results.put(ref,result(ref,sha));
+        assertThat(service.state(project,recovered,viewer).fileVersion().integrityStatus()).isEqualTo("VERIFIED");counters(10,0);
+    }
+    @Test void recoveredPollingRechecksMembershipAfterStorageRead() throws Exception {
+        UploadCreated upload=init();complete(upload,"v1");
+        UUID recovered=service.list(project,viewer,0,20).items().getFirst().uploadId();
+        ObjectRef ref=object(upload,"v1");storage.results.put(ref,result(ref,sha));
+        storage.onRead=()->jdbc.update("DELETE FROM memberships WHERE project_id=? AND user_id=?",project,viewer);
+        code(()->service.state(project,recovered,viewer),"PROJECT_NOT_FOUND");
+        assertThat(repository.session(project,recovered).orElseThrow().version().integrityStatus()).isEqualTo("INTEGRITY_PENDING");
+        code(()->service.list(project,viewer,0,20),"PROJECT_NOT_FOUND");
+    }
     @Test void missingInvalidStorageOutageAndExpiryReleaseOnce() {
         UploadCreated u=init();
         code(()->service.complete(project,u.uploadId(),owner,"missing",requestId),"OBJECT_NOT_READY");counters(0,10);

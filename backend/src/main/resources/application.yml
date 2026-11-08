@@ -28,5 +28,7 @@ app:
   project-quota-bytes: ${PROJECT_QUOTA_BYTES:1073741824}
   upload:
     bucket: ${UPLOAD_BUCKET:}
+    s3-enabled: ${UPLOAD_S3_ENABLED:false}
+    s3-region: ${AWS_REGION:}
     ttl-seconds: ${UPLOAD_TTL_SECONDS:300}
     expiry-delay-ms: ${UPLOAD_EXPIRY_DELAY_MS:30000}

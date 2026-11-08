@@ -47,7 +47,7 @@ Kết quả phải khớp bucket/key/versionId/size với row server đang kiể
 
 ## Phát hành và xác nhận
 
-- DRAFT tạo bởi Owner; tất cả item phải cùng project, trỏ fileVersionId cụ thể. Version ID, object key và checksum lưu trong version được giữ bất biến; item không resolve latest. Không sửa manifest/recipients sau READY.
+- DRAFT tạo bởi Owner; tất cả item phải cùng project, AVAILABLE + VERIFIED và trỏ fileVersionId cụ thể. Quy tắc này được đồng bộ với process2.pdf mục 2.5.2 ngày 08/11/2026. Version ID, object key và checksum lưu trong version được giữ bất biến; item không resolve latest. Không sửa manifest/recipients sau READY.
 - Trước READY: gói/item/người nhận không rỗng, expiry tương lai, access ACTIVE; từng phiên bản AVAILABLE + VERIFIED và HEAD exact version còn truy xuất được. Chưa xác minh, hash sai, phụ thuộc lỗi hoặc object mất đều chặn phát hành. Không có bước bỏ qua integrity để demo.
 - Người nhận là user đã tồn tại, có thể ngoài project. Backend kiểm session và bản ghi HandoverRecipient, trạng thái/hạn dùng mỗi lần xem/tải/xác nhận. Grant theo gói không cho quyền xem cả project.
 - Confirm idempotent theo recipient; ghi actor/time phía server và audit. Đề xuất CONFIRMED khi **tất cả người nhận ACTIVE** xác nhận. Quy tắc nhiều người nhận cần Nam xác nhận trước tuần 3; không đổi ngầm khi ghép UI.

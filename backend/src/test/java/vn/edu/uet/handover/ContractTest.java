@@ -38,6 +38,7 @@ class ContractTest {
         cases.put("upload-complete.request.json","CompleteUpload");
         cases.put("upload-complete.response.json","UploadState"); cases.put("upload-verified.response.json","UploadState");
         cases.put("upload-mismatch.response.json","UploadState"); cases.put("handover-create.request.json","CreateHandover");
+        cases.put("file-page.response.json","FilePage");
         cases.put("handover-ready.response.json","Handover"); cases.put("handover-confirm.response.json","Confirmation");
         try (var files=Files.list(contracts.resolve("examples"))) {
             files.filter(p -> p.getFileName().toString().startsWith("error-")).forEach(p -> cases.put(p.getFileName().toString(),"Error"));
@@ -78,6 +79,15 @@ class ContractTest {
             assertThat(complete.validate(json.readTree(body))).as(body).isNotEmpty();
         }
         assertThat(complete.validate(json.readTree("{\"versionId\":\"opaque+version/v1=\"}"))).isEmpty();
+    }
+    @Test void fileVersionsRequirePersistentUploadIdentityForPollingRecovery() throws Exception {
+        ObjectNode page=(ObjectNode)json.readTree(contracts.resolve("examples/file-page.response.json").toFile());
+        assertThat(schema("FilePage").validate(page)).isEmpty();
+        ObjectNode version=(ObjectNode)page.get("items").get(0);
+        version.remove("uploadId");
+        assertThat(schema("FilePage").validate(page)).isNotEmpty();
+        version.putNull("uploadId");
+        assertThat(schema("FilePage").validate(page)).isNotEmpty();
     }
     com.networknt.schema.JsonSchema schema(String name) throws Exception {
         JsonNode api=new ObjectMapper(new YAMLFactory()).readTree(contracts.resolve("openapi.yaml").toFile());

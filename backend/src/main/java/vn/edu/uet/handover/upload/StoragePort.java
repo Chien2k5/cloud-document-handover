@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 
-/** Backend boundary for Dang's adapter. No implementation or AWS approval is implied. */
+/** Storage boundary for presigning and reading exact object versions. */
 public interface StoragePort {
     record ObjectRef(String bucket, String objectKey, String versionId) {}
     record PutSpec(String bucket, String objectKey, String contentType, long size, Instant notAfter) {}

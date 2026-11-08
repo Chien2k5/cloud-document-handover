@@ -47,9 +47,10 @@ public final class UploadDtos {
     }
     public record UploadCreated(UUID uploadId, UUID fileId, UUID fileVersionId, String uploadStatus,
                                 String integrityStatus, PresignedUpload presignedUpload) {}
+    /** uploadId is durable and lets authorized callers resume the existing status endpoint after reload. */
     public record FileVersion(UUID id, UUID fileId, String filename, String contentType, long size,
                               String versionId, String expectedSha256, String actualSha256,
-                              String uploadStatus, String integrityStatus) {}
+                              String uploadStatus, String integrityStatus, UUID uploadId) {}
     public record UploadState(UUID uploadId, FileVersion fileVersion, Instant expiresAt) {}
     public record FilePage(List<FileVersion> items, int page, int size) {}
     public record Download(String url, String versionId, Instant expiresAt) {

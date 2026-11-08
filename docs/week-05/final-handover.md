@@ -1,5 +1,7 @@
 # Bàn giao kỹ thuật backend của Dũng
 
+**Bản bổ sung 08/11/2026:** tài liệu này lưu snapshot ngày 29/10. Đọc [contract và hướng dẫn tích hợp hiện hành](../backend-integration-2026-11-08.md) cho adapter Java, uploadId sau reload và yêu cầu VERIFIED tại create; dùng OpenAPI 0.5.0 và source local hiện hành khi ghép mới.
+
 Ngày 29/10/2026. Bản bàn giao gồm backend Spring Boot/PostgreSQL, hợp đồng StoragePort/OpenAPI, kiểm thử và evidence local. C07 được kiểm chứng ở backend; nghiệm thu Cloud của nhóm còn chờ adapter S3/Lambda, môi trường AWS và UI. Không có phê duyệt Nam/Đăng/Chiến được tự ghi nhận.
 
 ## Thành phần và dữ liệu

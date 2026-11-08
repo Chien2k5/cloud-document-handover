@@ -1,5 +1,7 @@
 # Checklist chốt backend và nghiệm thu nhóm
 
+**Cập nhật 08/11/2026:** bản local đã sửa create để yêu cầu VERIFIED, bổ sung uploadId phục hồi polling và adapter Java tùy chọn. Xem [hướng dẫn hiện hành](../backend-integration-2026-11-08.md). Bảng ngày 29/10 bên dưới là bằng chứng lịch sử trước sửa; kết quả mới nằm trong báo cáo implementation riêng. AWS vẫn chưa được xác minh trong lượt sửa này.
+
 Ngày 29/10/2026. PASS LOCAL là kết quả kiểm trên máy với PostgreSQL/Tomcat thật; fixture storage chỉ ở test. NOT RUN là chưa có lượt kiểm chứng, không phải PASS. Evidence hiện tại ở evidence/week-05/backend và local-restore.
 
 | Hạng mục | Trạng thái phần Dũng | Bằng chứng/đầu ra |

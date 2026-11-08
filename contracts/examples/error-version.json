@@ -1,5 +1,5 @@
 {
-  "code": "VERSION_MISMATCH",
-  "message": "Object version does not match upload session",
+  "code": "UPLOAD_ALREADY_COMPLETED",
+  "message": "UPLOAD ALREADY COMPLETED",
   "requestId": "10000000-0000-0000-0000-000000000099"
 }

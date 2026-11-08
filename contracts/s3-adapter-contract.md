@@ -1,5 +1,9 @@
 # Đề xuất hợp đồng S3 adapter cho tuần 2
 
+**Bản hiện hành 08/11/2026:** xem [hướng dẫn ghép backend](../docs/backend-integration-2026-11-08.md). StoragePort Java và schema v1 là giao diện backend đang thực thi. Các kiểu PutSpec/ChecksumRead và mode replayable được nhắc ở phần đề xuất lịch sử bên dưới chưa phải interface runtime. Runtime chỉ hỗ trợ signed conditional PUT; Missing checksum là Optional.empty, dữ liệu JSON là byte[] tối đa 64 KiB, lỗi hạ tầng là StoragePort.Unavailable. Không có fallback đọc payload HASHED/sha256 hoặc result key cũ.
+
+**Cập nhật 08/11/2026:** Nhánh backend có adapter AWS SDK tùy chọn, đọc theo result key và schema v1 dưới đây. Bật bằng `UPLOAD_S3_ENABLED=true` cùng `UPLOAD_BUCKET` và `AWS_REGION`. PR #2 của Đăng đã đồng bộ cách mã hóa Version ID giữa adapter Python và Lambda, còn đường dẫn và payload vẫn khác hợp đồng v1. Việc tích hợp trên AWS còn chờ Lambda ghi theo quy ước chung.
+
 **Cập nhật 29/10/2026:** Dũng đã nhận ba tệp Python/README từ Đăng và [đối chiếu với StoragePort](../docs/week-02/dang-s3-adapter-review.md). Có POC PUT/GET/checksum, nhưng chưa có bean Java, HEAD exact version, signed headers và checksum schema/result key tương thích. Việc gửi tệp chưa xác nhận Đăng duyệt hợp đồng bên dưới. [Evidence review offline](../evidence/week-02/dang-adapter-review/README.md) không thay lượt kiểm AWS; các gate AWS vẫn NOT RUN.
 
 **Cập nhật 28/10/2026:** Dũng đã viết `backend/src/main/java/vn/edu/uet/handover/upload/StoragePort.java` và UploadService sử dụng port. Đăng vẫn cần review và cung cấp adapter thật. Bản mô tả ngày 22/10 bên dưới là thiết kế gốc. Port hiện dùng Optional cho Missing; lỗi hạ tầng ném `StoragePort.Unavailable`; JSON bytes quá 64 KiB/hỏng/sai identity thành integrity FAILED. Chỉ hỗ trợ PUT yêu cầu signed If-None-Match: *, không có chế độ replayable. Không có AWS SDK, Lambda hay xác nhận của thành viên khác trong lần cập nhật này.
