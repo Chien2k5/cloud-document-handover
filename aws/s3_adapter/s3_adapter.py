@@ -1,7 +1,7 @@
 import boto3
 import hashlib
 import json
-import urllib.parse
+from contextlib import closing
 from botocore.config import Config
 
 BUCKET = "nhom5-document-storage-2026-dang"
@@ -13,7 +13,10 @@ s3 = boto3.client(
     endpoint_url=f"https://s3.{REGION}.amazonaws.com",
     config=Config(
         signature_version="s3v4",
-        s3={"addressing_style": "virtual"}
+        s3={"addressing_style": "virtual"},
+        connect_timeout=3,
+        read_timeout=3,
+        retries={"mode": "standard", "total_max_attempts": 3}
     )
 )
 
@@ -31,7 +34,7 @@ def validate_key(key):
 
 
 def validate_version_id(version_id):
-    if not isinstance(version_id, str) or not version_id.strip():
+    if not isinstance(version_id, str) or not version_id.strip() or version_id == "null":
         raise ValueError("Version ID khong duoc de trong")
 
 
@@ -95,17 +98,34 @@ def list_versions(key):
     return versions
 
 
+def checksum_result_key(bucket, key, version_id):
+    parts = [hashlib.sha256(value.encode("utf-8")).hexdigest()
+             for value in (bucket, key, version_id)]
+    return "results/" + "/".join(parts) + ".json"
+
+
+def _unique_json_fields(pairs):
+    result = {}
+    for name, value in pairs:
+        if name in result:
+            raise ValueError("Duplicate checksum JSON field")
+        result[name] = value
+    return result
+
+
 def get_checksum_result(key, version_id):
     validate_key(key)
     validate_version_id(version_id)
 
-    key_hash = hashlib.sha256(key.encode("utf-8")).hexdigest()
-    encoded_version = urllib.parse.quote(version_id, safe="")
-    result_key = f"results/{key_hash}/{encoded_version}.json"
+    result_key = checksum_result_key(BUCKET, key, version_id)
 
     response = s3.get_object(
         Bucket=BUCKET,
         Key=result_key
     )
 
-    return json.loads(response["Body"].read())
+    with closing(response["Body"]) as body:
+        data = body.read(65537)
+        if len(data) > 65536:
+            raise ValueError("Checksum JSON exceeds 64 KiB")
+        return json.loads(data, object_pairs_hook=_unique_json_fields)

@@ -1,103 +1,135 @@
-import boto3
+"""S3 checksum Lambda using the backend checksum schema v1."""
 import hashlib
 import json
-import urllib.parse
+import os
+from contextlib import closing
 from datetime import datetime, timezone
-from botocore.exceptions import ClientError
+from urllib.parse import unquote_plus
 
-s3 = boto3.client("s3")
+MAX_FILE_BYTES = 100 * 1024 * 1024
+MAX_RESULT_BYTES = 64 * 1024
+CHUNK_BYTES = 1024 * 1024
+RESULT_FIELDS = frozenset({
+    "schemaVersion", "bucket", "objectKey", "versionId", "size", "status",
+    "actualSha256", "errorCode", "processedAt",
+})
+_client = None
+
+
+def result_key(bucket, key, version_id):
+    # Identity must be identical to Java S3StorageAdapter.resultKey.
+    parts = [hashlib.sha256(value.encode("utf-8")).hexdigest()
+             for value in (bucket, key, version_id)]
+    return "results/" + "/".join(parts) + ".json"
+
+
+def hash_version(s3, bucket, key, version_id):
+    response = s3.get_object(Bucket=bucket, Key=key, VersionId=version_id)
+    with closing(response["Body"]) as body:
+        size = response.get("ContentLength")
+        if response.get("VersionId") != version_id:
+            raise ValueError("Unexpected source version")
+        if type(size) is not int or not 1 <= size <= 9223372036854775807:
+            raise ValueError("Invalid source size")
+        if size > MAX_FILE_BYTES:
+            return size, None, "FILE_TOO_LARGE"
+        digest = hashlib.sha256()
+        count = 0
+        while chunk := body.read(CHUNK_BYTES):
+            count += len(chunk)
+            if count > size:
+                raise ValueError("Source stream exceeded reported size")
+            digest.update(chunk)
+        if count != size:
+            raise ValueError("Incomplete source stream")
+        return size, digest.hexdigest(), None
+
+
+def _unique_fields(pairs):
+    result = {}
+    for name, value in pairs:
+        if name in result:
+            raise ValueError("Duplicate JSON field")
+        result[name] = value
+    return result
+
+
+def verify_existing_result(s3, bucket, key, expected):
+    response = s3.get_object(Bucket=bucket, Key=key)
+    with closing(response["Body"]) as body:
+        data = body.read(MAX_RESULT_BYTES + 1)
+        if len(data) > MAX_RESULT_BYTES:
+            raise ValueError("Existing checksum document is too large")
+        saved = json.loads(data, object_pairs_hook=_unique_fields)
+    if not isinstance(saved, dict) or set(saved) != RESULT_FIELDS:
+        raise ValueError("Existing checksum document has an incompatible schema")
+    for name in RESULT_FIELDS - {"processedAt"}:
+        if type(saved[name]) is not type(expected[name]) or saved[name] != expected[name]:
+            raise ValueError("Existing checksum result does not match source")
+    timestamp = saved["processedAt"]
+    if not isinstance(timestamp, str):
+        raise ValueError("Invalid checksum timestamp")
+    parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    if parsed.utcoffset() is None:
+        raise ValueError("Checksum timestamp requires a timezone")
+
+
+def process_records(event, s3, expected_bucket):
+    if not isinstance(expected_bucket, str) or not expected_bucket.strip():
+        raise ValueError("UPLOAD_BUCKET is required")
+    created = skipped = 0
+    for record in event.get("Records", []):
+        if record.get("eventSource") != "aws:s3":
+            continue
+        if not record.get("eventName", "").startswith("ObjectCreated:"):
+            continue
+        source = record["s3"]
+        bucket = source["bucket"]["name"]
+        key = unquote_plus(source["object"]["key"], encoding="utf-8", errors="strict")
+        if bucket != expected_bucket or not key.startswith("uploads/") or key.endswith("/"):
+            continue
+        version = source["object"].get("versionId")
+        if not isinstance(version, str) or not version.strip() or version == "null":
+            raise ValueError("Upload event requires an S3 Version ID")
+
+        # Storage failures propagate to Lambda. Never fabricate a successful hash.
+        size, actual, error_code = hash_version(s3, bucket, key, version)
+        result = {
+            "schemaVersion": 1,
+            "bucket": bucket,
+            "objectKey": key,
+            "versionId": version,
+            "size": size,
+            "status": "FAILED" if error_code else "SUCCEEDED",
+            "actualSha256": actual,
+            "errorCode": error_code,
+            "processedAt": datetime.now(timezone.utc).isoformat(),
+        }
+        destination = result_key(bucket, key, version)
+        data = json.dumps(result, ensure_ascii=False).encode("utf-8")
+        if len(data) > MAX_RESULT_BYTES:
+            raise ValueError("Checksum document is too large")
+        try:
+            s3.put_object(Bucket=bucket, Key=destination, Body=data,
+                          ContentType="application/json", IfNoneMatch="*")
+            created += 1
+        except s3.exceptions.ClientError as error:
+            status = error.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+            if status != 412:
+                raise  # Includes 409 conflicts and temporary storage failures.
+            verify_existing_result(s3, bucket, destination, result)
+            skipped += 1
+    return {"created": created, "skipped": skipped}
 
 
 def lambda_handler(event, context):
-    results = []
+    global _client
+    if _client is None:
+        import boto3
+        from botocore.config import Config
 
-    for record in event["Records"]:
-        bucket = record["s3"]["bucket"]["name"]
-        key = urllib.parse.unquote_plus(
-            record["s3"]["object"]["key"]
-        )
-        version_id = record["s3"]["object"].get("versionId")
-
-        if not key.startswith("uploads/") or key.endswith("/"):
-            continue
-
-        if not version_id or version_id == "null":
-            raise ValueError("S3 event khong co Version ID hop le")
-
-        result_key = (
-            "results/"
-            + hashlib.sha256(key.encode("utf-8")).hexdigest()
-            + "/"
-            + urllib.parse.quote(version_id, safe="")
-            + ".json"
-        )
-
-        response = s3.get_object(
-            Bucket=bucket,
-            Key=key,
-            VersionId=version_id
-        )
-
-        sha256 = hashlib.sha256()
-
-        for chunk in response["Body"].iter_chunks(
-            chunk_size=1024 * 1024
-        ):
-            if chunk:
-                sha256.update(chunk)
-
-        result = {
-            "bucket": bucket,
-            "objectKey": key,
-            "versionId": version_id,
-            "sha256": sha256.hexdigest(),
-            "status": "HASHED",
-            "processedAt": datetime.now(timezone.utc).isoformat()
-        }
-
-        try:
-            s3.put_object(
-                Bucket=bucket,
-                Key=result_key,
-                Body=json.dumps(result, indent=2).encode("utf-8"),
-                ContentType="application/json",
-                IfNoneMatch="*"
-            )
-
-            print("CREATED:", result_key)
-            result["writeStatus"] = "CREATED"
-
-        except ClientError as e:
-            code = e.response["Error"]["Code"]
-
-            if code in ("PreconditionFailed", "412"):
-                existing = s3.get_object(
-                    Bucket=bucket,
-                    Key=result_key
-                )
-                saved = json.loads(existing["Body"].read())
-
-                if (
-                    saved.get("bucket") != bucket
-                    or saved.get("objectKey") != key
-                    or saved.get("versionId") != version_id
-                    or saved.get("sha256") != result["sha256"]
-                    or saved.get("status") != "HASHED"
-                ):
-                    raise ValueError(
-                        "Existing checksum JSON does not match source"
-                    )
-
-                print("DUPLICATE SKIPPED:", result_key)
-                result = saved.copy()
-                result["writeStatus"] = "SKIPPED"
-
-            else:
-                raise
-
-        results.append(result)
-
-    return {
-        "statusCode": 200,
-        "body": json.dumps(results)
-    }
+        _client = boto3.client("s3", config=Config(
+            connect_timeout=3, read_timeout=3,
+            retries={"mode": "standard", "total_max_attempts": 3},
+        ))
+    return process_records(event, _client, os.environ["UPLOAD_BUCKET"])
