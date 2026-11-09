@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Quản Lý & Bàn Giao Tài Liệu</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Portal Quản Lý & Bàn Giao Tài Liệu</h1>
+            <div id="user-info">Trạng thái: Chưa đăng nhập</div>
+        </header>
+
+        <!-- Form Đăng nhập -->
+        <section id="login-section" class="card">
+            <h2>Đăng Nhập Hệ Thống</h2>
+            <form id="login-form">
+                <input type="text" id="username" placeholder="Tên đăng nhập" required>
+                <input type="password" id="password" placeholder="Mật khẩu" required>
+                <button type="submit">Đăng nhập</button>
+            </form>
+        </section>
+
+        <main id="main-section" class="hidden">
+            <!-- Upload File & Checksum SHA-256 -->
+            <section class="card">
+                <h2>1. Upload File & Kiểm Tra Checksum (SHA-256)</h2>
+                <form id="upload-form">
+                    <input type="file" id="file-input" required>
+                    <button type="submit" id="btn-upload">Upload & Kiểm tra SHA-256</button>
+                </form>
+                <div id="upload-status" class="status-box hidden"></div>
+            </section>
+
+            <!-- Quy trình Bàn giao Tài liệu (DRAFT -> READY -> CONFIRMED) -->
+            <section class="card">
+                <h2>2. Quy Trình Bàn Giao Tài Liệu (Handover Workflow)</h2>
+                
+                <div class="workflow-step">
+                    <h3>Bước 2.1: Tạo yêu cầu bàn giao nháp (DRAFT)</h3>
+                    <form id="draft-form">
+                        <input type="text" id="project-id" placeholder="Project ID" required>
+                        <input type="text" id="file-version-ids" placeholder="FileVersion IDs (cách nhau dấu phẩy)" required>
+                        <button type="submit">Tạo Yêu Cầu DRAFT</button>
+                    </form>
+                </div>
+
+                <div class="workflow-step margin-top">
+                    <h3>Bước 2.2: Phát hành gói tài liệu (READY)</h3>
+                    <div class="action-row">
+                        <input type="text" id="handover-id-ready" placeholder="Handover ID">
+                        <button id="btn-make-ready" class="btn-primary">Chuyển sang READY</button>
+                    </div>
+                </div>
+
+                <div class="workflow-step margin-top">
+                    <h3>Bước 2.3: Bàn giao thành công (CONFIRMED)</h3>
+                    <div class="action-row">
+                        <input type="text" id="handover-id-confirm" placeholder="Handover ID">
+                        <button id="btn-confirm" class="btn-success">Xác Nhận CONFIRMED</button>
+                    </div>
+                </div>
+
+                <div id="workflow-status" class="status-box hidden"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
