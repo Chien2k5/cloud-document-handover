@@ -114,9 +114,7 @@ Nextcloud và database người dùng giữ nguyên. Log mặc định trong `ru
 bị ignore; không chia sẻ raw log/cookie/trace. Summary không có secret. Xem
 `docs/pilot/checkpoints.json`, `docs/pilot/live-verification.json` và test report.
 
-## Deploy cùng origin/HTTPS
-
-### Local business integration (PRE_AWS A13)
+## Local business integration (PRE_AWS A13)
 
 Run `python tools/run_live_check.py --business` after `npm ci`. This launches real
 Spring Boot and a new PostgreSQL container, with an HTTPS `StoragePort` fixture on

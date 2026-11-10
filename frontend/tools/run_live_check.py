@@ -5,6 +5,7 @@ Creates its own container and two empty databases; never reads existing DB setti
 Passwords are generated in memory. Logs/artifacts stay in ignored runtime-data.
 """
 import argparse
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
@@ -39,7 +40,7 @@ def main():
     container = 'handover-frontend-test-' + uuid.uuid4().hex[:10]
     started = False
     server = None
-    summary = {'date': '2026-11-10', 'status': 'RUNNING', 'aws': 'NOT_RUN',
+    summary = {'date': datetime.now(timezone.utc).isoformat(), 'status': 'RUNNING', 'aws': 'NOT_RUN',
                'browserStorageAndHandover': 'MOCK_TESTS_SEPARATE_FROM_THIS_RUN',
                'database': 'NEW_DISPOSABLE_POSTGRESQL_17_CONTAINER', 'backendModified': False}
     summary['testLevel'] = 'LOCAL_REAL_BACKEND_WITH_TEST_STORAGE' if args.business else 'LOCAL_REAL_BACKEND'
@@ -57,6 +58,9 @@ def main():
     try:
         summary['sourceParentCommit'] = run('source-commit', ['git', 'rev-parse', 'HEAD'])
         summary['backendTree'] = run('backend-tree', ['git', 'rev-parse', 'HEAD:backend'])
+        summary['workingTreeDirty'] = bool(run('source-status', ['git', 'status', '--porcelain']))
+        timestamp = run('build-timestamp', ['git', 'show', '-s', '--format=%cI', 'HEAD'])
+        summary['buildOutputTimestamp'] = timestamp
         runtime_files = list((frontend / 'src').rglob('*')) + [frontend / name for name in (
             'index.html', 'styles.css', 'package.json', 'package-lock.json', 'vite.config.js')]
         summary['frontendRuntimeHashes'] = {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
@@ -83,7 +87,7 @@ def main():
         for key in ('SPRING_PROFILES_ACTIVE', 'LOCAL_DEMO_PASSWORD', 'UPLOAD_BUCKET', 'JAVA_TOOL_OPTIONS', 'MAVEN_OPTS'):
             env.pop(key, None)
         maven = args.maven or str(root / 'backend' / ('mvnw.cmd' if os.name == 'nt' else 'mvnw'))
-        command = [maven, '-B', '-ntp']
+        command = [maven, '-B', '-ntp', '-Dproject.build.outputTimestamp=' + timestamp]
         if os.name != 'nt' and not args.maven:
             command.insert(0, 'sh')
         if args.offline:
@@ -184,7 +188,8 @@ def main():
         if args.business and (out / 'fixture.p12').exists():
             (out / 'fixture.p12').unlink()
         evidence.parent.mkdir(parents=True, exist_ok=True)
-        evidence.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+        with evidence.open('x', encoding='utf-8') as summary_file:
+            summary_file.write(json.dumps(summary, ensure_ascii=False, indent=2) + '\n')
         print(json.dumps(summary, ensure_ascii=False, indent=2), flush=True)
 
 
