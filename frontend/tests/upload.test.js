@@ -67,3 +67,21 @@ test('PUT network/timeout and abort stop the flow without a guessed version', as
   const controller = new AbortController(); controller.abort();
   await assert.rejects(startUpload(fixture(), 'p', bytes, { signal: controller.signal }), e => e.name === 'AbortError');
 });
+
+test('binary bytes, unknown content type and cancellation during hashing preserve initialization boundaries', async () => {
+  const binary = new File([new Uint8Array([0, 255, 128, 13, 10])], 'du lieu.bin');
+  const expected = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new Uint8Array([0, 255, 128, 13, 10]))), b => b.toString(16).padStart(2, '0')).join('');
+  assert.equal(await fileSha256(binary), expected);
+  const api = fixture();
+  await startUpload(api, 'p', binary, { fetchImpl: async () => new Response(null, { headers: { 'x-amz-version-id': 'binary-v1' } }) });
+  assert.equal(api.calls[0].body.contentType, 'application/octet-stream');
+  assert.equal(api.calls[0].body.size, 5); assert.equal(api.calls[0].body.expectedSha256, expected);
+  assert.ok(!Object.hasOwn(api.calls[0].body, 'fileId'));
+  const controller = new AbortController(); let initCalls = 0;
+  const interrupted = { size: 3, arrayBuffer: async () => { controller.abort(); return new Uint8Array([1, 2, 3]).buffer; } };
+  await assert.rejects(startUpload({ request: () => { initCalls++; } }, 'p', interrupted, { signal: controller.signal }), e => e.name === 'AbortError');
+  assert.equal(initCalls, 0);
+  const failing = { request: async () => { initCalls++; throw new ApiError(0, 'REQUEST_TIMEOUT'); } };
+  await assert.rejects(startUpload(failing, 'p', bytes), e => e.code === 'REQUEST_TIMEOUT');
+  assert.equal(initCalls, 1);
+});
