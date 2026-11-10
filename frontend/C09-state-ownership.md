@@ -36,3 +36,13 @@ Existing auth/security, exact-version, upload and handover assertions remain.
 Add hash parser cases, Back/Forward/reload/invalid UUID checks, mobile keyboard/menu checks,
 same-project selected-version/upload-session retention and cross-project reset/late-response checks.
 Run full PRE_AWS checks before completing C09.02. Keep baseline UUID-pattern and aged-file-link findings outside this batch.
+
+## Batch 01 UI review fix
+
+Global destinations now render one visible screen: project list, selected project workspace, or handover opener.
+Inactive screen wrappers use native `hidden` plus `inert`: no layout, accessibility tree or keyboard focus.
+Projects/ProjectDetail/Files and Handovers stay mounted with their existing keys and cancellation lifecycles.
+Only changing project ID or account keeps the existing reset/unmount behavior. Same-project navigation,
+upload/polling, selected FileVersions, DRAFT fields and handover state survive hidden screens.
+Hash parser/API semantics are unchanged. Existing assertions are kept; tests navigate to the visible screen
+before interacting rather than depending on all screens sharing one long document.

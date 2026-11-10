@@ -37,7 +37,7 @@ export default function AppShell({ user, busy, onLogout, route, selectedProjectI
         </nav>
         <div className="sidebar-note">Tài liệu theo dự án.<br />Bàn giao đúng phiên bản.</div>
       </aside>
-      <main className="workspace-content" id="workspace-main" tabIndex={-1}>{children}</main>
+      <main className="workspace-content" id="workspace-main" tabIndex={-1} aria-label={route.view === 'handovers' ? 'Mở gói bàn giao' : route.view === 'project' ? 'Không gian dự án' : 'Dự án'}>{children}</main>
     </div>
   </div>;
 }

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { workspaceView } from './fixtures.js';
 async function login(page, email = 'dung@example.test') {
   await page.goto('/'); await page.getByLabel('Email', { exact: true }).fill(email);
   await page.getByLabel('Mật khẩu', { exact: true }).fill(process.env.LIVE_DEMO_PASSWORD);
@@ -68,7 +69,7 @@ test('real Spring/PostgreSQL: S3 disabled fails closed with 503; unknown handove
   const project = projects.items.find(item => item.name === 'Live fail-closed project');
   expect(project.reservedBytes).toBe(0);
   expect((await page.request.post('/api/v1/projects', { data: { name: 'Must fail CSRF' } })).status()).toBe(403);
-  await page.getByLabel('UUID gói bàn giao', { exact: true }).fill('00000000-0000-0000-0000-000000000000');
+  await workspaceView(page, 'Mở gói bàn giao'); await page.getByLabel('UUID gói bàn giao', { exact: true }).fill('00000000-0000-0000-0000-000000000000');
   await page.getByRole('button', { name: 'Mở gói bàn giao', exact: true }).click();
   await expect(page.getByText('Gói không tồn tại', { exact: false })).toBeVisible();
 });

@@ -41,7 +41,7 @@ export default function Projects({ user, selected, onSelectProject, navigation, 
     } catch (e) { setCreateError(e); } finally { submitting.current = false; setCreating(false); }
   }
   return <>
-    <Card className="workspace-section projects-page" id="workspace-projects" tabIndex={-1}>
+    <Card className="workspace-section projects-page" id="workspace-projects" tabIndex={-1} hidden={navigation.view !== 'projects'} inert={navigation.view !== 'projects'}>
       <p className="eyebrow">Không gian làm việc</p>
       <PageHeader title="Dự án của bạn" description="Chọn dự án để quản lý tài liệu và bàn giao đúng phiên bản." actions={<>
         <Button variant="secondary" disabled={busy} onClick={() => setReload(value => value + 1)}>Tải lại dự án</Button>
@@ -71,7 +71,7 @@ export default function Projects({ user, selected, onSelectProject, navigation, 
         </form>
       </details>
     </Card>
-    {selected && <ProjectDetail key={selected} projectId={selected} user={user} navigation={navigation} onHandoverCreated={onHandoverCreated} />}
+    <div hidden={navigation.view !== 'project'} inert={navigation.view !== 'project'}>{selected && <ProjectDetail key={selected} projectId={selected} user={user} navigation={navigation} onHandoverCreated={onHandoverCreated} />}</div>
   </>;
 }
 

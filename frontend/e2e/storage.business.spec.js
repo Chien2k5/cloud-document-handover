@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { workspaceView } from './fixtures.js';
 
 async function login(page, email = 'dung@example.test') {
   await page.goto('/');
@@ -30,6 +31,7 @@ async function upload(page, projectId, buffer, count, verifiedCount = count) {
   return files;
 }
 async function open(page, id) {
+  await workspaceView(page, 'Mở gói bàn giao');
   await page.getByLabel('UUID gói bàn giao', { exact: true }).fill(id);
   await page.getByRole('button', { name: 'Mở gói bàn giao', exact: true }).click();
 }
@@ -43,7 +45,7 @@ test('real backend + test HTTPS storage: v1 survives v2, two recipients confirm,
     await login(page); const id = await project(page, 'Business version handover');
     const original = Buffer.from([0, 255, 128, 13, 10, 42]);
     const [v1] = await upload(page, id, original, 1);
-    await page.reload(); await page.getByRole('button', { name: 'Business version handover · OWNER' }).click();
+    await page.reload(); await workspaceView(page, 'Dự án'); await page.getByRole('button', { name: 'Business version handover · OWNER' }).click();
     await expect(page.getByText('VERIFIED', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Thêm phiên bản fixture.bin' }).click();
     const files = await upload(page, id, Buffer.from('different-v2'), 2);
@@ -93,7 +95,7 @@ test('real backend + test HTTPS storage: mismatched hash cannot enter DRAFT; exp
   }, init.presignedUpload);
   expect(put.status).toBe(200);
   expect((await mutate(page, `/projects/${id}/files/uploads/${init.uploadId}/complete`, { versionId: put.version })).status()).toBe(200);
-  await page.reload(); await page.getByRole('button', { name: 'Business mismatch expiry · OWNER' }).click();
+  await page.reload(); await workspaceView(page, 'Dự án'); await page.getByRole('button', { name: 'Business mismatch expiry · OWNER' }).click();
   await expect(page.getByText('MISMATCH', { exact: true })).toBeVisible({ timeout: 30000 });
   await expect(page.getByLabel(`Chọn bàn giao bad.bin · ${init.fileVersionId}`, { exact: true })).toBeDisabled();
   const invalid = await mutate(page, `/projects/${id}/handovers`, { title: 'Blocked', fileVersionIds: [init.fileVersionId], recipientUserIds: [actor], expiresAt: '2099-01-01T12:00:00Z' });

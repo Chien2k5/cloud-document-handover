@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { mockProject } from './fixtures.js';
+import { mockProject, workspaceView } from './fixtures.js';
 const id = '10000000-0000-0000-0000-000000000001', other = '10000000-0000-0000-0000-000000000002';
 const file = { id: '20000000-0000-0000-0000-000000000001', fileId: '30000000-0000-0000-0000-000000000001', uploadId: '40000000-0000-0000-0000-000000000001', versionId: 'opaque-v1', filename: 'navigation.txt', size: 3, expectedSha256: 'a'.repeat(64), actualSha256: 'a'.repeat(64), uploadStatus: 'AVAILABLE', integrityStatus: 'VERIFIED' };
 const nav = page => page.getByRole('navigation', { name: 'Điều hướng workspace', exact: true });
@@ -22,7 +22,7 @@ test('C09.02: same-project hash navigation preserves selection and supports Back
   await page.goBack(); await expect(page).toHaveURL(new RegExp(`/files$`)); await expect(selected).toBeChecked();
   await page.goForward(); await expect(page).toHaveURL(new RegExp(`/members$`));
   await page.reload(); await page.getByText('Thông tin kỹ thuật dự án', { exact: true }).click(); await expect(page.getByText('Project ID:', { exact: false })).toContainText(id);
-  await expect(page.getByRole('button', { name: 'Project fixture · OWNER', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await workspaceView(page, 'Dự án'); await expect(page.getByRole('button', { name: 'Project fixture · OWNER', exact: true })).toHaveAttribute('aria-pressed', 'true');
   expect(writes).toBe(0); expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
 });
 
@@ -75,7 +75,7 @@ test('C09.02: switching projects cancels stale reads and resets protected file s
     await page.goto('/'); await page.getByRole('button', { name: 'Alpha · OWNER', exact: true }).click();
     await page.getByLabel(`Chọn bàn giao A-only.txt · ${file.id}`, { exact: true }).check();
     hold = true; await page.getByRole('button', { name: 'Kiểm tra lại quyền dự án', exact: true }).click();
-    await page.getByRole('button', { name: 'Beta · VIEWER', exact: true }).click();
+    await workspaceView(page, 'Dự án'); await page.getByRole('button', { name: 'Beta · VIEWER', exact: true }).click();
     await expect(page.locator('#project-overview').getByRole('heading', { name: 'Beta', exact: true })).toBeVisible();
     release();
     await expect(page.getByRole('heading', { name: 'B-only.txt · 3 byte', exact: true })).toBeVisible();

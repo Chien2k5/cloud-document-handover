@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { mockProject } from './fixtures.js';
+import { mockProject, workspaceView } from './fixtures.js';
 const projectId = '10000000-0000-0000-0000-000000000001';
 const fileId = '20000000-0000-0000-0000-000000000001';
 const v1 = '30000000-0000-0000-0000-000000000001', v2 = '30000000-0000-0000-0000-000000000002';
@@ -12,6 +12,7 @@ function handover(changes = {}) {
     recipients: [{ userId: recipientId, accessStatus: 'ACTIVE', confirmedAt: null }], ...changes };
 }
 async function open(page) {
+  await workspaceView(page, 'Mở gói bàn giao');
   await page.getByLabel('UUID gói bàn giao', { exact: true }).fill(handoverId);
   await page.getByRole('button', { name: 'Mở gói bàn giao', exact: true }).click();
 }

@@ -61,6 +61,6 @@ function Portal({ user, busy, error, onLogout }) {
     <ErrorNotice error={error} />
     {route.invalid && <p className="route-notice" role="status">Đường dẫn không hợp lệ. Chọn một mục trong workspace hoặc nhập UUID gói được cấp quyền.</p>}
     <Projects user={user} selected={selected} onSelectProject={id => navigate(projectHash(id))} navigation={route} onHandoverCreated={openHandover} />
-    <Handovers user={user} activeId={route.invalid && route.view === 'handovers' ? null : handoverId} onSelect={openHandover} />
+    <div hidden={route.view !== 'handovers'} inert={route.view !== 'handovers'}><Handovers user={user} activeId={route.invalid && route.view === 'handovers' ? null : handoverId} onSelect={openHandover} /></div>
   </AppShell>;
 }

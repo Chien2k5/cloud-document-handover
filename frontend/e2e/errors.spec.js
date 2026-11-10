@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { mockProject } from './fixtures.js';
+import { mockProject, workspaceView } from './fixtures.js';
 
 test('mock backend: a protected 401 clears project UI and asks for login again', async ({ page }) => {
   let expired = false;
@@ -7,7 +7,7 @@ test('mock backend: a protected 401 clears project UI and asks for login again',
     if (!expired || new URL(route.request().url()).pathname !== '/api/v1/projects') return false;
     await route.fulfill({ status: 401, json: { code: 'UNAUTHENTICATED' } }); return true;
   });
-  expired = true; await page.getByRole('button', { name: 'Tải lại dự án' }).click();
+  expired = true; await workspaceView(page, 'Dự án'); await page.getByRole('button', { name: 'Tải lại dự án' }).click();
   await expect(page.getByRole('button', { name: 'Đăng nhập', exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toContainText('Phiên đăng nhập đã hết');
   await expect(page.getByRole('heading', { name: 'Chi tiết dự án' })).toHaveCount(0);
@@ -19,7 +19,7 @@ test('mock backend: 403 does not retry a mutation; CSRF can refresh without repe
     if (request.method() !== 'POST' || !path.endsWith('/projects')) return false;
     mutations++; await route.fulfill({ status: 403, json: { code: 'ACCESS_DENIED' } }); return true;
   });
-  await page.getByText('Tạo dự án mới', { exact: true }).click();
+  await workspaceView(page, 'Dự án'); await page.getByText('Tạo dự án mới', { exact: true }).click();
   await page.getByLabel('Tên dự án', { exact: true }).fill('Retry fixture');
   await page.getByRole('button', { name: 'Tạo dự án', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('Không đủ quyền hoặc CSRF');

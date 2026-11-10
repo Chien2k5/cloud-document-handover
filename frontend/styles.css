@@ -297,3 +297,9 @@ label { font-size: 1.0625rem; font-weight: 550; }
 .quota-panel h4 { font-size: 1.125rem; }
 .technical-details { font-size: .9375rem; }
 @media (max-width: 650px) { body { font-size: 17px; } .page-header h2 { font-size: 1.75rem; } }
+
+.sidebar-link { border: 1px solid transparent; min-height: 50px; }
+.sidebar-link.is-active { border-color: #5b8dff; box-shadow: 0 4px 12px rgb(0 0 0 / 12%); }
+.sidebar-link:focus-visible { outline-color: #bfdbfe; }
+.sidebar-project { padding-top: 24px; border-top: 1px solid #304460; }
+.sidebar-caption { line-height: 1.5; }
