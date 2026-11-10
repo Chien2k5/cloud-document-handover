@@ -40,7 +40,7 @@ for (const kind of ['publish', 'confirm', 'revoke']) for (const failure of [401,
 });
 
 test('C09.08C: expiry is checked at activation even before the one-second display clock updates', async ({ page }) => {
-  const now = Date.parse('2030-01-01T00:00:00Z'); await page.clock.install({ time: now }); let posts = 0;
+  const now = Date.parse('2030-01-01T00:00:00Z'); await page.clock.install({ time: now }); await page.clock.pauseAt(now + 1000); let posts = 0;
   await setupHandover(page, { value: manifest({ expiresAt: new Date(now + 5000).toISOString() }), extra: async route => { if (route.request().method() === 'POST') posts++; return false; } }); await openHandover(page); await expect(button(page, 'publish')).toBeEnabled(); await page.clock.setSystemTime(now + 6000); await button(page, 'publish').click();
   await expect(button(page, 'publish')).toHaveCount(0); await expect(view(page).locator('.handover-states')).toContainText('Expired — đã hết hạn'); expect(posts).toBe(0);
 });

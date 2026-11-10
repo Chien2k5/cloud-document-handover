@@ -5,6 +5,7 @@ import { canOwn, isUuid } from './rules.js';
 import { createHandoverBody, handoverPermissions } from './handover.js';
 import { downloadUrl } from './files.js';
 import { Button, EmptyState, ErrorNotice, LoadingState, TechnicalDetails } from './ui.jsx';
+import ExpiringDownloadLink from './ExpiringDownloadLink.jsx';
 
 export function CreateHandover({ project, members, files, onCreated, onAccessLost }) {
   const [title, setTitle] = useState(''), [recipients, setRecipients] = useState(''), [expiresAt, setExpiresAt] = useState('');
@@ -109,7 +110,7 @@ function HandoverView({ id, user }) {
       <section className="handover-manifest"><h4>Phiên bản trong gói</h4>{handover.items.length === 0 && <EmptyState title="Không có item trong phản hồi" description="Tải lại gói để kiểm tra dữ liệu từ backend." />}<ul>{handover.items.map(item => <li key={item.fileVersionId} className="handover-item" data-item-version-id={item.fileVersionId}><h5>{item.filename}</h5><p className="handover-item__identity">FileVersion ID: <code>{item.fileVersionId}</code></p>
         <TechnicalDetails title="Thông tin kỹ thuật item" accessibleLabel={`Thông tin kỹ thuật item ${item.fileVersionId}`}><dl className="technical-grid"><div><dt>S3 Version ID được pin</dt><dd><code>{item.versionId}</code></dd></div><div><dt>SHA-256 dự kiến</dt><dd><code>{item.expectedSha256}</code></dd></div></dl></TechnicalDetails>
         <Button variant="secondary" disabled={busy || !permissions.download} onClick={() => action('download', item.fileVersionId)}>Lấy link tải item {item.filename}</Button>
-        {download?.itemId === item.fileVersionId && permissions.download && Date.parse(download.expiresAt) > now && <p><a href={download.url} target="_blank" rel="noopener noreferrer">Tải item đúng phiên bản</a></p>}</li>)}</ul>
+        {download?.itemId === item.fileVersionId && permissions.download && <ExpiringDownloadLink key={`${download.itemId}:${download.expiresAt}`} download={download} label="Tải item đúng phiên bản" validUntil={handover.expiresAt} />}</li>)}</ul>
       </section><section className="handover-recipients"><h4>Người nhận</h4><ul>{handover.recipients.map(person => <li key={person.userId} data-recipient-id={person.userId}><div><strong>{person.userId === user.id ? 'Bạn' : 'Người nhận được cấp quyền'}</strong><p><code>{person.userId}</code></p></div><div><span className="recipient-access" data-state={person.accessStatus}>{person.accessStatus}</span><p>{person.confirmedAt ? `Đã xác nhận ${new Date(person.confirmedAt).toLocaleString('vi-VN')}` : 'Chưa xác nhận'}</p></div></li>)}</ul></section>
       <p className="handover-policy">Thu hồi/hết hạn chặn cấp URL mới. URL đã cấp trước đó có thể còn dùng được tới hạn của URL.</p>
     </>}

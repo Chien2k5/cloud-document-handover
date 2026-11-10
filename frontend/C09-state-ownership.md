@@ -84,3 +84,24 @@ HTTP 401/403/404 forwards access loss to Files/ProjectDetail and clears protecte
 Polling limits remain 15 reads / 2 seconds, recovery concurrency 3 and total recovery bound
 60 seconds. Browser clock tests exercise these defaults; helper terminal/identity guards
 and backend late-result tests are retained. FAILED can be checked again explicitly.
+
+## Batch 03 — DRAFT, manifest and item download (C09.08)
+
+CreateHandover keeps its fields/created UUID in the existing project-keyed subtree. A
+single-flight controller guards submit and unmount cancels/ignores late results. The
+protected body helper still owns validation, ID deduplication and local-date UTC conversion.
+Selected entries remain exact FileVersion records; creating a DRAFT never publishes it.
+Access-loss errors propagate to the same parent boundary as file/upload requests.
+
+Portal still owns active handover ID; HandoverView remains keyed by UUID/reload and account.
+The server owns workflow/access/recipient confirmations. Each successful mutation is followed
+by a fresh manifest read; a single recipient acknowledgement never sets aggregate status.
+Activation checks current time with the unchanged permissions helper. Pending mutations are
+single-flight, are not automatically retried on uncertainty and do not leak after unmount.
+401/403/404 and explicit expired/revoked access errors clear the old protected manifest;
+the owner may explicitly refresh to read server-authorized history.
+
+Item links retain the manifest FileVersion/S3 Version ID guard and protected URL validation.
+The shared expiry component accepts an accessible link label and the actual package deadline
+as an additional display/activation bound. It does not change the signed URL or claim S3
+revocation. Timers clean up on item/gateway/account unmount; no URL is persisted.

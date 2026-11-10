@@ -209,3 +209,28 @@ trên; không được coi các bài này là AWS_REAL_E2E.
 - [React + Vite](https://react.dev/learn/build-a-react-app-from-scratch)
 - [Vite](https://vite.dev/guide/)
 - [Playwright web server](https://playwright.dev/docs/test-webserver)
+
+## C09 Batch 03: upload và bàn giao
+
+Upload giữ nguyên file đã chọn, hash từ bytes thật và signed headers. Giao diện hiển thị
+size/type, phân biệt tài liệu mới với thêm phiên bản, và chỉ trình bày các bước thực tế
+được quan sát. AVAILABLE khác VERIFIED; mở phần Đối chiếu SHA-256 để xem hai giá trị
+backend trả về. Không có phần trăm tiến độ giả.
+
+Dừng chờ chỉ hủy việc chờ ở trình duyệt, không chứng minh server đã hủy. Khi complete
+lỗi nhưng đã có S3 Version ID, nút thử lại chỉ complete cùng ID, không PUT lại. Không
+đoán latest/ETag. Một lần upload mới tạo phiên mới. Polling vẫn tối đa 15 lần, cách 2
+giây; recovery danh sách tối đa 3 phiên đồng thời, dừng sau 60 giây. Có thể kiểm tra lại
+thủ công khi kết quả hợp lệ đến muộn. Đổi project/logout hủy và xóa state thuộc ngữ cảnh cũ.
+
+Owner rà soát các FileVersion đã chọn, nhập title/UUID người nhận/deadline local để tạo
+DRAFT; payload gửi UTC và giữ FileVersion ID. Không tự publish. Gói mở bằng UUID độc lập
+với membership; named recipient ngoài dự án vẫn được backend cấp quyền theo contract.
+Manifest hiển thị Workflow, Access, expiry và xác nhận từng người riêng. Sau publish,
+confirm, revoke, UI đọc lại aggregate state từ backend. Timeout/network không tự retry
+mutation; tải lại gói để kiểm tra trạng thái trước khi quyết định.
+
+Item download giữ đúng phiên bản đã pin, kiểm tra response Version ID/HTTPS/hạn URL.
+Link bị gỡ theo hạn URL hoặc hạn gói, và được kiểm tra lại ngay khi bấm. Thu hồi/hết hạn
+chặn cấp link mới; URL đã cấp có thể vẫn còn hiệu lực tới deadline riêng. Các bài browser
+clock/mock và storage fixture không chứng minh hành vi AWS thật.
