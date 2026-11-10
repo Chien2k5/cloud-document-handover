@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from './client.js';
-import { segment } from './api.js';
+import { ApiError, segment } from './api.js';
 import { canOwn, canWrite, isVerified } from './rules.js';
 import { downloadUrl, updateVersion } from './files.js';
 import { pollUpload, shouldPoll } from './upload.js';
@@ -14,6 +14,7 @@ export default function Files({ project, members, onHandoverCreated }) {
   const [target, setTarget] = useState(null), [download, setDownload] = useState(null), [actionBusy, setActionBusy] = useState(false);
   const manual = useRef(null);
   const [selected, setSelected] = useState({});
+  const [uploadBusy, setUploadBusy] = useState(false);
   function reconcileSelection(versions) {
     setSelected(current => {
       const next = { ...current };
@@ -57,13 +58,14 @@ export default function Files({ project, members, onHandoverCreated }) {
     const controller = new AbortController(); manual.current = controller; setActionBusy(true); setError(null); setDownload(null);
     try {
       const result = await api.request(`${base}/${segment(file.id)}/download`, { signal: controller.signal });
+      if (result.versionId !== file.versionId) throw new ApiError(0, 'INVALID_DOWNLOAD');
       controller.signal.throwIfAborted(); setDownload({ id: file.id, url: downloadUrl(result), expiresAt: result.expiresAt });
     } catch (e) { if (e.name !== 'AbortError') setError(e); }
     finally { manual.current = null; setActionBusy(false); }
   }
   return <>
-    <UploadPanel project={project} targetFile={target} onChanged={refresh} onUploaded={() => setTarget(null)} />
-    {target && <button onClick={() => setTarget(null)}>Chọn tài liệu mới thay vì thêm phiên bản</button>}
+    <UploadPanel project={project} targetFile={target} onChanged={refresh} onUploaded={() => setTarget(null)} onBusyChange={setUploadBusy} />
+    {target && <button disabled={uploadBusy} onClick={() => setTarget(null)}>Chọn tài liệu mới thay vì thêm phiên bản</button>}
     <section className="card"><h3>File và phiên bản</h3><ErrorNotice error={error} />
       <button disabled={busy || actionBusy} onClick={refresh}>Tải lại danh sách file</button>
       {busy && <p role="status">Đang tải file…</p>}
@@ -76,7 +78,7 @@ export default function Files({ project, members, onHandoverCreated }) {
         {canOwn(project) && <label className="select-file"><input type="checkbox" checked={Boolean(selected[file.id])} disabled={!isVerified(file)} onChange={event => setSelected(current => { const next = { ...current }; if (event.target.checked) next[file.id] = file; else delete next[file.id]; return next; })} />Chọn bàn giao {file.filename} · {file.id}</label>}
         <div className="actions"><button disabled={actionBusy} onClick={() => check(file)}>Kiểm tra lại {file.filename}</button>
           <button disabled={actionBusy || !isVerified(file)} onClick={() => prepareDownload(file)}>Lấy link tải {file.filename}</button>
-          {canWrite(project) && <button disabled={actionBusy} onClick={() => setTarget(file)}>Thêm phiên bản {file.filename}</button>}
+          {canWrite(project) && <button disabled={actionBusy || uploadBusy} onClick={() => setTarget(file)}>Thêm phiên bản {file.filename}</button>}
         </div>
         {download?.id === file.id && <p><a href={download.url} target="_blank" rel="noopener noreferrer">Tải phiên bản đã chọn</a> · Hết hạn {new Date(download.expiresAt).toLocaleString('vi-VN')}</p>}
       </li>)}</ul>

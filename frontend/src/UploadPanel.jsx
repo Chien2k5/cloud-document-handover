@@ -13,7 +13,7 @@ export function VersionState({ file }) {
     <p>SHA-256 dự kiến: <code>{file.expectedSha256 || '—'}</code></p><p>SHA-256 thực tế: <code>{file.actualSha256 || 'Chưa có kết quả'}</code></p>
   </div>;
 }
-export default function UploadPanel({ project, targetFile = null, onChanged = () => {}, onUploaded = () => {} }) {
+export default function UploadPanel({ project, targetFile = null, onChanged = () => {}, onUploaded = () => {}, onBusyChange = () => {} }) {
   const [file, setFile] = useState(null), [busy, setBusy] = useState(false), [error, setError] = useState(null);
   const [session, setSession] = useState(null), [state, setState] = useState(null), [progress, setProgress] = useState('');
   const active = useRef(null), form = useRef(null);
@@ -26,10 +26,10 @@ export default function UploadPanel({ project, targetFile = null, onChanged = ()
   }
   async function perform(action) {
     if (active.current) return;
-    const controller = new AbortController(); active.current = controller; setBusy(true); setError(null);
+    const controller = new AbortController(); active.current = controller; setBusy(true); onBusyChange(true); setError(null);
     try { await action(controller); }
     catch (e) { if (e.name !== 'AbortError') setError(e); else setProgress('Đã dừng chờ. Thao tác trên máy chủ có thể vẫn đã xảy ra; không tự gửi lại PUT.'); }
-    finally { active.current = null; setBusy(false); }
+    finally { active.current = null; setBusy(false); onBusyChange(false); }
   }
   function submit(event) {
     event.preventDefault();

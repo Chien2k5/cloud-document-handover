@@ -12,7 +12,8 @@ export async function mockProject(page, role = 'OWNER', overrides = async () => 
     else if (path.endsWith('/members')) data = [{ userId: id, displayName: 'Owner fixture', role: 'OWNER' }];
     else if (path === `/api/v1/projects/${id}`) data = project;
     else if (path.endsWith('/projects')) data = route.request().method() === 'POST' ? project : { items: [project], page: 0, size: 20 };
-    else data = { items: [], page: 0, size: 20 };
+    else if (path.endsWith('/files') && route.request().method() === 'GET') data = { items: [], page: 0, size: 20 };
+    else throw new Error(`Unexpected fixture request: ${route.request().method()} ${path}`);
     await route.fulfill({ json: data });
   });
   await page.goto('/');

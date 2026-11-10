@@ -36,3 +36,9 @@ test('API client refuses external origins before attaching cookies or CSRF', asy
   const api = new ApiClient({ fetchImpl: () => assert.fail('must not fetch') });
   await assert.rejects(api.request('//s3.example.test/object')); await assert.rejects(api.request('https://s3.example.test/object'));
 });
+test('anonymous startup is silent but later protected 401 notifies session expiry', async () => {
+  let expired = 0;
+  const api = new ApiClient({ fetchImpl: async () => json({ code: 'UNAUTHENTICATED' }, 401), onUnauthorized: () => expired++ });
+  await assert.rejects(api.request('/auth/me', { notifyUnauthorized: false })); assert.equal(expired, 0);
+  await assert.rejects(api.request('/projects')); assert.equal(expired, 1);
+});

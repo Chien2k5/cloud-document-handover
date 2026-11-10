@@ -9,7 +9,7 @@ export default function App() {
   const [email, setEmail] = useState(''), [password, setPassword] = useState('');
   useEffect(() => {
     const controller = new AbortController();
-    api.request('/auth/me', { signal: controller.signal }).then(setUser).catch(e => {
+    api.request('/auth/me', { signal: controller.signal, notifyUnauthorized: false }).then(setUser).catch(e => {
       if (e.status !== 401 && e.name !== 'AbortError') setError(e);
     }).finally(() => setLoading(false));
     const expired = event => { setUser(null); setPassword(''); setError(event.detail); };

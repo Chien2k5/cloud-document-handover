@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from './client.js';
-import { segment } from './api.js';
+import { ApiError, segment } from './api.js';
 import { canOwn, isUuid } from './rules.js';
 import { createHandoverBody, handoverPermissions } from './handover.js';
 import { downloadUrl } from './files.js';
@@ -71,6 +71,7 @@ function HandoverView({ id, user }) {
     try {
       if (kind === 'download') {
         const result = await api.request(`${base}/items/${segment(itemId)}/download`, { signal: controller.signal });
+        if (result.versionId !== handover.items.find(item => item.fileVersionId === itemId)?.versionId) throw new ApiError(0, 'INVALID_DOWNLOAD');
         controller.signal.throwIfAborted(); setDownload({ itemId, url: downloadUrl(result), expiresAt: result.expiresAt });
       } else {
         if (kind !== 'refresh') await api.request(`${base}/${kind}`, { method: 'POST', signal: controller.signal });

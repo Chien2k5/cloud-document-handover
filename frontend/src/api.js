@@ -54,7 +54,7 @@ export class ApiClient {
     if (!csrf?.headerName || !csrf?.token) throw new ApiError(0, 'INVALID_RESPONSE');
     this.csrf = csrf; return csrf;
   }
-  async request(path, { method = 'GET', body, form, signal, timeoutMs = this.timeoutMs } = {}) {
+  async request(path, { method = 'GET', body, form, signal, timeoutMs = this.timeoutMs, notifyUnauthorized = true } = {}) {
     if (!path.startsWith('/') || path.startsWith('//') || path.includes('://')) throw new Error('Internal API path required');
     const headers = { Accept: 'application/json' };
     if (!['GET', 'HEAD'].includes(method)) {
@@ -74,7 +74,7 @@ export class ApiClient {
       }
       if (!response.ok) {
         const error = new ApiError(response.status, data?.code || 'HTTP_ERROR', data?.requestId || '');
-        if (response.status === 401 && path !== '/auth/login') { this.csrf = null; this.onUnauthorized(error); }
+        if (response.status === 401 && path !== '/auth/login') { this.csrf = null; if (notifyUnauthorized) this.onUnauthorized(error); }
         throw error;
       }
       return data;
