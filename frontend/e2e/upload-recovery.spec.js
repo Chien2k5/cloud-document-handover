@@ -57,7 +57,9 @@ for (const failure of [409, 412, 'missing-version', 'network', 'timeout']) test(
   if (failure === 'timeout') await page.clock.install();
   const calls = await setup(page, { put: route => failure === 'timeout' ? new Promise(() => {}) : failure === 'network' ? route.abort('failed') : failure === 'missing-version' ? route.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*' } }) : route.fulfill({ status: failure }) });
   await start(page); await expect.poll(() => calls.put).toBe(1); if (failure === 'timeout') await page.clock.fastForward(120001);
-  await expect(panel(page).getByRole('alert')).toBeVisible(); await expect(retry(page)).toHaveCount(0); expect(calls.complete).toHaveLength(0); expect(calls.put).toBe(1); expect(calls.init).toHaveLength(1);
+  await expect(panel(page).getByRole('alert')).toBeVisible();
+  const message = failure === 409 ? 'S3 trả 409' : failure === 412 ? 'S3 trả 412' : failure === 'missing-version' ? 'Không đọc được S3 Version ID' : failure === 'timeout' ? 'Upload S3 hết thời gian chờ' : 'Không nhận được phản hồi S3';
+  await expect(panel(page).getByRole('alert')).toContainText(message); await expect(retry(page)).toHaveCount(0); expect(calls.complete).toHaveLength(0); expect(calls.put).toBe(1); expect(calls.init).toHaveLength(1);
   await expect(panel(page)).toContainText('Bấm upload lần nữa sẽ khởi tạo phiên mới');
 });
 

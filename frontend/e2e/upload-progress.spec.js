@@ -8,6 +8,7 @@ const init = { uploadId: file.uploadId, fileVersionId: file.id, fileId: file.fil
 async function choose(page) { await page.getByLabel('Chọn file', { exact: true }).setInputFiles({ name: file.filename, mimeType: 'text/plain', buffer: Buffer.from('abc') }); await page.getByRole('button', { name: 'Upload & kiểm tra SHA-256', exact: true }).click(); }
 
 test('C09.07B: stages follow real async boundaries, preserve bytes/headers/hash/version and never invent percent completion', async ({ page }) => {
+  const errors = []; page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   await page.addInitScript(() => { const original = File.prototype.arrayBuffer; File.prototype.arrayBuffer = async function () { await new Promise(resolve => { window.releaseHash = resolve; }); return original.call(this); }; });
   const releases = {}, waits = Object.fromEntries(['init', 'put', 'complete', 'integrity'].map(key => [key, new Promise(resolve => { releases[key] = resolve; })])); const calls = [];
   await page.route('https://s3.example.test/**', async route => { calls.push('put'); expect(route.request().postDataBuffer()).toEqual(Buffer.from('abc')); expect(route.request().headers()['x-csrf']).toBeUndefined(); expect(route.request().headers().cookie).toBeUndefined(); expect(route.request().headers()['if-none-match']).toBe('*'); await waits.put; await route.fulfill({ status: 200, headers: { 'x-amz-version-id': file.versionId, 'access-control-allow-origin': '*', 'access-control-expose-headers': 'x-amz-version-id' } }); });
@@ -25,7 +26,7 @@ test('C09.07B: stages follow real async boundaries, preserve bytes/headers/hash/
     await panel(page).getByText('Thông tin kỹ thuật phiên upload', { exact: true }).click(); for (const value of [file.id, file.uploadId, file.versionId]) await expect(panel(page).getByText(value, { exact: true })).toBeVisible();
     await panel(page).getByText('Đối chiếu SHA-256', { exact: true }).click(); await expect(panel(page).getByText(hash, { exact: true })).toHaveCount(1); await expect(panel(page).getByText('Chưa có kết quả', { exact: true })).toBeVisible();
     releases.integrity(); await expect(panel(page).locator('.upload-progress')).toHaveAttribute('data-phase', 'verified'); await expect(panel(page).getByText(hash, { exact: true })).toHaveCount(2);
-    expect(calls).toEqual(['init', 'put', 'complete', 'integrity']); await expect(panel(page).getByRole('progressbar')).toHaveCount(0); expect(await panel(page).innerText()).not.toMatch(/\b(?:30|70|100)%/);
+    expect(calls).toEqual(['init', 'put', 'complete', 'integrity']); await expect(panel(page).getByRole('progressbar')).toHaveCount(0); expect(await panel(page).innerText()).not.toMatch(/\b(?:30|70|100)%/); expect(errors).toEqual([]);
   } finally { Object.values(releases).forEach(release => release()); }
 });
 

@@ -69,3 +69,18 @@ anchor at expiry and rechecks the existing protected downloadUrl helper on activ
 Hidden same-project screens retain the component and its expiry timer; project/account
 unmount clears it. A renewed response uses a new keyed instance. No URL or selection is
 persisted in browser storage, and no automatic request/retry is added.
+
+## Batch 03 — Upload presentation and recovery (C09.07)
+
+UploadPanel still owns the File, session, response and one active controller. Presentation
+uses the existing helper's observed phases and backend upload/integrity states. File bytes,
+SHA-256, signed request, opaque S3 Version ID and complete/poll helpers remain unchanged.
+The component guards callbacks by mounted state/controller ownership. Same-project hidden
+screens retain the instance. Project/account unmount aborts work and ignores late callbacks.
+Explicit stop preserves the known session without claiming the server cancelled. Complete
+retry requires the exact already-received version; it never invokes startUpload or PUT.
+HTTP 401/403/404 forwards access loss to Files/ProjectDetail and clears protected UI.
+
+Polling limits remain 15 reads / 2 seconds, recovery concurrency 3 and total recovery bound
+60 seconds. Browser clock tests exercise these defaults; helper terminal/identity guards
+and backend late-result tests are retained. FAILED can be checked again explicitly.
