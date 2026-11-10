@@ -28,8 +28,8 @@ export function StatusBadge({ children }) {
   return <span className="status-badge" data-role={children}>{children}</span>;
 }
 
-export function TechnicalDetails({ title = 'Thông tin kỹ thuật', children }) {
-  return <details className="technical-details"><summary>{title}</summary>{children}</details>;
+export function TechnicalDetails({ title = 'Thông tin kỹ thuật', accessibleLabel, children }) {
+  return <details className="technical-details"><summary aria-label={accessibleLabel}>{title}</summary>{children}</details>;
 }
 
 export function ProjectSymbol() {

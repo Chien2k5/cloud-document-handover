@@ -89,6 +89,12 @@ function ProjectDetail({ projectId, user, navigation, onHandoverCreated }) {
   const [project, setProject] = useState(null), [members, setMembers] = useState([]), [reload, setReload] = useState(0);
   const [busy, setBusy] = useState(true), [error, setError] = useState(null);
   const [memberId, setMemberId] = useState(''), [role, setRole] = useState('VIEWER'), [saving, setSaving] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState(null);
+  const memberMutation = useRef(null), memberInput = useRef(null), removeTrigger = useRef(null);
+  const normalizedMember = memberId.trim();
+  const ownerTarget = members.some(member => member.role === 'OWNER' && member.userId.toLowerCase() === normalizedMember.toLowerCase());
+  const invalidMember = memberId.length > 0 && !isUuid(normalizedMember);
+  useEffect(() => () => memberMutation.current?.abort(), []);
   const base = `/projects/${segment(projectId)}`;
   useEffect(() => {
     if (project && !busy && navigation?.view === 'project') focusWorkspaceSection(`project-${navigation.section}`);
@@ -101,18 +107,28 @@ function ProjectDetail({ projectId, user, navigation, onHandoverCreated }) {
       .finally(() => { if (!controller.signal.aborted) setBusy(false); });
     return () => controller.abort();
   }, [base, reload]);
+  function editMember(member) {
+    if (saving || member.role === 'OWNER' || !canOwn(project)) return;
+    setMemberId(member.userId); setRole(member.role); setRemoveTarget(null); memberInput.current?.focus();
+  }
   async function changeMember(target, nextRole) {
+    target = target.trim();
+    if (memberMutation.current || !canOwn(project) || !isUuid(target)
+        || members.some(member => member.role === 'OWNER' && member.userId.toLowerCase() === target.toLowerCase())
+        || (nextRole !== undefined && !['EDITOR', 'VIEWER'].includes(nextRole))) return;
+    const controller = new AbortController(); memberMutation.current = controller;
     setSaving(true); setError(null);
     try {
-      await api.request(base + '/members/' + segment(target), nextRole ? { method: 'PUT', body: { role: nextRole } } : { method: 'DELETE' });
-      setMemberId(''); setReload(value => value + 1);
+      await api.request(base + '/members/' + segment(target), nextRole ? { method: 'PUT', body: { role: nextRole }, signal: controller.signal } : { method: 'DELETE', signal: controller.signal });
+      controller.signal.throwIfAborted(); setMemberId(''); setRemoveTarget(null); setReload(value => value + 1);
     } catch (e) {
-      setError(e);
-      if ([401, 403, 404].includes(e.status)) setProject(null);
-    } finally { setSaving(false); }
+      if (!controller.signal.aborted && e.name !== 'AbortError') {
+        setError(e); if ([401, 403, 404].includes(e.status)) setProject(null);
+      }
+    } finally { if (memberMutation.current === controller) memberMutation.current = null; if (!controller.signal.aborted) setSaving(false); }
   }
   return <section className="card workspace-section" id="project-overview" tabIndex={-1}>
-    <PageHeader title="Tổng quan dự án" actions={<Button variant="secondary" disabled={busy} onClick={() => setReload(value => value + 1)}>Kiểm tra lại quyền dự án</Button>} /><ErrorNotice error={error} />
+    <PageHeader title="Tổng quan dự án" actions={<Button variant="secondary" disabled={busy || saving} onClick={() => setReload(value => value + 1)}>Kiểm tra lại quyền dự án</Button>} /><ErrorNotice error={error} />
     {busy && <LoadingState>Đang tải quyền và thành viên…</LoadingState>}
     {project && <>
       <ProjectOverview project={project} />
@@ -121,15 +137,30 @@ function ProjectDetail({ projectId, user, navigation, onHandoverCreated }) {
         {members.length === 0 ? <EmptyState title="Chưa có thành viên trong phản hồi" description="Kiểm tra lại quyền dự án để lấy danh sách mới từ máy chủ." /> : <ul className="member-list">{members.map(member => <li key={member.userId} className="member-row">
           <div className="member-row__identity"><div className="member-row__name"><strong>{member.displayName}</strong>{member.userId === user.id && <span className="self-badge">Bạn</span>}</div>
             <div className="member-row__role"><StatusBadge>{member.role}</StatusBadge>{member.role === 'OWNER' && <span className="field-help">Chủ dự án</span>}</div>
-            <TechnicalDetails title={`Thông tin kỹ thuật thành viên ${member.displayName}`}><p>UUID thành viên: <code>{member.userId}</code></p></TechnicalDetails>
+            <TechnicalDetails title="Thông tin kỹ thuật thành viên" accessibleLabel={`Thông tin kỹ thuật thành viên ${member.displayName}`}><p>UUID thành viên: <code>{member.userId}</code></p></TechnicalDetails>
           </div>
-          {canOwn(project) && member.role !== 'OWNER' && <div className="actions member-row__actions"><Button variant="danger" disabled={saving} onClick={() => changeMember(member.userId)}>Gỡ {member.displayName}</Button></div>}
+          {canOwn(project) && member.role !== 'OWNER' && <div className="actions member-row__actions">
+            <Button variant="secondary" disabled={saving} aria-label={`Đổi vai trò ${member.displayName}`} onClick={() => editMember(member)}>Đổi vai trò</Button>
+            <Button variant="danger" disabled={saving} aria-label={`Gỡ ${member.displayName}`} aria-expanded={removeTarget?.userId === member.userId} onClick={event => { removeTrigger.current = event.currentTarget; setRemoveTarget(member); }}>Gỡ</Button>
+          </div>}
+          {removeTarget?.userId === member.userId && <div className="member-confirm" role="group" aria-label={`Xác nhận gỡ ${member.displayName}`}>
+            <p>Gỡ <strong>{member.displayName}</strong> khỏi dự án? Thành viên sẽ mất quyền truy cập dự án này.</p>
+            <div className="actions"><Button autoFocus variant="secondary" disabled={saving} onClick={() => { setRemoveTarget(null); removeTrigger.current?.focus(); }}>Hủy gỡ thành viên</Button>
+              <Button variant="danger" disabled={saving} onClick={() => changeMember(member.userId)}>Xác nhận gỡ {member.displayName}</Button></div>
+          </div>}
         </li>)}</ul>}
-      {canOwn(project) && <form onSubmit={event => { event.preventDefault(); if (isUuid(memberId.trim())) changeMember(memberId.trim(), role); }}>
-        <label>UUID thành viên<input required value={memberId} pattern="[0-9a-fA-F-]{36}" onChange={event => setMemberId(event.target.value)} /></label>
-        <label>Vai trò thành viên<select aria-label="Vai trò thành viên" value={role} onChange={event => setRole(event.target.value)}><option value="VIEWER">VIEWER</option><option value="EDITOR">EDITOR</option></select></label>
-        <button disabled={saving || !isUuid(memberId.trim())}>Lưu thành viên</button>
-      </form>}</div>
+      {canOwn(project) && <div className="member-form-panel"><h4>Thêm hoặc cập nhật thành viên</h4>
+        <p className="muted">Dùng UUID của tài khoản đang hoạt động. Chọn thành viên trong danh sách để đổi vai trò; quyền cuối cùng do máy chủ xác minh.</p>
+        <form onSubmit={event => { event.preventDefault(); if (isUuid(normalizedMember) && !ownerTarget) changeMember(normalizedMember, role); }}>
+          <label htmlFor="member-uuid">UUID thành viên</label><input id="member-uuid" ref={memberInput} required disabled={saving} value={memberId} pattern={'\\s*[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\s*'} aria-invalid={invalidMember || ownerTarget} aria-describedby="member-uuid-help member-uuid-error" onChange={event => setMemberId(event.target.value)} />
+          <span className="field-help" id="member-uuid-help">UUID gồm 5 nhóm ký tự hex, ví dụ 8-4-4-4-12. Khoảng trắng ở đầu/cuối được bỏ khi gửi.</span>
+          {(invalidMember || ownerTarget) && <p className="field-error" id="member-uuid-error" role="alert">{ownerTarget ? 'Không thể thay đổi OWNER của dự án.' : 'UUID không đúng định dạng. Kiểm tra đủ 5 nhóm và dấu gạch nối.'}</p>}
+          <label htmlFor="member-role">Vai trò thành viên</label><select id="member-role" disabled={saving} value={role} onChange={event => setRole(event.target.value)}><option value="VIEWER">VIEWER</option><option value="EDITOR">EDITOR</option></select>
+          <p className="field-help">EDITOR có thể tải lên; VIEWER chỉ xem và tải phiên bản được phép.</p>
+          <div className="actions"><Button type="submit" disabled={saving || !isUuid(normalizedMember) || ownerTarget}>Lưu thành viên</Button></div>
+          {saving && <p role="status">Đang xử lý thay đổi thành viên…</p>}
+        </form>
+      </div>}</div>
       <div className="workspace-section" id="project-files" tabIndex={-1}><Files project={project} members={members} onHandoverCreated={onHandoverCreated} /></div>
     </>}
   </section>;

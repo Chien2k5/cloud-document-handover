@@ -24,7 +24,7 @@ for (const viewport of [{ width: 375, height: 812 }, { width: 768, height: 1024 
     await check.focus(); await page.keyboard.press('Tab');
     expect(await page.evaluate(() => getComputedStyle(document.activeElement).outlineStyle)).toBe('solid');
     await page.screenshot({ path: testInfo.outputPath(`fixture-foundation-${viewport.width}.png`), fullPage: true });
-    expect(errors.filter(error => !error.startsWith('Pattern attribute value [0-9a-fA-F-]{36} is not a valid regular expression:'))).toEqual([]);
+    expect(errors).toEqual([]);
   });
 }
 

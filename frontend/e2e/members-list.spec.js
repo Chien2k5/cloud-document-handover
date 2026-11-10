@@ -19,7 +19,7 @@ for (const role of ['OWNER', 'EDITOR', 'VIEWER']) test(`C09.05A: ${role} reads a
   await expect(section(page).getByRole('button', { name: /^Gỡ / })).toHaveCount(role === 'OWNER' ? 2 : 0);
   await expect(section(page).getByRole('button', { name: 'Gỡ Owner thật từ fixture', exact: true })).toHaveCount(0);
   await expect(section(page).getByText(owner, { exact: true })).toBeHidden();
-  await section(page).getByText('Thông tin kỹ thuật thành viên Owner thật từ fixture', { exact: true }).click();
+  await section(page).getByLabel('Thông tin kỹ thuật thành viên Owner thật từ fixture', { exact: true }).click();
   await expect(section(page).getByText(owner, { exact: true })).toBeVisible();
 });
 
@@ -50,7 +50,7 @@ for (const width of [375, 768, 1440]) test(`C09.05A: long member display names a
   const errors = []; page.on('pageerror', e => errors.push(e.message)); page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   const long = 'Thành_viên_'.repeat(12);
   await roster(page, 'VIEWER', [{ ...members[1], displayName: long }, members[2]]); await workspaceView(page, 'Thành viên');
-  await section(page).getByText('Thông tin kỹ thuật thành viên ' + long, { exact: true }).focus(); await page.keyboard.press('Enter');
+  await section(page).getByLabel('Thông tin kỹ thuật thành viên ' + long, { exact: true }).focus(); await page.keyboard.press('Enter');
   await expect(section(page).getByText(editor, { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath(`fixture-members-list-${width}.png`) }); expect(errors).toEqual([]);

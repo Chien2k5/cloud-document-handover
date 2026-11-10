@@ -373,3 +373,13 @@ label { font-size: 1.0625rem; font-weight: 550; }
 .member-row .technical-details { margin-top: 16px; padding-top: 12px; }
 .member-row__actions { flex: 0 1 auto; }
 @media (max-width: 650px) { .member-row { flex-direction: column; padding: 20px; } .member-row__actions { width: 100%; } .member-row__actions button { width: 100%; } }
+
+.member-row { flex-wrap: wrap; }
+.member-row__actions { align-self: flex-start; }
+.member-confirm { flex: 1 0 100%; min-width: 0; padding: 20px; border: 1px solid #f5c7c7; border-radius: 10px; background: var(--danger-soft); }
+.member-confirm p { margin: 0 0 16px; }
+.member-form-panel { padding: 28px; margin: 28px 0; border: 1px solid var(--border); border-radius: 14px; background: var(--background); }
+.member-form-panel h4 { font-size: 1.25rem; margin: 0 0 12px; }
+.member-form-panel > p { margin: 0 0 24px; max-width: 70ch; }
+.member-form-panel form { max-width: 760px; }
+@media (max-width: 650px) { .member-form-panel { padding: 20px; } .member-confirm { flex-basis: auto; width: 100%; padding: 16px; } }
