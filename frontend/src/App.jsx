@@ -29,8 +29,8 @@ export default function App() {
     finally { setBusy(false); }
   }
   if (!loading && user) return <Portal key={user.id} user={user} busy={busy} error={error} onLogout={logout} />;
-  return <div className="container container--guest">
-    <header><h1>Cloud Handover</h1><div>Chưa đăng nhập</div></header>
+  return <div className="container container--guest"><div className="guest-panel">
+    <header className="guest-brand"><span className="brand-mark" aria-hidden="true">CH</span><h1>Cloud Handover</h1><p>Không gian tài liệu của nhóm</p></header>
     <ErrorNotice error={error} />
     {loading ? <LoadingState>Đang kiểm tra phiên đăng nhập…</LoadingState> : !user ? <Card>
       <PageHeader title="Đăng nhập" description="Truy cập dự án và các gói bàn giao được cấp quyền." /><form onSubmit={login}>
@@ -39,7 +39,7 @@ export default function App() {
         <Button type="submit" disabled={busy}>{busy ? 'Đang đăng nhập…' : 'Đăng nhập'}</Button>
       </form>
     </Card> : null}
-  </div>;
+  </div></div>;
 }
 function Portal({ user, busy, error, onLogout }) {
   const [route, setRoute] = useState(() => readWorkspaceHash(window.location.hash));
