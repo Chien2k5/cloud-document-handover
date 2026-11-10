@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from './client.js';
-import { ErrorNotice } from './ui.jsx';
+import { Button, Card, ErrorNotice, LoadingState, PageHeader } from './ui.jsx';
 import Projects from './Projects.jsx';
 import Handovers from './Handovers.jsx';
 export default function App() {
@@ -27,15 +27,15 @@ export default function App() {
     finally { setBusy(false); }
   }
   return <div className={`container ${user ? 'container--workspace' : 'container--guest'}`}>
-    <header><h1>Portal tài liệu nhóm 5</h1><div>{user ? <><span>{user.displayName} · {user.email}</span> <button disabled={busy} onClick={logout}>Đăng xuất</button></> : 'Chưa đăng nhập'}</div></header>
+    <header><h1>Portal tài liệu nhóm 5</h1><div>{user ? <><span>{user.displayName} · {user.email}</span> <Button variant="secondary" disabled={busy} onClick={logout}>Đăng xuất</Button></> : 'Chưa đăng nhập'}</div></header>
     <ErrorNotice error={error} />
-    {loading ? <p role="status">Đang kiểm tra phiên đăng nhập…</p> : !user ? <section className="card">
-      <h2>Đăng nhập</h2><form onSubmit={login}>
+    {loading ? <LoadingState>Đang kiểm tra phiên đăng nhập…</LoadingState> : !user ? <Card>
+      <PageHeader title="Đăng nhập" description="Truy cập dự án và các gói bàn giao được cấp quyền." /><form onSubmit={login}>
         <label>Email<input type="email" name="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)} /></label>
         <label>Mật khẩu<input type="password" name="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></label>
-        <button disabled={busy}>{busy ? 'Đang đăng nhập…' : 'Đăng nhập'}</button>
+        <Button type="submit" disabled={busy}>{busy ? 'Đang đăng nhập…' : 'Đăng nhập'}</Button>
       </form>
-    </section> : <Portal key={user.id} user={user} />}
+    </Card> : <Portal key={user.id} user={user} />}
   </div>;
 }
 function Portal({ user }) {

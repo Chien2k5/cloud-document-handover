@@ -101,6 +101,20 @@ button {
 }
 
 button:hover:not(:disabled) { background: var(--primary-hover); }
+.button--secondary { background: var(--surface); color: var(--text); border: 1px solid #cbd5e1; }
+.button--secondary:hover:not(:disabled) { background: #f1f5f9; color: var(--navy); }
+.button--ghost { background: transparent; color: var(--primary-hover); }
+.button--ghost:hover:not(:disabled) { background: #eff6ff; }
+.button--danger { background: var(--danger); }
+.button--danger:hover:not(:disabled) { background: #991b1b; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); margin-bottom: var(--space-5); }
+.page-header > * { min-width: 0; }
+.page-header h2 { margin: 0 0 var(--space-2); }
+.page-header p { margin: 0; color: var(--muted); }
+.page-header__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.loading-state { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4) 0; color: var(--muted); }
+.loading-state__dot { width: .5rem; height: .5rem; flex: 0 0 auto; border-radius: 50%; background: var(--primary); }
+.pagination { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); }
 
 .btn-primary { background: var(--primary); }
 .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
@@ -158,5 +172,6 @@ button:disabled { background: var(--border); color: #475569; cursor: not-allowed
     .container { padding: var(--space-3); }
     .container > header { align-items: start; flex-direction: column; gap: var(--space-3); padding: var(--space-4); }
     .card { padding: var(--space-4); }
+    .page-header { flex-direction: column; }
     h1 { font-size: 1.4rem; }
 }
