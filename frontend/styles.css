@@ -358,3 +358,18 @@ label { font-size: 1.0625rem; font-weight: 550; }
   .quota-metric { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); align-items: center; gap: 16px; }
   .quota-metric dd { margin: 0; text-align: right; }
 }
+
+.section-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin: 32px 0 20px; }
+.section-heading h3 { font-size: 1.5rem; margin: 0 0 8px; }
+.section-heading p { margin: 0; color: var(--muted); }
+.member-list { display: grid; gap: 16px; list-style: none; padding: 0; margin: 0 0 28px; }
+.member-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding: 24px; margin: 0; border: 1px solid var(--border); border-radius: 14px; background: white; min-width: 0; }
+.member-row__identity { min-width: 0; flex: 1; }
+.member-row__name { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; color: var(--navy); font-size: 1.125rem; }
+.member-row__name strong { min-width: 0; overflow-wrap: anywhere; }
+.member-row__role { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+.member-row__role .field-help { margin: 0; }
+.self-badge { color: var(--text); background: var(--background); border: 1px solid var(--border); padding: 2px 8px; border-radius: 6px; font-size: .875rem; }
+.member-row .technical-details { margin-top: 16px; padding-top: 12px; }
+.member-row__actions { flex: 0 1 auto; }
+@media (max-width: 650px) { .member-row { flex-direction: column; padding: 20px; } .member-row__actions { width: 100%; } .member-row__actions button { width: 100%; } }

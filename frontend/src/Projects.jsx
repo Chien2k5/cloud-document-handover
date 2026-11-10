@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from './client.js';
 import { ApiError, segment } from './api.js';
 import { canOwn, isUuid } from './rules.js';
-import { Button, Card, EmptyState, ErrorNotice, LoadingState, PageHeader, Pager, ProjectSymbol, StatusBadge } from './ui.jsx';
+import { Button, Card, EmptyState, ErrorNotice, LoadingState, PageHeader, Pager, ProjectSymbol, StatusBadge, TechnicalDetails } from './ui.jsx';
 import Files from './Files.jsx';
 import ProjectOverview from './ProjectOverview.jsx';
 import { focusWorkspaceSection } from './navigation.js';
@@ -116,8 +116,15 @@ function ProjectDetail({ projectId, user, navigation, onHandoverCreated }) {
     {busy && <LoadingState>Đang tải quyền và thành viên…</LoadingState>}
     {project && <>
       <ProjectOverview project={project} />
-      <div className="workspace-section" id="project-members" tabIndex={-1}><h3>Thành viên</h3><ul>{members.map(member => <li key={member.userId}>{member.displayName} · {member.role} · <code>{member.userId}</code>{member.userId === user.id && ' (bạn)'}{' '}
-        {canOwn(project) && member.role !== 'OWNER' && <button disabled={saving} onClick={() => changeMember(member.userId)}>Gỡ {member.displayName}</button>}</li>)}</ul>
+      <div className="workspace-section members-section" id="project-members" tabIndex={-1}>
+        <div className="section-heading"><div><h3>Thành viên</h3><p>Quyền truy cập được quản lý riêng cho dự án này.</p></div></div>
+        {members.length === 0 ? <EmptyState title="Chưa có thành viên trong phản hồi" description="Kiểm tra lại quyền dự án để lấy danh sách mới từ máy chủ." /> : <ul className="member-list">{members.map(member => <li key={member.userId} className="member-row">
+          <div className="member-row__identity"><div className="member-row__name"><strong>{member.displayName}</strong>{member.userId === user.id && <span className="self-badge">Bạn</span>}</div>
+            <div className="member-row__role"><StatusBadge>{member.role}</StatusBadge>{member.role === 'OWNER' && <span className="field-help">Chủ dự án</span>}</div>
+            <TechnicalDetails title={`Thông tin kỹ thuật thành viên ${member.displayName}`}><p>UUID thành viên: <code>{member.userId}</code></p></TechnicalDetails>
+          </div>
+          {canOwn(project) && member.role !== 'OWNER' && <div className="actions member-row__actions"><Button variant="danger" disabled={saving} onClick={() => changeMember(member.userId)}>Gỡ {member.displayName}</Button></div>}
+        </li>)}</ul>}
       {canOwn(project) && <form onSubmit={event => { event.preventDefault(); if (isUuid(memberId.trim())) changeMember(memberId.trim(), role); }}>
         <label>UUID thành viên<input required value={memberId} pattern="[0-9a-fA-F-]{36}" onChange={event => setMemberId(event.target.value)} /></label>
         <label>Vai trò thành viên<select aria-label="Vai trò thành viên" value={role} onChange={event => setRole(event.target.value)}><option value="VIEWER">VIEWER</option><option value="EDITOR">EDITOR</option></select></label>
