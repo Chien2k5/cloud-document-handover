@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from './client.js';
 import { canWrite } from './rules.js';
 import { completeUpload, pollUpload, startUpload } from './upload.js';
-import { ErrorNotice } from './ui.jsx';
+import { Button, EmptyState, ErrorNotice } from './ui.jsx';
 import { ApiError } from './api.js';
 import { shouldPoll } from './upload.js';
 
@@ -42,11 +42,16 @@ export default function UploadPanel({ project, targetFile = null, onChanged = ()
       await track(result.session, controller);
     });
   }
-  return <section className="card"><h3>Upload file</h3>
-    {!canWrite(project) ? <p>Viewer chỉ xem và tải file đã VERIFIED.</p> : <>
-      {targetFile && <p>Thêm phiên bản cho <strong>{targetFile.filename}</strong>. File ID: <code>{targetFile.fileId}</code>. Giữ nguyên tên file khi chọn.</p>}
-      <form ref={form} onSubmit={submit}><label>Chọn file<input type="file" required disabled={busy} onChange={event => setFile(event.target.files?.[0] || null)} /></label><button disabled={busy || !file}>Upload & kiểm tra SHA-256</button></form>
-      <p>Tối đa 100 MiB, file phải có ít nhất 1 byte. PUT thành công chưa đồng nghĩa VERIFIED.</p>
+  return <section className="card upload-panel"><h3>Upload file</h3>
+    <p className="upload-intro">{targetFile ? 'Thêm phiên bản vào tài liệu đã chọn.' : 'Tải tài liệu mới lên dự án.'} Toàn vẹn nội dung được kiểm tra riêng sau khi upload.</p>
+    {!canWrite(project) ? <EmptyState title="Quyền xem tài liệu" description="Viewer chỉ xem và tải file đã VERIFIED." /> : <>
+      {targetFile && <p className="upload-target">Thêm phiên bản cho <strong>{targetFile.filename}</strong>. File ID: <code>{targetFile.fileId}</code>. Giữ nguyên tên file khi chọn.</p>}
+      <form ref={form} onSubmit={submit} className="upload-form"><label htmlFor="upload-file">Chọn file</label><input id="upload-file" type="file" required disabled={busy} aria-describedby="upload-file-help" onChange={event => setFile(event.target.files?.[0] || null)} />
+        {file && <div className="upload-selection" aria-label="File đã chọn"><span aria-hidden="true" className="upload-selection__symbol">↥</span><div><strong>{file.name}</strong><dl><div><dt>Kích thước</dt><dd>{file.size} byte</dd></div><div><dt>Loại nội dung</dt><dd>{file.type || 'application/octet-stream'}</dd></div></dl></div></div>}
+        <p id="upload-file-help" className="field-help">Từ 1 byte đến 100 MiB (104857600 byte). Nội dung và tên file được giữ nguyên khi gửi.</p>
+        <div className="actions"><Button type="submit" disabled={busy || !file}>Upload & kiểm tra SHA-256</Button></div>
+      </form>
+      <p className="upload-safety">PUT thành công chưa đồng nghĩa VERIFIED. Chỉ phiên bản được backend xác minh mới có thể tải và bàn giao.</p>
     </>}
     <ErrorNotice error={error} />{progress && <p role="status">{progress}</p>}
     {session && <><p>Upload ID: <code>{session.uploadId}</code></p><p>FileVersion ID: <code>{session.fileVersionId}</code></p><p>S3 Version ID: <code>{session.versionId || 'Chưa nhận được'}</code></p></>}
