@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from './client.js';
 import { ErrorNotice } from './ui.jsx';
 import Projects from './Projects.jsx';
+import Handovers from './Handovers.jsx';
 export default function App() {
   const [user, setUser] = useState(null), [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false), [error, setError] = useState(null);
@@ -34,6 +35,10 @@ export default function App() {
         <label>Mật khẩu<input type="password" name="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></label>
         <button disabled={busy}>{busy ? 'Đang đăng nhập…' : 'Đăng nhập'}</button>
       </form>
-    </section> : <main key={user.id}><Projects user={user} /></main>}
+    </section> : <Portal key={user.id} user={user} />}
   </div>;
+}
+function Portal({ user }) {
+  const [handoverId, setHandoverId] = useState(null);
+  return <main><Projects user={user} onHandoverCreated={setHandoverId} /><Handovers user={user} activeId={handoverId} onSelect={setHandoverId} /></main>;
 }

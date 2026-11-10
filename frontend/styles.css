@@ -100,6 +100,10 @@ li { margin: 8px 0; }
 .file-card { border: 1px solid #ccd6df; padding: 14px; border-radius: 6px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
 a { color: #0056b3; }
+fieldset { border: 0; padding: 0; display: grid; gap: 12px; min-width: 0; }
+.select-file { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.select-file input { width: auto; }
+.handover { border-top: 1px solid #ccd6df; margin-top: 18px; padding-top: 12px; }
 button:disabled { opacity: .55; cursor: not-allowed; }
 .error { padding: 12px; background: #fff0f0; color: #9c1414; border-left: 4px solid #9c1414; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #297ec9; outline-offset: 2px; }

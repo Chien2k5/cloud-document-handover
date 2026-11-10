@@ -5,7 +5,7 @@ import { canOwn, isUuid } from './rules.js';
 import { ErrorNotice, Pager } from './ui.jsx';
 import Files from './Files.jsx';
 
-export default function Projects({ user }) {
+export default function Projects({ user, onHandoverCreated }) {
   const [page, setPage] = useState(0), [items, setItems] = useState([]), [reload, setReload] = useState(0);
   const [busy, setBusy] = useState(false), [error, setError] = useState(null), [selected, setSelected] = useState(null);
   const [name, setName] = useState(''), [description, setDescription] = useState(''), [creating, setCreating] = useState(false);
@@ -35,11 +35,11 @@ export default function Projects({ user }) {
         <button disabled={creating}>Tạo dự án</button>
       </form></details>
     </section>
-    {selected && <ProjectDetail key={selected} projectId={selected} user={user} />}
+    {selected && <ProjectDetail key={selected} projectId={selected} user={user} onHandoverCreated={onHandoverCreated} />}
   </>;
 }
 
-function ProjectDetail({ projectId, user }) {
+function ProjectDetail({ projectId, user, onHandoverCreated }) {
   const [project, setProject] = useState(null), [members, setMembers] = useState([]), [reload, setReload] = useState(0);
   const [busy, setBusy] = useState(true), [error, setError] = useState(null);
   const [memberId, setMemberId] = useState(''), [role, setRole] = useState('VIEWER'), [saving, setSaving] = useState(false);
@@ -75,7 +75,7 @@ function ProjectDetail({ projectId, user }) {
         <label>Vai trò thành viên<select aria-label="Vai trò thành viên" value={role} onChange={event => setRole(event.target.value)}><option value="VIEWER">VIEWER</option><option value="EDITOR">EDITOR</option></select></label>
         <button disabled={saving || !isUuid(memberId.trim())}>Lưu thành viên</button>
       </form>}
-      <Files project={project} />
+      <Files project={project} members={members} onHandoverCreated={onHandoverCreated} />
     </>}
   </section>;
 }
