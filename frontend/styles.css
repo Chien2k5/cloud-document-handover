@@ -437,5 +437,22 @@ label { font-size: 1.0625rem; font-weight: 550; }
 .upload-progress[data-failed="true"], .upload-progress[data-phase="mismatch"], .upload-progress[data-phase="failed"] { border-color: #fecaca; background: #fffafa; }
 .upload-progress[data-phase="verified"] { border-color: #bbf7d0; background: #f0fdf4; }
 .upload-panel .version-state { padding: 20px; margin: 24px 0; border: 1px solid var(--border); border-radius: 12px; }
+.draft-panel > h3 { margin-top: 0; }
+.draft-layout { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 28px; align-items: start; margin-top: 28px; }
+.draft-layout > * { min-width: 0; }
+.draft-selection { padding: 24px; background: var(--background); border: 1px solid var(--border); border-radius: 12px; }
+.draft-selection h4 { margin: 0 0 20px; font-size: 1.15rem; }
+.draft-selection > ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
+.draft-selection li { min-width: 0; padding: 16px; border: 1px solid var(--border); background: white; border-radius: 10px; }
+.draft-selection p { font-size: .9375rem; }
+.draft-selection dl { font-size: .9375rem; }
+.draft-selection dd { margin: 4px 0 16px; overflow-wrap: anywhere; }
+.draft-form fieldset { padding: 0; border: 0; margin: 0; min-width: 0; }
+.recipient-picker { display: grid; gap: 12px; list-style: none; padding: 0; }
+.recipient-picker li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; font-size: 1rem; }
+.recipient-picker button { font-size: .9375rem; }
+.draft-created { padding: 20px; margin-top: 24px; border: 1px solid #bbf7d0; border-radius: 10px; background: #f0fdf4; overflow-wrap: anywhere; }
+@media (max-width: 1050px) { .draft-layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 650px) { .draft-selection { padding: 16px; } .draft-form .actions > button { width: 100%; } }
 @media (max-width: 650px) { .upload-selection { padding: 16px; gap: 12px; } .upload-selection dl { display: grid; } .upload-form .actions > button { width: 100%; } .upload-form input[type="file"] { font-size: 1rem; } }
 @media (max-width: 650px) { .files-section > .section-heading { flex-direction: column; } .files-section > .section-heading > button { width: 100%; } .version-list > .file-card { padding: 20px; } .file-card__heading { gap: 12px; } .file-card__actions { flex-direction: column; } .file-card__actions > button { width: 100%; } .technical-grid { grid-template-columns: minmax(0, 1fr); } }

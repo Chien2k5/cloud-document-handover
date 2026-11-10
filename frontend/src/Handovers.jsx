@@ -4,34 +4,46 @@ import { ApiError, segment } from './api.js';
 import { canOwn, isUuid } from './rules.js';
 import { createHandoverBody, handoverPermissions } from './handover.js';
 import { downloadUrl } from './files.js';
-import { ErrorNotice } from './ui.jsx';
+import { Button, EmptyState, ErrorNotice, TechnicalDetails } from './ui.jsx';
 
-export function CreateHandover({ project, members, files, onCreated }) {
+export function CreateHandover({ project, members, files, onCreated, onAccessLost }) {
   const [title, setTitle] = useState(''), [recipients, setRecipients] = useState(''), [expiresAt, setExpiresAt] = useState('');
   const [busy, setBusy] = useState(false), [error, setError] = useState(null), [created, setCreated] = useState(null);
-  const active = useRef(null); useEffect(() => () => active.current?.abort(), []);
+  const active = useRef(null), mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; active.current?.abort(); }; }, []);
   if (!canOwn(project)) return null;
   async function submit(event) {
-    event.preventDefault(); setError(null); setBusy(true);
+    event.preventDefault(); if (active.current || !canOwn(project)) return;
+    setError(null); setBusy(true);
     const controller = new AbortController(); active.current = controller;
     try {
       const body = createHandoverBody({ title, files, recipients, expiresAt });
       const result = await api.request(`/projects/${segment(project.id)}/handovers`, { method: 'POST', body, signal: controller.signal });
-      controller.signal.throwIfAborted(); setCreated(result.id); onCreated(result.id);
-    } catch (e) { if (e.name !== 'AbortError') setError(e); }
-    finally { active.current = null; setBusy(false); }
+      controller.signal.throwIfAborted(); if (!mounted.current) return;
+      if (!isUuid(result?.id)) throw new ApiError(0, 'INVALID_RESPONSE');
+      setCreated(result.id); onCreated(result.id);
+    } catch (e) { if (mounted.current && !controller.signal.aborted && e.name !== 'AbortError') { setError(e); if ([401, 403, 404].includes(e.status)) onAccessLost?.(e); } }
+    finally { if (active.current === controller) active.current = null; if (mounted.current) setBusy(false); }
   }
-  return <section className="card"><h3>Tạo gói DRAFT</h3><ErrorNotice error={error} />
+  return <section className="card draft-panel"><h3>Tạo gói DRAFT</h3><ErrorNotice error={error} />
     <p>Đã chọn {files.length} phiên bản AVAILABLE + VERIFIED. Giữ nguyên version ngay cả khi có bản upload mới.</p>
-    <form onSubmit={submit}><fieldset disabled={busy}>
-      <label>Tiêu đề bàn giao<input required maxLength={200} value={title} onChange={event => setTitle(event.target.value)} /></label>
-      <label>UUID người nhận<textarea required value={recipients} onChange={event => setRecipients(event.target.value)} placeholder="Một hoặc nhiều UUID, ngăn bằng dấu phẩy" /></label>
-      <details><summary>Thành viên có thể chọn làm người nhận</summary><ul>{members.map(member => <li key={member.userId}>{member.displayName} · <code>{member.userId}</code>{' '}<button type="button" onClick={() => setRecipients(value => value ? value + ', ' + member.userId : member.userId)}>Thêm người nhận {member.displayName}</button></li>)}</ul></details>
-      <p>Có thể nhập UUID tài khoản enabled ngoài dự án; backend kiểm tra tài khoản. Không có API tìm toàn bộ người dùng.</p>
-      <label>Hạn bàn giao (giờ trên máy bạn)<input type="datetime-local" required value={expiresAt} onChange={event => setExpiresAt(event.target.value)} /></label>
-      <button disabled={!files.length}>Tạo DRAFT</button>
-    </fieldset></form>
-    {created && <p>Đã tạo gói <code>{created}</code>. Xem trạng thái ở mục gói bàn giao bên dưới.</p>}
+    <div className="draft-layout"><div className="draft-selection" aria-label="Phiên bản đã chọn"><h4>Rà soát phiên bản</h4>
+      {files.length ? <ul>{files.map(file => <li key={file.id}><strong>{file.filename}</strong><p>{file.size} byte · {file.uploadStatus} / {file.integrityStatus}</p>
+        <TechnicalDetails title="Định danh phiên bản đã chọn" accessibleLabel={`Định danh phiên bản đã chọn ${file.id}`}><dl><dt>FileVersion ID</dt><dd><code>{file.id}</code></dd><dt>S3 Version ID</dt><dd><code>{file.versionId || 'Chưa có'}</code></dd></dl></TechnicalDetails>
+      </li>)}</ul> : <EmptyState title="Chưa chọn phiên bản" description="Chọn phiên bản AVAILABLE + VERIFIED trong danh sách tài liệu trước khi tạo gói." />}
+      <p className="field-help">Gói giữ đúng các phiên bản này; không tự chuyển sang bản upload mới hơn.</p>
+    </div><form className="draft-form" onSubmit={submit}><fieldset disabled={busy}>
+      <label htmlFor="handover-title">Tiêu đề bàn giao</label><input id="handover-title" required maxLength={200} value={title} aria-describedby="handover-title-help" onChange={event => setTitle(event.target.value)} /><span className="field-help" id="handover-title-help">Tối đa 200 ký tự · {title.length}/200</span>
+      <label htmlFor="handover-recipients">UUID người nhận</label><textarea id="handover-recipients" required value={recipients} aria-describedby="handover-recipients-help" onChange={event => setRecipients(event.target.value)} placeholder="Một hoặc nhiều UUID, ngăn bằng dấu phẩy" />
+      <p className="field-help" id="handover-recipients-help">Có thể nhập UUID tài khoản đang hoạt động ngoài dự án. Backend kiểm tra quyền và tài khoản người nhận.</p>
+      <TechnicalDetails title="Thành viên có thể chọn làm người nhận"><ul className="recipient-picker">{members.map(member => <li key={member.userId}><span>{member.displayName} · {member.role}</span><Button variant="secondary" onClick={() => setRecipients(value => value.split(/[\s,;]+/).some(id => id.toLowerCase() === member.userId.toLowerCase()) ? value : value ? value + ', ' + member.userId : member.userId)}>Thêm người nhận {member.displayName}</Button></li>)}</ul></TechnicalDetails>
+      <label htmlFor="handover-deadline">Hạn bàn giao (giờ trên máy bạn)</label><input id="handover-deadline" type="datetime-local" required value={expiresAt} aria-describedby="handover-deadline-help" onChange={event => setExpiresAt(event.target.value)} />
+      <p className="field-help" id="handover-deadline-help">Chọn thời điểm trong tương lai. Hạn được chuyển sang UTC khi gửi backend.</p>
+      <div className="actions"><Button type="submit" disabled={!files.length}>Tạo DRAFT</Button></div>
+      <p className="field-help">Tạo DRAFT chưa phát hành gói cho người nhận.</p>
+    </fieldset></form></div>
+    {busy && <p role="status">Đang tạo gói DRAFT… Không gửi lại yêu cầu trong lúc chờ.</p>}
+    {created && <div className="draft-created" role="status"><p>Đã tạo gói DRAFT <code>{created}</code>.</p><Button variant="secondary" onClick={() => onCreated(created)}>Mở gói vừa tạo</Button></div>}
   </section>;
 }
 

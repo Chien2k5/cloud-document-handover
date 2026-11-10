@@ -97,6 +97,6 @@ export default function Files({ project, members, onHandoverCreated, onAccessLos
       </li>)}</ul>
       <Pager page={page} count={items.length} busy={busy || actionBusy} onPage={setPage} />
     </section>
-    <CreateHandover project={project} members={members} files={Object.values(selected)} onCreated={onHandoverCreated} />
+    <CreateHandover project={project} members={members} files={Object.values(selected)} onCreated={onHandoverCreated} onAccessLost={showError} />
   </>;
 }
