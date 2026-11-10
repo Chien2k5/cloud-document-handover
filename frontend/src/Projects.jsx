@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from './client.js';
 import { ApiError, segment } from './api.js';
 import { canOwn, isUuid } from './rules.js';
-import { Button, Card, EmptyState, ErrorNotice, LoadingState, PageHeader, Pager, StatusBadge } from './ui.jsx';
+import { Button, Card, EmptyState, ErrorNotice, LoadingState, PageHeader, Pager, ProjectSymbol, StatusBadge } from './ui.jsx';
 import Files from './Files.jsx';
 import ProjectOverview from './ProjectOverview.jsx';
 import { focusWorkspaceSection } from './navigation.js';
@@ -12,7 +12,7 @@ export default function Projects({ user, selected, onSelectProject, navigation, 
   const [busy, setBusy] = useState(true), [error, setError] = useState(null), [createError, setCreateError] = useState(null);
   const [name, setName] = useState(''), [description, setDescription] = useState(''), [creating, setCreating] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
-  const createPanel = useRef(null), nameInput = useRef(null), submitting = useRef(false);
+  const createPanel = useRef(null), createButton = useRef(null), nameInput = useRef(null), submitting = useRef(false);
   useEffect(() => {
     const controller = new AbortController(); setBusy(true); setError(null);
     api.request(`/projects?page=${page}&size=20`, { signal: controller.signal }).then(data => {
@@ -22,7 +22,16 @@ export default function Projects({ user, selected, onSelectProject, navigation, 
     }).finally(() => { if (!controller.signal.aborted) setBusy(false); });
     return () => controller.abort();
   }, [page, reload]);
-  function openCreate() { createPanel.current.open = true; nameInput.current.focus(); }
+  useEffect(() => { if (navigation.view !== 'projects' && createPanel.current?.open) createPanel.current.close(); }, [navigation.view]);
+  function openCreate() { createPanel.current.showModal(); nameInput.current.focus(); }
+  function returnCreateFocus() { if (createButton.current?.getClientRects().length) createButton.current.focus(); }
+  function cycleCreateFocus(event) {
+    if (event.key !== 'Tab') return;
+    const controls = [...createPanel.current.querySelectorAll('button:not(:disabled), input:not(:disabled), textarea:not(:disabled)')].filter(element => element.getClientRects().length);
+    const first = controls[0], last = controls.at(-1);
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  }
   async function create(event) {
     event.preventDefault();
     if (submitting.current) return;
@@ -37,7 +46,7 @@ export default function Projects({ user, selected, onSelectProject, navigation, 
       const project = await api.request('/projects', { method: 'POST', body: { name: name.trim(), description: description.trim() } });
       if (!isUuid(project?.id)) throw new ApiError(0, 'INVALID_RESPONSE');
       onSelectProject(project.id); setName(''); setDescription(''); setPage(0); setReload(value => value + 1);
-      createPanel.current.open = false;
+      createPanel.current.close();
     } catch (e) { setCreateError(e); } finally { submitting.current = false; setCreating(false); }
   }
   return <>
@@ -45,20 +54,21 @@ export default function Projects({ user, selected, onSelectProject, navigation, 
       <p className="eyebrow">Không gian làm việc</p>
       <PageHeader title="Dự án của bạn" description="Chọn dự án để quản lý tài liệu và bàn giao đúng phiên bản." actions={<>
         <Button variant="secondary" disabled={busy} onClick={() => setReload(value => value + 1)}>Tải lại dự án</Button>
-        <Button onClick={openCreate}>Tạo dự án mới</Button>
+        <Button ref={createButton} onClick={openCreate}>Tạo dự án mới</Button>
       </>} />
       <ErrorNotice error={error} />
       {busy ? <LoadingState>Đang tải dự án…</LoadingState> : !error && (items.length ? <ul className="project-list project-grid">{items.map(project => <li key={project.id}>
         <button className="project-tile" aria-label={`${project.name} · ${project.role}`} aria-pressed={selected === project.id} onClick={() => onSelectProject(project.id)}>
-          <span className="project-tile__top"><span className="project-symbol" aria-hidden="true">▱</span><StatusBadge>{project.role}</StatusBadge></span>
+          <span className="project-tile__top"><ProjectSymbol /><StatusBadge>{project.role}</StatusBadge></span>
           <span className="project-tile__name">{project.name}</span>
           <span className="project-tile__description">{project.description || 'Chưa có mô tả.'}</span>
           <span className="project-tile__link">{selected === project.id ? 'Đang chọn' : 'Mở dự án'} <span aria-hidden="true">→</span></span>
         </button>
       </li>)}</ul> : <EmptyState title="Chưa có dự án ở trang này" description="Tạo dự án mới hoặc quay lại trang trước để tiếp tục." />)}
       <Pager page={page} count={items.length} busy={busy || !!error} onPage={setPage} />
-      <details ref={createPanel} className="create-project"><summary>Thông tin dự án mới</summary>
-        <p className="muted">Đặt tên rõ ràng để các thành viên dễ nhận biết.</p>
+      <dialog ref={createPanel} className="create-project" aria-labelledby="project-create-title" aria-describedby="project-create-help" onClose={returnCreateFocus} onKeyDown={cycleCreateFocus}>
+        <div className="dialog-header"><h2 id="project-create-title">Tạo dự án</h2><Button variant="ghost" aria-label="Đóng form tạo dự án" onClick={() => createPanel.current.close()}>×</Button></div>
+        <p id="project-create-help" className="muted">Đặt tên rõ ràng để các thành viên dễ nhận biết.</p>
         <ErrorNotice error={createError} />
         <form onSubmit={create}>
           <label htmlFor="project-name">Tên dự án</label><input id="project-name" ref={nameInput} required maxLength={150} value={name} aria-invalid={!!fieldErrors.name} aria-describedby="project-name-help project-name-error" onChange={event => { setName(event.target.value); setFieldErrors(value => ({ ...value, name: null })); }} />
@@ -67,9 +77,9 @@ export default function Projects({ user, selected, onSelectProject, navigation, 
           <label htmlFor="project-description">Mô tả</label><textarea id="project-description" maxLength={2000} value={description} aria-invalid={!!fieldErrors.description} aria-describedby="project-description-help project-description-error" onChange={event => { setDescription(event.target.value); setFieldErrors(value => ({ ...value, description: null })); }} />
           <span id="project-description-help" className="field-help">Không bắt buộc · {description.length}/2000 ký tự</span>
           {fieldErrors.description && <p id="project-description-error" className="field-error" role="alert">{fieldErrors.description}</p>}
-          <div className="actions"><Button type="submit" disabled={creating}>{creating ? 'Đang tạo dự án…' : 'Tạo dự án'}</Button></div>
+          <div className="actions dialog-actions"><Button variant="secondary" onClick={() => createPanel.current.close()}>Để sau</Button><Button type="submit" disabled={creating}>{creating ? 'Đang tạo dự án…' : 'Tạo dự án'}</Button></div>
         </form>
-      </details>
+      </dialog>
     </Card>
     <div hidden={navigation.view !== 'project'} inert={navigation.view !== 'project'}>{selected && <ProjectDetail key={selected} projectId={selected} user={user} navigation={navigation} onHandoverCreated={onHandoverCreated} />}</div>
   </>;

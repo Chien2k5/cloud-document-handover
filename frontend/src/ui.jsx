@@ -25,9 +25,13 @@ export function EmptyState({ title, description }) {
   return <div className="empty-state"><span className="empty-state__symbol" aria-hidden="true">▱</span><h3>{title}</h3><p>{description}</p></div>;
 }
 export function StatusBadge({ children }) {
-  return <span className="status-badge">{children}</span>;
+  return <span className="status-badge" data-role={children}>{children}</span>;
 }
 
 export function TechnicalDetails({ title = 'Thông tin kỹ thuật', children }) {
   return <details className="technical-details"><summary>{title}</summary>{children}</details>;
+}
+
+export function ProjectSymbol() {
+  return <span className="project-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7h6l2 2h10v11H3z M3 7V4h6l2 3h8v2" /></svg></span>;
 }
