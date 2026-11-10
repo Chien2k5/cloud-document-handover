@@ -1,0 +1,135 @@
+{
+  "status": "PASS",
+  "environment": "localstack-emulation",
+  "gitCommit": "d7b23139e0cb945a414caa42c9a7eb29676edd7e",
+  "backupBucket": "handover-backups-local",
+  "backupKey": "postgres/20261110T193617Z-e2e-verified/portal.dump",
+  "backupS3VersionId": "AaHG9aL7Q5Yd8x8smGmJUVetFb2hb3QG",
+  "dumpSha256Verified": true,
+  "sourceDatabase": "handover",
+  "restoredDatabase": "handover_s3restore_20261110_193624_dst",
+  "atomicRollbackCheck": {
+    "rollbackDatabase": "handover_s3restore_20261110_193624_rollback",
+    "restoreExitCode": 1,
+    "remainingPublicTables": [
+      "handovers"
+    ],
+    "sentinelPreserved": true,
+    "passed": true
+  },
+  "all11TablesMatched": true,
+  "validatedForeignKeyCount": 18,
+  "handoverStateSummary": [
+    "CONFIRMED:ACTIVE=1"
+  ],
+  "tables": {
+    "flyway_schema_history": {
+      "sourceRowCount": 1,
+      "restoredRowCount": 1,
+      "canonicalSha256Matched": true
+    },
+    "app_users": {
+      "sourceRowCount": 4,
+      "restoredRowCount": 4,
+      "canonicalSha256Matched": true
+    },
+    "projects": {
+      "sourceRowCount": 1,
+      "restoredRowCount": 1,
+      "canonicalSha256Matched": true
+    },
+    "memberships": {
+      "sourceRowCount": 2,
+      "restoredRowCount": 2,
+      "canonicalSha256Matched": true
+    },
+    "file_metadata": {
+      "sourceRowCount": 2,
+      "restoredRowCount": 2,
+      "canonicalSha256Matched": true
+    },
+    "file_versions": {
+      "sourceRowCount": 3,
+      "restoredRowCount": 3,
+      "canonicalSha256Matched": true
+    },
+    "upload_sessions": {
+      "sourceRowCount": 3,
+      "restoredRowCount": 3,
+      "canonicalSha256Matched": true
+    },
+    "handovers": {
+      "sourceRowCount": 1,
+      "restoredRowCount": 1,
+      "canonicalSha256Matched": true
+    },
+    "handover_items": {
+      "sourceRowCount": 1,
+      "restoredRowCount": 1,
+      "canonicalSha256Matched": true
+    },
+    "handover_recipients": {
+      "sourceRowCount": 1,
+      "restoredRowCount": 1,
+      "canonicalSha256Matched": true
+    },
+    "audit_events": {
+      "sourceRowCount": 11,
+      "restoredRowCount": 11,
+      "canonicalSha256Matched": true
+    }
+  },
+  "s3VersionCrossCheck": {
+    "checkedCount": 3,
+    "allMatched": true,
+    "items": [
+      {
+        "fileVersionId": "43adfafe-398c-4a50-9c81-badeddd8f050",
+        "bucket": "handover-uploads-local",
+        "objectKey": "uploads/758b576c-8bee-43f2-b1ab-c29272094218/8b11ac63-58ef-4961-8dcb-80cca223a72c",
+        "s3VersionId": "AaHG9aL0xkR2fFNHnTjxAkajBCUN9TC7",
+        "sizeBytes": 69,
+        "uploadStatus": "AVAILABLE",
+        "integrityStatus": "VERIFIED",
+        "expectedSha256": "f75d30cdb790f05fc9295af6d54708cf3d81e03e77464b9409f9489e7437bde8",
+        "actualSha256": "f75d30cdb790f05fc9295af6d54708cf3d81e03e77464b9409f9489e7437bde8",
+        "headExactVersionMatched": true,
+        "checksumResultJsonMatched": true
+      },
+      {
+        "fileVersionId": "dd661a9f-00ff-4686-b9b0-74ba2b169f20",
+        "bucket": "handover-uploads-local",
+        "objectKey": "uploads/758b576c-8bee-43f2-b1ab-c29272094218/db714a43-018d-4733-ab78-e6d4fe7ba156",
+        "s3VersionId": "AaHG9aL2iSRPoOMOMgMfPp2MSe7FWx0i",
+        "sizeBytes": 67,
+        "uploadStatus": "AVAILABLE",
+        "integrityStatus": "VERIFIED",
+        "expectedSha256": "447ae91e6796e601d59bb63db373ede75d4f6aa83a2289c8588b6a44866e0ed1",
+        "actualSha256": "447ae91e6796e601d59bb63db373ede75d4f6aa83a2289c8588b6a44866e0ed1",
+        "headExactVersionMatched": true,
+        "checksumResultJsonMatched": true
+      },
+      {
+        "fileVersionId": "11ccee4b-5dc8-413d-aa3d-29b3ce76f2d8",
+        "bucket": "handover-uploads-local",
+        "objectKey": "uploads/758b576c-8bee-43f2-b1ab-c29272094218/31bf1800-0dd8-4be5-a17c-6d2a517708ec",
+        "s3VersionId": "AaHG9aL4zMvIKKi8VHgkbbxslIXVvyNU",
+        "sizeBytes": 39,
+        "uploadStatus": "AVAILABLE",
+        "integrityStatus": "MISMATCH",
+        "expectedSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "actualSha256": "408634d5f99229d1a771974f2fc27c7082967ce8ee5f9d01183f7349e3b627db",
+        "headExactVersionMatched": true,
+        "checksumResultJsonMatched": true
+      }
+    ]
+  },
+  "timingsMs": {
+    "s3DownloadAndVerifyMs": 2071.0,
+    "atomicRollbackTestMs": 847.8,
+    "pgRestoreIsolatedDbMs": 474.9,
+    "dbAndS3VerificationMs": 1884.9,
+    "totalMs": 5278.5
+  },
+  "completedAt": "2026-11-11T02:36:27+0700"
+}
