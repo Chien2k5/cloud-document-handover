@@ -2,6 +2,7 @@
 import hashlib
 import json
 import os
+import re
 from contextlib import closing
 from datetime import datetime, timezone
 from urllib.parse import unquote_plus
@@ -67,11 +68,12 @@ def verify_existing_result(s3, bucket, key, expected):
         if type(saved[name]) is not type(expected[name]) or saved[name] != expected[name]:
             raise ValueError("Existing checksum result does not match source")
     timestamp = saved["processedAt"]
-    if not isinstance(timestamp, str):
+    if not isinstance(timestamp, str) or not re.fullmatch(
+            r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:[0-5]\d)", timestamp, re.ASCII):
         raise ValueError("Invalid checksum timestamp")
     parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-    if parsed.utcoffset() is None:
-        raise ValueError("Checksum timestamp requires a timezone")
+    if parsed.utcoffset() is None or abs(parsed.utcoffset().total_seconds()) > 18 * 3600:
+        raise ValueError("Checksum timestamp requires a Java-compatible timezone")
 
 
 def process_records(event, s3, expected_bucket):
