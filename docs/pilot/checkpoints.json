@@ -1,0 +1,41 @@
+[
+  {
+    "stage": 1,
+    "date": "2026-11-10",
+    "status": "PASS_MOCK",
+    "testedParentCommit": "e58a382a1ac7de1094312baa1797de34bf772ac2",
+    "realBackend": "NOT_RUN_AT_THIS_CHECKPOINT",
+    "aws": "NOT_RUN",
+    "lint": "PASS",
+    "test": "PASS",
+    "unitTests": 4,
+    "build": "PASS",
+    "test:e2e": "PASS",
+    "browserMockTests": 2,
+    "npmAudit": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "frontendSourceHashes": {
+      "frontend/.env.example": "ad30ebb68cbe501de4f1f47e050331a10741f9e0afe06e8c6d1fd3bc00aef297",
+      "frontend/.gitignore": "ab4aaf3bda4a22d11b963fb455e1fc52c1498f866969fb07f849ab7f4091303d",
+      "frontend/eslint.config.js": "79ce8fc7e40ff8ad8d6c5c3f9ddb11269c543d72cf6c54d7a455a8483acfd8e3",
+      "frontend/index.html": "540f5a59a5b1dc16278512d577e2d5b081a106fc011513aeaff2863a2c421baa",
+      "frontend/package-lock.json": "dd579a91165ecc906544d5b4be77ddbdefb7ba381064f2081db92c8ba21a0a56",
+      "frontend/package.json": "b4af7225f5c484cdde10cf10a3492e1f87085ceaa624d5033552f60f78645430",
+      "frontend/playwright.config.js": "1b4eebecd44e698ace990e82e5cefd03447f011f4a141608f4dddc67b929a420",
+      "frontend/README.md": "a3ce9a3b754ce582d6f34bacff9602ae7a064b8532ff376e54f884f184ce9875",
+      "frontend/styles.css": "71ca78f8c72d675bb832d7790a96f08ca1c56894330f7bc73b0956e7ef73a87e",
+      "frontend/vite.config.js": "d22d225501017f5508a935e6b923033e20b8b1dbfb67ede0a156afd21eccddf7",
+      "frontend/e2e/auth.spec.js": "f82af4c6a705d85bf82cf26101147a4129266212c3a668731f19c568106b6e1a",
+      "frontend/src/api.js": "83c9adf475a777d40ac3a55c241d7dc05c4fc9b2a83fad1fcb206892887095a8",
+      "frontend/src/App.jsx": "4be8f1bcd94e056aed17bd50bb5df0b92e00ccc9453279cffe06edafc170972c",
+      "frontend/src/main.jsx": "af7431a93ffb2bdbff2aafe34cf049d6f7af292f3b8846816e61b8034d67e093",
+      "frontend/tests/api.test.js": "6ebb575a64066868d8351066ae3c4d5727edc093a9f374c6290b6e5d2bb5941c"
+    }
+  }
+]
