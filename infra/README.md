@@ -1,1 +1,37 @@
+# Hạ tầng AWS & Giả lập Local (TV1 — Hoàng Hải Chiến | A01, A02, A03)
 
+Thư mục `infra/` chứa toàn bộ cấu hình Infrastructure-as-Code (CloudFormation), chính sách IAM quyền tối thiểu, cấu hình CORS S3 và bộ giả lập AWS trên Docker (PostgreSQL 17 + LocalStack S3/Lambda + Nginx EB) do **TV1 (Hoàng Hải Chiến)** phụ trách theo `PRINCIPLE.MD`.
+
+## 1. Cấu trúc thư mục
+
+| Đường dẫn | Mã việc | Mô tả |
+| --- | --- | --- |
+| [`cloudformation/00-storage.yaml`](cloudformation/00-storage.yaml) | A03, A05, K05, K12 | S3 Upload Bucket (private, Versioning `Enabled`, mã hóa `AES256`, CORS, chỉ trigger Lambda trên prefix `uploads/`), Lambda SHA-256 (`python3.12`), S3 Backup Bucket tách quyền (`postgres/`), CloudWatch Logs (retention 14 ngày) & 3 CloudWatch Alarms (`Errors`, `Throttles`, `Duration`). Hỗ trợ cả **AWS Academy Learner Lab** (`UseLabRole=true`, dùng `LabRole`/`LabInstanceProfile`) và tài khoản AWS thường (`UseLabRole=false`, tự tạo IAM Role quyền tối thiểu). |
+| [`cloudformation/01-rds-beanstalk-cloudfront.yaml`](cloudformation/01-rds-beanstalk-cloudfront.yaml) | A01, A03, A04, A05, K12, K13 | RDS PostgreSQL 17 độc lập vòng đời Elastic Beanstalk (`PubliclyAccessible=false`, chỉ nhận kết nối TCP 5432 từ Security Group của EB), Elastic Beanstalk Corretto 21 trên AL2023 (`SingleInstance`, port `5000`, health check `/api/v1/health`), CloudFront HTTPS (`*.cloudfront.net` phục vụ cùng origin cho `/portal/` và `/api/v1`), và CloudWatch Alarms cho RDS. |
+| [`iam/backend-instance-s3-policy.json`](iam/backend-instance-s3-policy.json) | A03, K12 | Chính sách IAM quyền tối thiểu cho EC2 Instance Profile của Backend (`s3:PutObject`, `s3:GetObjectVersion` trên `uploads/*`; `s3:GetObject` trên `results/*`; `s3:ListBucket` trên upload bucket để phân biệt `404 NoSuchKey/NoSuchVersion` với `403 AccessDenied`). Không cấp `s3:DeleteObject*` và không truy cập được Backup Bucket. |
+| [`iam/lambda-checksum-s3-policy.json`](iam/lambda-checksum-s3-policy.json) | A03, K05, K12 | Chính sách IAM quyền tối thiểu cho Lambda SHA-256 (`s3:GetObjectVersion` trên `uploads/*`, `s3:PutObject`/`s3:GetObject` trên `results/*`, `s3:ListBucket`, CloudWatch Logs). |
+| [`iam/backup-operator-s3-policy.json`](iam/backup-operator-s3-policy.json) | A05, K11, K12 | Chính sách IAM tách riêng cho tác vụ backup/restore PostgreSQL (`s3:PutObject`, `s3:GetObject`, `s3:GetObjectVersion` trên `s3://<backup-bucket>/postgres/*` và quyền đọc đối chiếu `uploads/*`, `results/*` khi kiểm tra sau restore). |
+| [`config/s3-cors.json`](config/s3-cors.json) | A03 | Cấu hình CORS chuẩn cho S3 Upload Bucket: cho phép `PUT`, `GET`, `HEAD` từ origin của Portal, cho phép header `content-type`, `if-none-match` và expose `x-amz-version-id`, `etag`. |
+| [`local/compose.yml`](local/compose.yml) | A02 | Docker Compose giả lập môi trường AWS ở local: `postgres:17` (cổng `15432`), `localstack/localstack:4.4` (S3 + Lambda, cổng `4566`), và `nginx:stable-alpine` (cổng `8088`, nạp trực tiếp file `99_portal.conf` của Beanstalk). |
+| [`local/bootstrap_localstack.py`](local/bootstrap_localstack.py) | A02, A03 | Script khởi tạo tự động trên LocalStack đúng theo thiết kế của `00-storage.yaml` (2 bucket Versioning + Encryption + BlockPublicAccess, CORS, đóng gói và tạo hàm Lambda `aws/lambda/lambda_function.py`, gắn S3 notification chỉ cho prefix `uploads/`). |
+
+## 2. Kiểm tra hợp lệ template CloudFormation (`cfn-lint`)
+
+```powershell
+python -c "import sys; from cfnlint.runner import main; sys.argv=['cfn-lint','infra/cloudformation/00-storage.yaml','infra/cloudformation/01-rds-beanstalk-cloudfront.yaml']; main()"
+```
+
+Cả 2 template đều đạt **0 lỗi, 0 cảnh báo** (`exit code 0`).
+
+## 3. Chạy môi trường giả lập AWS ở Local
+
+```powershell
+docker compose -f infra/local/compose.yml up -d
+python infra/local/bootstrap_localstack.py
+```
+
+Sau khi khởi tạo, có thể chạy toàn bộ kịch bản kiểm thử tích hợp của TV1 (Nginx + Spring Boot + S3 Presigned PUT/GET + Lambda SHA-256 + Backup S3 + Restore DB tách biệt + Redeploy):
+
+```powershell
+python ops/verify_tv1_local_stack.py
+```
