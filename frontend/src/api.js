@@ -27,6 +27,8 @@ const messages = {
   REQUEST_TIMEOUT: 'Yêu cầu hết thời gian chờ; thao tác có thể đã được máy chủ nhận. Kiểm tra trạng thái trước khi thử lại.',
   INVALID_RESPONSE: 'Máy chủ trả dữ liệu không đúng định dạng API.',
   INVALID_FILE_SIZE: 'Chọn file từ 1 byte đến 100 MiB.',
+  FILE_NAME_CONFLICT: 'Phiên bản mới phải giữ nguyên tên file của tài liệu đã chọn.',
+  INVALID_DOWNLOAD: 'Liên kết tải không hợp lệ hoặc đã hết hạn. Lấy link mới từ backend.',
   INVALID_SIGNED_UPLOAD: 'Backend trả thông tin upload không hợp lệ. Không gửi file.',
   MISSING_VERSION_ID: 'Không đọc được S3 Version ID. Kiểm tra Versioning và CORS expose x-amz-version-id. Không complete hoặc đoán latest; chờ phiên cũ hết hạn rồi tạo upload mới.',
   S3_ALREADY_EXISTS: 'S3 trả 412: key đã tồn tại. Không tự PUT lại hoặc complete khi thiếu Version ID; chờ hết hạn và tạo upload mới.',

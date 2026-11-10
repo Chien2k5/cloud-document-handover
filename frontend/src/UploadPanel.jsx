@@ -3,6 +3,8 @@ import { api } from './client.js';
 import { canWrite } from './rules.js';
 import { completeUpload, pollUpload, startUpload } from './upload.js';
 import { ErrorNotice } from './ui.jsx';
+import { ApiError } from './api.js';
+import { shouldPoll } from './upload.js';
 
 export function VersionState({ file }) {
   return file && <div className="version-state"><p>Upload: <strong>{file.uploadStatus}</strong> · Integrity: <strong>{file.integrityStatus}</strong></p>
@@ -17,7 +19,9 @@ export default function UploadPanel({ project, targetFile = null, onChanged = ()
   const active = useRef(null), form = useRef(null);
   useEffect(() => () => active.current?.abort(), []);
   async function track(sessionInfo, controller) {
-    const result = await pollUpload(api, project.id, sessionInfo.uploadId, { signal: controller.signal, onState: value => { setState(value); onChanged(); } });
+    const result = await pollUpload(api, project.id, sessionInfo.uploadId, { signal: controller.signal, onState: value => {
+      setState(value); if (!shouldPoll(value.fileVersion) || value.fileVersion.integrityStatus === 'FAILED') onChanged();
+    } });
     setProgress(result.stopped === 'limit' ? 'Đã dừng tự kiểm tra sau 15 lần. Bạn có thể kiểm tra lại.' : 'Đã nhận trạng thái từ backend.');
   }
   async function perform(action) {
@@ -31,6 +35,7 @@ export default function UploadPanel({ project, targetFile = null, onChanged = ()
     event.preventDefault();
     perform(async controller => {
       setSession(null); setState(null);
+      if (targetFile && targetFile.filename !== file?.name) throw new ApiError(409, 'FILE_NAME_CONFLICT');
       const result = await startUpload(api, project.id, file, { fileId: targetFile?.fileId, signal: controller.signal,
         onSession: setSession, onProgress: setProgress });
       setState(result.state); onUploaded(); onChanged(); setFile(null); form.current?.reset();

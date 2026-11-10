@@ -3,7 +3,7 @@ import { api } from './client.js';
 import { segment } from './api.js';
 import { canOwn, isUuid } from './rules.js';
 import { ErrorNotice, Pager } from './ui.jsx';
-import UploadPanel from './UploadPanel.jsx';
+import Files from './Files.jsx';
 
 export default function Projects({ user }) {
   const [page, setPage] = useState(0), [items, setItems] = useState([]), [reload, setReload] = useState(0);
@@ -75,7 +75,7 @@ function ProjectDetail({ projectId, user }) {
         <label>Vai trò thành viên<select aria-label="Vai trò thành viên" value={role} onChange={event => setRole(event.target.value)}><option value="VIEWER">VIEWER</option><option value="EDITOR">EDITOR</option></select></label>
         <button disabled={saving || !isUuid(memberId.trim())}>Lưu thành viên</button>
       </form>}
-      <UploadPanel project={project} />
+      <Files project={project} />
     </>}
   </section>;
 }

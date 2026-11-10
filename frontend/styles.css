@@ -96,6 +96,10 @@ li { margin: 8px 0; }
 .project-list { list-style: none; padding: 0; }
 .project-list button { width: 100%; text-align: left; }
 .project-list button[aria-pressed="true"] { outline: 3px solid #17a2b8; }
+.file-list { list-style: none; padding: 0; }
+.file-card { border: 1px solid #ccd6df; padding: 14px; border-radius: 6px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+a { color: #0056b3; }
 button:disabled { opacity: .55; cursor: not-allowed; }
 .error { padding: 12px; background: #fff0f0; color: #9c1414; border-left: 4px solid #9c1414; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #297ec9; outline-offset: 2px; }
