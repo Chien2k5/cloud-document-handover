@@ -23,3 +23,15 @@ for (const width of [375, 768, 1440, 1920]) test(`C09 UI review: workspace uses 
   expect(Math.abs((main.x - sidebarWidth) - (width - main.x - main.width))).toBeLessThan(2);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+for (const width of [375, 768, 1440]) test(`C09 UI review: readable typography at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 1024 }); await mockProject(page, 'VIEWER');
+  const size = locator => locator.evaluate(element => parseFloat(getComputedStyle(element).fontSize));
+  expect(await size(page.locator('body'))).toBeGreaterThanOrEqual(17);
+  expect(await size(page.locator('#project-overview .page-header h2'))).toBeGreaterThanOrEqual(28);
+  expect(await size(page.locator('.quota-metric dt').first())).toBeGreaterThanOrEqual(15);
+  expect(await size(page.locator('.quota-metric dd strong').first())).toBeGreaterThanOrEqual(24);
+  const sidebarLink = page.locator('.sidebar-link').first();
+  expect(await size(sidebarLink)).toBeGreaterThanOrEqual(16);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
