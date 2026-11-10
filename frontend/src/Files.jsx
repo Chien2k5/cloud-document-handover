@@ -4,8 +4,9 @@ import { ApiError, segment } from './api.js';
 import { canOwn, canWrite, isVerified } from './rules.js';
 import { downloadUrl, updateVersion } from './files.js';
 import { pollUpload, shouldPoll } from './upload.js';
-import { ErrorNotice, Pager } from './ui.jsx';
-import UploadPanel, { VersionState } from './UploadPanel.jsx';
+import { Button, EmptyState, ErrorNotice, LoadingState, Pager } from './ui.jsx';
+import UploadPanel from './UploadPanel.jsx';
+import { FileVersionDetails, FileVersionStatus } from './FileVersionInfo.jsx';
 import { CreateHandover } from './Handovers.jsx';
 
 export default function Files({ project, members, onHandoverCreated }) {
@@ -66,21 +67,22 @@ export default function Files({ project, members, onHandoverCreated }) {
   return <>
     <UploadPanel project={project} targetFile={target} onChanged={refresh} onUploaded={() => setTarget(null)} onBusyChange={setUploadBusy} />
     {target && <button disabled={uploadBusy} onClick={() => setTarget(null)}>Chọn tài liệu mới thay vì thêm phiên bản</button>}
-    <section className="card"><h3>File và phiên bản</h3><ErrorNotice error={error} />
-      <button disabled={busy || actionBusy} onClick={refresh}>Tải lại danh sách file</button>
-      {busy && <p role="status">Đang tải file…</p>}
-      {polling && <p role="status">Đang đối soát phiên bản chờ bằng Upload ID; tự dừng sau tối đa 60 giây.</p>}
-      {!busy && items.length === 0 && <p>Chưa có file ở trang này.</p>}
-      <ul className="file-list">{items.map(file => <li key={file.id} className="file-card">
-        <h4>{file.filename} · {file.size} byte</h4><p>File ID: <code>{file.fileId}</code></p>
-        <p>FileVersion ID: <code>{file.id}</code></p><p>Upload ID: <code>{file.uploadId}</code></p><p>S3 Version ID: <code>{file.versionId || 'Chưa complete'}</code></p>
-        <VersionState file={file} />
-        {canOwn(project) && <label className="select-file"><input type="checkbox" checked={Boolean(selected[file.id])} disabled={!isVerified(file)} onChange={event => setSelected(current => { const next = { ...current }; if (event.target.checked) next[file.id] = file; else delete next[file.id]; return next; })} />Chọn bàn giao {file.filename} · {file.id}</label>}
-        <div className="actions"><button disabled={actionBusy} onClick={() => check(file)}>Kiểm tra lại {file.filename}</button>
-          <button disabled={actionBusy || !isVerified(file)} onClick={() => prepareDownload(file)}>Lấy link tải {file.filename}</button>
-          {canWrite(project) && <button disabled={actionBusy || uploadBusy} onClick={() => setTarget(file)}>Thêm phiên bản {file.filename}</button>}
+    <section className="card files-section">
+      <div className="section-heading"><div><h3>File và phiên bản</h3><p>Mỗi thẻ là một FileVersion. Mở thông tin kỹ thuật để đối chiếu định danh trước khi chọn bàn giao.</p></div><Button variant="secondary" disabled={busy || actionBusy} onClick={refresh}>Tải lại danh sách file</Button></div>
+      <ErrorNotice error={error} />
+      {busy && <LoadingState>Đang tải file…</LoadingState>}
+      {polling && <p className="file-polling" role="status">Đang đối soát phiên bản chờ bằng Upload ID; tự dừng sau tối đa 60 giây.</p>}
+      {!busy && !error && items.length === 0 && <EmptyState title="Chưa có file ở trang này." description="Phiên bản tài liệu được hiển thị từ phản hồi của backend. Dùng phân trang hoặc tải lại để kiểm tra." />}
+      <ul className="file-list version-list">{items.map(file => <li key={file.id} className="file-card" data-file-version-id={file.id}>
+        <div className="file-card__heading"><span className="file-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h8l4 4v14H6z M14 3v5h5 M9 12h6 M9 16h6" /></svg></span><h4>{file.filename}<span className="file-size"> · {file.size} byte</span></h4></div>
+        <FileVersionStatus file={file} />
+        {canOwn(project) && <label className="select-file"><input type="checkbox" aria-label={`Chọn bàn giao ${file.filename} · ${file.id}`} checked={Boolean(selected[file.id])} disabled={!isVerified(file)} onChange={event => setSelected(current => { const next = { ...current }; if (event.target.checked) next[file.id] = file; else delete next[file.id]; return next; })} />Chọn phiên bản bàn giao</label>}
+        <div className="actions file-card__actions"><Button variant="secondary" disabled={actionBusy} onClick={() => check(file)}>Kiểm tra lại {file.filename}</Button>
+          <Button disabled={actionBusy || !isVerified(file)} onClick={() => prepareDownload(file)}>Lấy link tải {file.filename}</Button>
+          {canWrite(project) && <Button variant="secondary" disabled={actionBusy || uploadBusy} onClick={() => setTarget(file)}>Thêm phiên bản {file.filename}</Button>}
         </div>
         {download?.id === file.id && <p><a href={download.url} target="_blank" rel="noopener noreferrer">Tải phiên bản đã chọn</a> · Hết hạn {new Date(download.expiresAt).toLocaleString('vi-VN')}</p>}
+        <FileVersionDetails file={file} />
       </li>)}</ul>
       <Pager page={page} count={items.length} busy={busy || actionBusy} onPage={setPage} />
     </section>
