@@ -26,7 +26,7 @@ export default function App() {
     try { await api.logout(); setUser(null); } catch (e) { setError(e); if (!api.csrf) setUser(null); }
     finally { setBusy(false); }
   }
-  return <div className="container">
+  return <div className={`container ${user ? 'container--workspace' : 'container--guest'}`}>
     <header><h1>Portal tài liệu nhóm 5</h1><div>{user ? <><span>{user.displayName} · {user.email}</span> <button disabled={busy} onClick={logout}>Đăng xuất</button></> : 'Chưa đăng nhập'}</div></header>
     <ErrorNotice error={error} />
     {loading ? <p role="status">Đang kiểm tra phiên đăng nhập…</p> : !user ? <section className="card">

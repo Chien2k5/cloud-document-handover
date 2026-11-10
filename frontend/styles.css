@@ -1,33 +1,77 @@
+:root {
+    color-scheme: light;
+    --navy: #12233d;
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --background: #f8fafc;
+    --surface: #ffffff;
+    --text: #334155;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --success: #166534;
+    --success-soft: #f0fdf4;
+    --warning: #92400e;
+    --warning-soft: #fffbeb;
+    --danger: #b91c1c;
+    --danger-soft: #fef2f2;
+    --space-1: .25rem;
+    --space-2: .5rem;
+    --space-3: .75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --radius-sm: .5rem;
+    --radius: .875rem;
+    --shadow: 0 2px 8px rgb(18 35 61 / 4%);
+    --focus-ring: 3px solid var(--primary);
+}
+
+* { box-sizing: border-box; }
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f6f9;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.55;
+    background-color: var(--background);
     margin: 0;
-    padding: 20px;
-    color: #333;
+    padding: 0;
+    color: var(--text);
 }
 
 .container {
-    max-width: 850px;
+    width: 100%;
+    max-width: 88rem;
     margin: 0 auto;
+    padding: var(--space-5);
 }
+.container--guest { max-width: 38rem; margin-top: var(--space-6); }
+.container > *, .card > *, .file-card > *, .actions > * { min-width: 0; }
+h1, h2, h3, h4 { color: var(--navy); line-height: 1.3; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.4rem; }
+h3 { font-size: 1.15rem; }
+:where(h1, h2, h3, h4, p, label, li, button, summary, a) { overflow-wrap: anywhere; }
 
-header {
+.container > header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #0056b3;
+    gap: var(--space-4);
+    background: var(--navy);
     color: white;
-    padding: 15px 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
+    padding: var(--space-5);
+    border-radius: var(--radius);
+    margin-bottom: var(--space-5);
 }
+.container > header h1 { color: var(--surface); margin: 0; }
+.container > header > * { min-width: 0; }
 
 .card {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    background: var(--surface);
+    padding: var(--space-5);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: var(--space-5);
+    box-shadow: var(--shadow);
+    min-width: 0;
 }
 
 .hidden { display: none; }
@@ -35,45 +79,48 @@ header {
 form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--space-3);
 }
 
 input, button {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
+    padding: .65rem .9rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font: inherit;
+    min-height: 44px;
 }
 
 button {
-    background: #0056b3;
+    background: var(--primary);
     color: white;
     border: none;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 600;
+    max-width: 100%;
+    white-space: normal;
 }
 
-button:hover { background: #004085; }
+button:hover:not(:disabled) { background: var(--primary-hover); }
 
-.btn-primary { background: #17a2b8; }
-.btn-primary:hover { background: #138496; }
+.btn-primary { background: var(--primary); }
+.btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
 
-.btn-success { background: #28a745; }
-.btn-success:hover { background: #218838; }
+.btn-success { background: var(--success); }
+.btn-success:hover:not(:disabled) { background: #14532d; }
 
 .status-box {
     margin-top: 15px;
     padding: 12px;
-    background: #e9ecef;
-    border-left: 4px solid #0056b3;
-    border-radius: 4px;
+    background: var(--background);
+    border-left: 4px solid var(--primary);
+    border-radius: var(--radius-sm);
 }
 
 .workflow-step {
-    background: #fafafa;
+    background: var(--background);
     padding: 15px;
-    border: 1px solid #eee;
-    border-radius: 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
 }
 
 .margin-top { margin-top: 15px; }
@@ -95,16 +142,21 @@ code { overflow-wrap: anywhere; font-size: .85em; }
 li { margin: 8px 0; }
 .project-list { list-style: none; padding: 0; }
 .project-list button { width: 100%; text-align: left; }
-.project-list button[aria-pressed="true"] { outline: 3px solid #17a2b8; }
+.project-list button[aria-pressed="true"] { outline: 3px solid var(--primary); outline-offset: 2px; }
 .file-list { list-style: none; padding: 0; }
-.file-card { border: 1px solid #ccd6df; padding: 14px; border-radius: 6px; }
+.file-card { border: 1px solid var(--border); padding: var(--space-4); border-radius: var(--radius-sm); min-width: 0; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
-a { color: #0056b3; }
+a { color: var(--primary-hover); }
 fieldset { border: 0; padding: 0; display: grid; gap: 12px; min-width: 0; }
 .select-file { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .select-file input { width: auto; }
-.handover { border-top: 1px solid #ccd6df; margin-top: 18px; padding-top: 12px; }
-button:disabled { opacity: .55; cursor: not-allowed; }
-.error { padding: 12px; background: #fff0f0; color: #9c1414; border-left: 4px solid #9c1414; }
-button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #297ec9; outline-offset: 2px; }
-@media (max-width: 650px) { body { padding: 10px; } header { align-items: start; flex-direction: column; gap: 12px; } h1 { font-size: 1.4rem; } }
+.handover { border-top: 1px solid var(--border); margin-top: 18px; padding-top: 12px; }
+button:disabled { background: var(--border); color: #475569; cursor: not-allowed; }
+.error { padding: var(--space-3); background: var(--danger-soft); color: var(--danger); border-left: 4px solid var(--danger); border-radius: var(--radius-sm); }
+:where(button, input, select, textarea, summary, a):focus-visible { outline: var(--focus-ring); outline-offset: 3px; }
+@media (max-width: 650px) {
+    .container { padding: var(--space-3); }
+    .container > header { align-items: start; flex-direction: column; gap: var(--space-3); padding: var(--space-4); }
+    .card { padding: var(--space-4); }
+    h1 { font-size: 1.4rem; }
+}

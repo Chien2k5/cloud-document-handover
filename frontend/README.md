@@ -32,6 +32,12 @@ không phải test backend hay AWS thật. Playwright dùng Chrome có sẵn; đ
 `PW_CHANNEL` theo môi trường nếu dùng browser khác được hỗ trợ.
 Không thu trace/video/cookie/token. Không lưu mật khẩu hoặc CSRF vào web storage.
 
+Nếu 5173 đang được worktree khác sử dụng, giữ server đó và chọn cổng trống riêng
+cho browser fixture tests: `$env:PW_PORT='5189'; npm run test:e2e` (PowerShell).
+Playwright tự chạy Vite từ worktree hiện tại với strictPort/reuseExistingServer=false;
+không thay đích proxy production. `PW_PORT` chỉ cấu hình test, live/business runners
+vẫn dùng cổng riêng do runner cấp. Không chạy hai lượt fixture tests cùng cổng.
+
 ## Chạy cùng backend thật
 
 Tạo database PostgreSQL **portal riêng** theo `backend/README.md`; không dùng
