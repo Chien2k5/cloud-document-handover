@@ -63,7 +63,7 @@ export default function Handovers({ user, activeId, onSelect }) {
 function HandoverView({ id, user }) {
   const [handover, setHandover] = useState(null), [project, setProject] = useState(null);
   const [error, setError] = useState(null), [busy, setBusy] = useState(true), [now, setNow] = useState(Date.now());
-  const [download, setDownload] = useState(null); const active = useRef(null);
+  const [download, setDownload] = useState(null), [operation, setOperation] = useState('refresh'); const active = useRef(null), mounted = useRef(true);
   const base = `/handovers/${segment(id)}`;
   async function read(signal) {
     const data = await api.request(base, { signal }); signal.throwIfAborted(); setHandover(data); setProject(null); setDownload(null);
@@ -72,14 +72,16 @@ function HandoverView({ id, user }) {
     } catch (e) { if (![403, 404].includes(e.status)) throw e; }
   }
   useEffect(() => {
+    mounted.current = true;
     const controller = new AbortController(); active.current = controller;
-    read(controller.signal).catch(e => { if (e.name !== 'AbortError') setError(e); }).finally(() => { if (!controller.signal.aborted) { setBusy(false); active.current = null; } });
+    read(controller.signal).catch(e => { if (mounted.current && !controller.signal.aborted && e.name !== 'AbortError') setError(e); }).finally(() => { if (active.current === controller) { active.current = null; if (mounted.current && !controller.signal.aborted) setBusy(false); } });
     const clock = setInterval(() => setNow(Date.now()), 1000);
-    return () => { clearInterval(clock); controller.abort(); active.current?.abort(); };
+    return () => { mounted.current = false; clearInterval(clock); controller.abort(); active.current?.abort(); };
   }, [base]); // Component is keyed by immutable handover ID and account parent.
   async function action(kind, itemId) {
-    if (active.current) return;
-    const controller = new AbortController(); active.current = controller; setBusy(true); setError(null); setDownload(null);
+    if (active.current || !mounted.current) return;
+    if (kind !== 'refresh' && !handoverPermissions(handover, project, user.id, Date.now())[kind]) { setNow(Date.now()); return; }
+    const controller = new AbortController(); active.current = controller; setBusy(true); setOperation(kind); setError(null); setDownload(null);
     try {
       if (kind === 'download') {
         const result = await api.request(`${base}/items/${segment(itemId)}/download`, { signal: controller.signal });
@@ -90,16 +92,18 @@ function HandoverView({ id, user }) {
         // Confirmation response describes one recipient, never infer aggregate CONFIRMED.
         await read(controller.signal);
       }
-    } catch (e) { if (e.name !== 'AbortError') { setError(e); if ([401, 403, 404].includes(e.status)) { setHandover(null); setProject(null); } } }
-    finally { active.current = null; setBusy(false); }
+    } catch (e) { if (mounted.current && !controller.signal.aborted && e.name !== 'AbortError') { setError(e); if ([401, 403, 404].includes(e.status) || ['HANDOVER_REVOKED', 'HANDOVER_EXPIRED'].includes(e.code)) { setHandover(null); setProject(null); } } }
+    finally { if (active.current === controller) { active.current = null; if (mounted.current) { setBusy(false); setOperation('refresh'); } } }
   }
   const permissions = handoverPermissions(handover, project, user.id, now);
+  const pendingText = { publish: 'Đang phát hành gói…', confirm: 'Đang ghi nhận xác nhận của bạn…', revoke: 'Đang thu hồi quyền truy cập gói…', download: 'Đang xin link tải đúng phiên bản…', refresh: 'Đang kiểm tra gói và quyền hiện tại…' }[operation];
   return <div className="handover"><ErrorNotice error={error} /><div className="handover-toolbar"><p className="eyebrow">Gói được mở bằng UUID</p><Button variant="secondary" disabled={busy} onClick={() => action('refresh')}>Tải lại gói</Button></div>
-    {busy && <LoadingState>Đang kiểm tra gói và quyền hiện tại…</LoadingState>}
+    {busy && <LoadingState>{pendingText}</LoadingState>}
+    {error && ['REQUEST_TIMEOUT', 'NETWORK_ERROR', 'SESSION_CHANGED'].includes(error.code) && <p className="handover-policy">Kết quả thay đổi có thể đã được máy chủ ghi nhận. Tải lại gói để kiểm tra; không tự gửi lại thao tác.</p>}
     {handover && <><h3 className="handover-title">{handover.title}</h3>
       <div className="handover-states"><div><span>Workflow</span><strong data-state={handover.status}>{handover.status}</strong></div><div><span>Access</span><strong data-state={handover.accessStatus}>{handover.accessStatus}</strong></div><div><span>Thời hạn</span><strong>{permissions.expired ? 'Expired — đã hết hạn' : 'Chưa hết hạn'}</strong><span>{new Date(handover.expiresAt).toLocaleString('vi-VN')}</span></div></div>
       <TechnicalDetails title="Thông tin kỹ thuật gói bàn giao"><p>Handover ID: <code>{handover.id}</code></p><p>Project ID: <code>{handover.projectId}</code></p></TechnicalDetails>
-      <div className="actions handover-actions">{permissions.publish && <Button disabled={busy} onClick={() => action('publish')}>Phát hành gói</Button>}
+      <div className="actions handover-actions" role="group" aria-label="Thao tác gói bàn giao">{permissions.publish && <Button disabled={busy} onClick={() => action('publish')}>Phát hành gói</Button>}
         {permissions.confirm && <Button disabled={busy} onClick={() => action('confirm')}>Xác nhận nhận bàn giao</Button>}
         {permissions.revoke && <Button variant="danger" disabled={busy} onClick={() => action('revoke')}>Thu hồi gói</Button>}</div>
       <section className="handover-manifest"><h4>Phiên bản trong gói</h4>{handover.items.length === 0 && <EmptyState title="Không có item trong phản hồi" description="Tải lại gói để kiểm tra dữ liệu từ backend." />}<ul>{handover.items.map(item => <li key={item.fileVersionId} className="handover-item" data-item-version-id={item.fileVersionId}><h5>{item.filename}</h5><p className="handover-item__identity">FileVersion ID: <code>{item.fileVersionId}</code></p>
