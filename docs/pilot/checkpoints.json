@@ -82,5 +82,55 @@
       "frontend/tests/api.test.js": "6ebb575a64066868d8351066ae3c4d5727edc093a9f374c6290b6e5d2bb5941c",
       "frontend/tests/rules.test.js": "ae9dbb4d02ae924b5d99eaa977a0dacd302718de7f2529eb88bcf9a20545be34"
     }
+  },
+  {
+    "stage": 3,
+    "date": "2026-11-10",
+    "status": "PASS_MOCK",
+    "testedParentCommit": "f5e3d45b5bf3c1e3516b31520dfdc01fc448631e",
+    "realBackend": "NOT_RUN_AT_THIS_CHECKPOINT",
+    "aws": "NOT_RUN",
+    "lint": "PASS",
+    "test": "PASS",
+    "unitTests": 12,
+    "build": "PASS",
+    "test:e2e": "PASS",
+    "browserMockTests": 6,
+    "npmAudit": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "frontendSourceHashes": {
+      "frontend/.env.example": "ad30ebb68cbe501de4f1f47e050331a10741f9e0afe06e8c6d1fd3bc00aef297",
+      "frontend/.gitignore": "ab4aaf3bda4a22d11b963fb455e1fc52c1498f866969fb07f849ab7f4091303d",
+      "frontend/eslint.config.js": "79ce8fc7e40ff8ad8d6c5c3f9ddb11269c543d72cf6c54d7a455a8483acfd8e3",
+      "frontend/index.html": "540f5a59a5b1dc16278512d577e2d5b081a106fc011513aeaff2863a2c421baa",
+      "frontend/package-lock.json": "dd579a91165ecc906544d5b4be77ddbdefb7ba381064f2081db92c8ba21a0a56",
+      "frontend/package.json": "b4af7225f5c484cdde10cf10a3492e1f87085ceaa624d5033552f60f78645430",
+      "frontend/playwright.config.js": "1b4eebecd44e698ace990e82e5cefd03447f011f4a141608f4dddc67b929a420",
+      "frontend/README.md": "a3ce9a3b754ce582d6f34bacff9602ae7a064b8532ff376e54f884f184ce9875",
+      "frontend/styles.css": "2942929b3668c0c517e8d5bb6d891044708f0915f5214eaad936f444f1f7173e",
+      "frontend/vite.config.js": "d22d225501017f5508a935e6b923033e20b8b1dbfb67ede0a156afd21eccddf7",
+      "frontend/e2e/auth.spec.js": "f82af4c6a705d85bf82cf26101147a4129266212c3a668731f19c568106b6e1a",
+      "frontend/e2e/fixtures.js": "db18ebe6872e6c6ec1c62bd875b987a195c89aac68616f5b95dfb0ad9d1f4231",
+      "frontend/e2e/projects.spec.js": "6063c96b71bf99c2d2390d5eee759ca7ac1af4a8a319c150d89290921c3bb490",
+      "frontend/e2e/upload.spec.js": "ff431ada1f4e6ac8428f448d4fc54b6b22ee3d9c8cad870bf5f0746e571393f9",
+      "frontend/src/api.js": "d6632e7eb89f077424e0dcb2ffa0b7049b2ab7520711d618425bad75a8f41cf0",
+      "frontend/src/App.jsx": "da337caf2969e2a124bb863c293908d0466e7a07217a4996bca44f60e2db4cf7",
+      "frontend/src/client.js": "3da61bb2a566d06902bd80eeeb13749972c991843579acfd890a72a924c94b45",
+      "frontend/src/main.jsx": "af7431a93ffb2bdbff2aafe34cf049d6f7af292f3b8846816e61b8034d67e093",
+      "frontend/src/Projects.jsx": "889e230fe0ea8e12ae2a3256dbe779b25caf5bcf9e9a144d91032e968e648752",
+      "frontend/src/rules.js": "80d33b2cbda04e28188d0cfe92a9df245db66cfc7402240cd84605bcf6e8f56b",
+      "frontend/src/ui.jsx": "e8f7b895853a133522bfb92a8cafba05a728e15c03145a0a807c0f959219f805",
+      "frontend/src/upload.js": "3479a0ddc4881eecaff7c50bbd8ec78254b78b50dd0c993ce025aa9f64019b80",
+      "frontend/src/UploadPanel.jsx": "60ea13ee5a1a7b8350be37d11ccc5e67758096688f840e222110783f92795b29",
+      "frontend/tests/api.test.js": "6ebb575a64066868d8351066ae3c4d5727edc093a9f374c6290b6e5d2bb5941c",
+      "frontend/tests/rules.test.js": "ae9dbb4d02ae924b5d99eaa977a0dacd302718de7f2529eb88bcf9a20545be34",
+      "frontend/tests/upload.test.js": "2c0f4499a3a26f85112459b858c255df01eb46aeaeddab3d5dc956486e1d2d15"
+    }
   }
 ]

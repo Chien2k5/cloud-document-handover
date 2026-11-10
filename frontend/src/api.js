@@ -26,6 +26,14 @@ const messages = {
   NETWORK_ERROR: 'Không kết nối được máy chủ. Kiểm tra mạng và backend.',
   REQUEST_TIMEOUT: 'Yêu cầu hết thời gian chờ; thao tác có thể đã được máy chủ nhận. Kiểm tra trạng thái trước khi thử lại.',
   INVALID_RESPONSE: 'Máy chủ trả dữ liệu không đúng định dạng API.',
+  INVALID_FILE_SIZE: 'Chọn file từ 1 byte đến 100 MiB.',
+  INVALID_SIGNED_UPLOAD: 'Backend trả thông tin upload không hợp lệ. Không gửi file.',
+  MISSING_VERSION_ID: 'Không đọc được S3 Version ID. Kiểm tra Versioning và CORS expose x-amz-version-id. Không complete hoặc đoán latest; chờ phiên cũ hết hạn rồi tạo upload mới.',
+  S3_ALREADY_EXISTS: 'S3 trả 412: key đã tồn tại. Không tự PUT lại hoặc complete khi thiếu Version ID; chờ hết hạn và tạo upload mới.',
+  S3_CONFLICT: 'S3 trả 409: ghi xung đột. Không tự gửi lại file; kiểm tra phiên upload.',
+  S3_PUT_FAILED: 'S3 từ chối upload. Kiểm tra quyền, signed headers và hạn URL.',
+  S3_TIMEOUT: 'Upload S3 hết thời gian chờ. File có thể đã được gửi; không đoán Version ID hoặc tự retry PUT.',
+  S3_NETWORK_ERROR: 'Không nhận được phản hồi S3. Kiểm tra mạng/CORS; file có thể đã được gửi. Không tự retry PUT.',
 };
 export function errorText(error) {
   if (error?.name === 'AbortError') return 'Đã hủy thao tác.';
