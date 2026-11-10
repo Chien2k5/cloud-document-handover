@@ -1,0 +1,59 @@
+{
+  "date": "2026-11-09",
+  "branch": "task/s3-lambda",
+  "sourceParentCommit": "15973c334e0dbc19e2965fa1897ce5a3faa9a8ef",
+  "status": "PASS_OFFLINE",
+  "pythonTests": {
+    "tests": 25,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "command": "python -m unittest discover -s aws/tests -v"
+  },
+  "compilation": "PASS; Python AST also parsed with feature_version 3.12",
+  "diffCheck": "PASS",
+  "javaCompatibility": {
+    "status": "PASS",
+    "cases": 12,
+    "backendCommit": "41673cabf1ed4f894312a92d136f36c4355e44ca",
+    "jarSha256": "4a7519010957da50c24f3587d2d6628b35b5a531ec59a47365dcccce8d483f47",
+    "mechanism": "Python-generated documents through compiled Java UploadService checksum parser and S3StorageAdapter.resultKey",
+    "command": "python aws/tests/check_java_contract.py --backend-jar <compiled dung backend JAR>"
+  },
+  "aws": "NOT_RUN",
+  "deployment": "NOT_PERFORMED",
+  "sourceHashEncoding": "SHA-256 of working-tree bytes before Git normalization",
+  "sourceHashes": {
+    ".env.example": "9bc19481b80f1a7c65a898bebb2e8ea23a1d5dc9fb58dca736a9efbbb856f568",
+    ".gitignore": "862bc32ce7f7cbc3ac9fb9d381e90359458f94b22579e97dee1a0ce572d8e28c",
+    "PRINCIPLE.MD": "db02aedb25a77df7c77008879a61a46f53d206dd8cf43c70d6fba10f914e00b2",
+    "README.md": "c091ca223fd887012763ff8b982a14517155f87b4816caede18411aac852e6fa",
+    "aws/README.md": "6a4f24e3f045b099135d7f6b592930bb9bced740a373d8b1478df6d2a0d92ad8",
+    "aws/lambda/.env.example": "c64c7a8574f4402d711b1cd4a4591c561c41f847db039b5d2c1000b9463e05ac",
+    "aws/lambda/lambda_function.py": "bb515161e10d2b64b3a11be565a8ce80b04b57bfbf90fdced99104c149366b34",
+    "aws/s3_adapter/s3_adapter.py": "dcf4efb0dd1e02991be53772466bd5c837339c67af8bc4b8b24d8e8fbfa85cf0",
+    "aws/tests/ChecksumContractCheck.java": "0b4823763c2063dbfe4a65dec452a9ac3366bf9b3a1433d516e992b8c38769e4",
+    "aws/tests/check_java_contract.py": "595865650698ee5cb42dc156bccde80058ba9fc7e2f011c4e1240b823707a277",
+    "aws/tests/test_checksum_adapter.py": "ca557cc6dfc0703d2edefb409350275bd10f6433fb7233ca8262263367dbd7fd",
+    "aws/tests/test_checksum_lambda.py": "2718d99b37b18c8bb2f916dcc02a58799a27676bf57b0f326536c13c3c61dc7c",
+    "deploy/README.md": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+    "infra/README.md": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+    "ops/README.md": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6"
+  },
+  "changedFiles": [
+    "aws/README.md",
+    "aws/lambda/.env.example",
+    "aws/lambda/lambda_function.py",
+    "aws/s3_adapter/s3_adapter.py",
+    "aws/tests/ChecksumContractCheck.java",
+    "aws/tests/check_java_contract.py",
+    "aws/tests/test_checksum_adapter.py",
+    "aws/tests/test_checksum_lambda.py"
+  ],
+  "notes": [
+    "Evidence added after tests; source hashes rechecked unchanged.",
+    "Unit tests use FakeS3/mock SDK; Java consumer check starts no Spring context, DB or AWS.",
+    "Historical AWS claims in aws/README.md are not rerun results for this change.",
+    "The backend dung worktree is unchanged."
+  ]
+}
