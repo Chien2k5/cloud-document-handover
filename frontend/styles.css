@@ -86,6 +86,16 @@ button:hover { background: #004085; }
 .action-row input { flex: 1; }
 
 label { display: grid; gap: 6px; }
+input, select, textarea { box-sizing: border-box; width: 100%; max-width: 100%; padding: 10px; font: inherit; }
+textarea { min-height: 80px; }
+details { margin-top: 18px; }
+summary { cursor: pointer; margin-bottom: 12px; }
+nav { margin: 12px 0; }
+code { overflow-wrap: anywhere; font-size: .85em; }
+li { margin: 8px 0; }
+.project-list { list-style: none; padding: 0; }
+.project-list button { width: 100%; text-align: left; }
+.project-list button[aria-pressed="true"] { outline: 3px solid #17a2b8; }
 button:disabled { opacity: .55; cursor: not-allowed; }
 .error { padding: 12px; background: #fff0f0; color: #9c1414; border-left: 4px solid #9c1414; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #297ec9; outline-offset: 2px; }
