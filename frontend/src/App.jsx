@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from './client.js';
 import { Button, Card, ErrorNotice, LoadingState, PageHeader } from './ui.jsx';
 import Projects from './Projects.jsx';
 import Handovers from './Handovers.jsx';
+import AppShell from './AppShell.jsx';
+import { focusWorkspaceSection, handoverHash, projectHash, readWorkspaceHash } from './navigation.js';
 export default function App() {
   const [user, setUser] = useState(null), [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false), [error, setError] = useState(null);
@@ -26,8 +28,9 @@ export default function App() {
     try { await api.logout(); setUser(null); } catch (e) { setError(e); if (!api.csrf) setUser(null); }
     finally { setBusy(false); }
   }
-  return <div className={`container ${user ? 'container--workspace' : 'container--guest'}`}>
-    <header><h1>Portal tài liệu nhóm 5</h1><div>{user ? <><span>{user.displayName} · {user.email}</span> <Button variant="secondary" disabled={busy} onClick={logout}>Đăng xuất</Button></> : 'Chưa đăng nhập'}</div></header>
+  if (!loading && user) return <Portal key={user.id} user={user} busy={busy} error={error} onLogout={logout} />;
+  return <div className="container container--guest">
+    <header><h1>Cloud Handover</h1><div>Chưa đăng nhập</div></header>
     <ErrorNotice error={error} />
     {loading ? <LoadingState>Đang kiểm tra phiên đăng nhập…</LoadingState> : !user ? <Card>
       <PageHeader title="Đăng nhập" description="Truy cập dự án và các gói bàn giao được cấp quyền." /><form onSubmit={login}>
@@ -35,10 +38,29 @@ export default function App() {
         <label>Mật khẩu<input type="password" name="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></label>
         <Button type="submit" disabled={busy}>{busy ? 'Đang đăng nhập…' : 'Đăng nhập'}</Button>
       </form>
-    </Card> : <Portal key={user.id} user={user} />}
+    </Card> : null}
   </div>;
 }
-function Portal({ user }) {
-  const [handoverId, setHandoverId] = useState(null);
-  return <main><Projects user={user} onHandoverCreated={setHandoverId} /><Handovers user={user} activeId={handoverId} onSelect={setHandoverId} /></main>;
+function Portal({ user, busy, error, onLogout }) {
+  const [route, setRoute] = useState(() => readWorkspaceHash(window.location.hash));
+  const [selected, setSelected] = useState(() => readWorkspaceHash(window.location.hash).projectId || null);
+  const [handoverId, setHandoverId] = useState(() => readWorkspaceHash(window.location.hash).handoverId || null);
+  const applyRoute = useCallback(hash => {
+    const next = readWorkspaceHash(hash); setRoute(next);
+    if (next.projectId) setSelected(next.projectId);
+    if (next.handoverId) setHandoverId(next.handoverId);
+  }, []);
+  const navigate = useCallback(hash => { applyRoute(hash); if (window.location.hash !== hash) window.location.hash = hash; }, [applyRoute]);
+  useEffect(() => {
+    const changed = () => applyRoute(window.location.hash);
+    window.addEventListener('hashchange', changed); return () => window.removeEventListener('hashchange', changed);
+  }, [applyRoute]);
+  useEffect(() => { if (route.view !== 'project') focusWorkspaceSection(route.view === 'handovers' ? 'workspace-handovers' : 'workspace-projects'); }, [route]);
+  function openHandover(id) { setHandoverId(id); navigate(handoverHash(id)); }
+  return <AppShell user={user} busy={busy} onLogout={onLogout} route={route} selectedProjectId={selected} onNavigate={navigate}>
+    <ErrorNotice error={error} />
+    {route.invalid && <p className="route-notice" role="status">Đường dẫn không hợp lệ. Chọn một mục trong workspace hoặc nhập UUID gói được cấp quyền.</p>}
+    <Projects user={user} selected={selected} onSelectProject={id => navigate(projectHash(id))} navigation={route} onHandoverCreated={openHandover} />
+    <Handovers user={user} activeId={route.invalid && route.view === 'handovers' ? null : handoverId} onSelect={openHandover} />
+  </AppShell>;
 }

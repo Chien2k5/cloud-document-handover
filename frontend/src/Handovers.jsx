@@ -38,7 +38,7 @@ export function CreateHandover({ project, members, files, onCreated }) {
 export default function Handovers({ user, activeId, onSelect }) {
   const [entry, setEntry] = useState(activeId || ''), [reload, setReload] = useState(0);
   useEffect(() => setEntry(activeId || ''), [activeId]);
-  return <section className="card"><h2>Gói bàn giao</h2>
+  return <section className="card workspace-section" id="workspace-handovers" tabIndex={-1}><h2>Gói bàn giao</h2>
     <p>Mở gói bằng UUID được Owner cung cấp. Người nhận ngoài dự án cũng dùng mục này.</p>
     <form onSubmit={event => { event.preventDefault(); if (isUuid(entry.trim())) { onSelect(entry.trim()); setReload(value => value + 1); } }}>
       <label>UUID gói bàn giao<input required value={entry} onChange={event => setEntry(event.target.value)} /></label>
