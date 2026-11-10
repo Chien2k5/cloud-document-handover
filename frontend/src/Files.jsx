@@ -76,7 +76,7 @@ export default function Files({ project, members, onHandoverCreated, onAccessLos
     finally { if (manual.current === controller) manual.current = null; if (!controller.signal.aborted) setActionBusy(false); }
   }
   return <>
-    <UploadPanel project={project} targetFile={target} onChanged={refresh} onUploaded={() => setTarget(null)} onBusyChange={setUploadBusy} />
+    <UploadPanel project={project} targetFile={target} onChanged={refresh} onUploaded={() => setTarget(null)} onBusyChange={setUploadBusy} onAccessLost={showError} />
     {target && <button disabled={uploadBusy} onClick={() => setTarget(null)}>Chọn tài liệu mới thay vì thêm phiên bản</button>}
     <section className="card files-section">
       <div className="section-heading"><div><h3>File và phiên bản</h3><p>Mỗi thẻ là một FileVersion. Mở thông tin kỹ thuật để đối chiếu định danh trước khi chọn bàn giao.</p></div><Button variant="secondary" disabled={busy || actionBusy} onClick={refresh}>Tải lại danh sách file</Button></div>
