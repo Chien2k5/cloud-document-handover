@@ -1,0 +1,44 @@
+{
+  "date": "2026-11-10",
+  "status": "PASS_LOCAL_REAL_BACKEND",
+  "aws": "NOT_RUN",
+  "browserStorageAndHandover": "MOCK_TESTS_SEPARATE_FROM_THIS_RUN",
+  "database": "NEW_DISPOSABLE_POSTGRESQL_17_CONTAINER",
+  "backendModified": false,
+  "sourceParentCommit": "35a74ffa779593361f89b8274ddc292c351989aa",
+  "backendTree": "4ce2c8b2bb1646f104aab5303ccf3ad60a1c2527",
+  "frontendRuntimeHashes": {
+    "frontend/src/api.js": "99a247cefdb4e4e3626c9a8bb585913d7033b09df5ffe0c8a977baae5dd17fe8",
+    "frontend/src/App.jsx": "3f39d61caabf78f8eab65446b184ff08ab73f7df8044bb75d4bd03ed6b94c9e2",
+    "frontend/src/client.js": "3da61bb2a566d06902bd80eeeb13749972c991843579acfd890a72a924c94b45",
+    "frontend/src/files.js": "f17407576559c522462282758d957ec0bf0fa5986faf59ba60691f03ab8a02f4",
+    "frontend/src/Files.jsx": "172f4a094289267abce2fa41ce7ae1359da79febc581b966fab93b83795dd034",
+    "frontend/src/handover.js": "8f1b6a0458251e8ee9e157c1bb4d85036c6419aa34f0c9aaee9faa631dbc2959",
+    "frontend/src/Handovers.jsx": "8b9ed6369fdbbffbd20d123767a6c0bdca2b1c6025ba9f2363c70bfd7c4a6052",
+    "frontend/src/main.jsx": "af7431a93ffb2bdbff2aafe34cf049d6f7af292f3b8846816e61b8034d67e093",
+    "frontend/src/Projects.jsx": "038a2c5d45cd1fb18710da8984cb497d36fed83f2270910fbda323245671ee4b",
+    "frontend/src/rules.js": "80d33b2cbda04e28188d0cfe92a9df245db66cfc7402240cd84605bcf6e8f56b",
+    "frontend/src/ui.jsx": "e8f7b895853a133522bfb92a8cafba05a728e15c03145a0a807c0f959219f805",
+    "frontend/src/upload.js": "3479a0ddc4881eecaff7c50bbd8ec78254b78b50dd0c993ce025aa9f64019b80",
+    "frontend/src/UploadPanel.jsx": "f5ecf8c00a95df33aa64402d6102d46a489881ef25dce8a99c75cdc0853c2f8a",
+    "frontend/index.html": "540f5a59a5b1dc16278512d577e2d5b081a106fc011513aeaff2863a2c421baa",
+    "frontend/styles.css": "70fa767c4ef312e70bd88103d276d8b8e2b0cb0a16e07f50a1e6b0f7ab12ad4d",
+    "frontend/package.json": "b4af7225f5c484cdde10cf10a3492e1f87085ceaa624d5033552f60f78645430",
+    "frontend/package-lock.json": "dd579a91165ecc906544d5b4be77ddbdefb7ba381064f2081db92c8ba21a0a56",
+    "frontend/vite.config.js": "d22d225501017f5508a935e6b923033e20b8b1dbfb67ede0a156afd21eccddf7"
+  },
+  "backendTests": {
+    "tests": 62,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "jarSha256": "ba8db06b5a7e295c911133ecef3c45508f2bfd700a7398d9c540b99456ad57bd",
+  "realBrowserTests": 3,
+  "realBrowserScope": [
+    "session/CSRF/login/logout/401",
+    "project/membership/Owner/Editor/Viewer/403/404",
+    "S3-disabled 503 fail-closed"
+  ],
+  "testDatabaseRemoved": true
+}
