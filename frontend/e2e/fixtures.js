@@ -17,7 +17,15 @@ export async function mockProject(page, role = 'OWNER', overrides = async () => 
     await route.fulfill({ json: data });
   });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Project fixture · ' + role }).click();
-  await expect(page.getByText('Project ID:', { exact: false })).toBeVisible();
+  await expect(page.locator('#workspace-projects .project-tile').first()).toBeVisible();
+  await page.getByRole('button', { name: project.name + ' · ' + role, exact: true }).click();
+  await page.getByText('Thông tin kỹ thuật dự án', { exact: true }).click(); await expect(page.getByText('Project ID:', { exact: false })).toBeVisible();
   return { user, project };
+}
+
+export async function workspaceView(page, name) {
+  await expect(page.getByRole('button', { name: 'Đăng xuất', exact: true })).toBeVisible();
+  const link = page.getByRole('navigation', { name: 'Điều hướng workspace', exact: true }).getByRole('link', { name, exact: true });
+  if (!await link.isVisible()) await page.getByRole('button', { name: 'Mở điều hướng', exact: true }).click();
+  await link.click();
 }

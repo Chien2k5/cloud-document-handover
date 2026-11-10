@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { workspaceView } from './fixtures.js';
 async function login(page, email = 'dung@example.test') {
   await page.goto('/'); await page.getByLabel('Email', { exact: true }).fill(email);
   await page.getByLabel('Mật khẩu', { exact: true }).fill(process.env.LIVE_DEMO_PASSWORD);
@@ -32,8 +33,14 @@ test('real Spring/PostgreSQL: create/select project, Owner assigns Viewer then E
     await page.getByLabel('Tên dự án', { exact: true }).fill('Live role project');
     await page.getByLabel('Mô tả', { exact: true }).fill('Isolated fixture');
     await page.getByRole('button', { name: 'Tạo dự án', exact: true }).click();
-    await expect(page.getByText('Project ID:', { exact: false })).toBeVisible();
+    await page.getByText('Thông tin kỹ thuật dự án', { exact: true }).click(); await expect(page.getByText('Project ID:', { exact: false })).toBeVisible();
     const project = (await (await page.request.get('/api/v1/projects')).json()).items.find(item => item.name === 'Live role project');
+    const owner = await (await page.request.get('/api/v1/auth/me')).json();
+    const ownerCsrf = await (await page.request.get('/api/v1/auth/csrf')).json();
+    for (const method of ['put', 'delete']) {
+      const response = await page.request[method](`/api/v1/projects/${project.id}/members/${owner.id}`, { headers: { [ownerCsrf.headerName]: ownerCsrf.token }, ...(method === 'put' ? { data: { role: 'VIEWER' } } : {}) });
+      expect(response.status()).toBe(409); expect((await response.json()).code).toBe('OWNER_IMMUTABLE');
+    }
     await page.getByLabel('UUID thành viên', { exact: true }).fill(person.id);
     await page.getByLabel('Vai trò thành viên', { exact: true }).selectOption('VIEWER');
     await page.getByRole('button', { name: 'Lưu thành viên' }).click();
@@ -51,7 +58,13 @@ test('real Spring/PostgreSQL: create/select project, Owner assigns Viewer then E
     await expect(page.getByLabel('UUID thành viên', { exact: true })).toHaveValue('');
     await viewer.getByRole('button', { name: 'Kiểm tra lại quyền dự án' }).click();
     await expect(viewer.getByLabel('Chọn file', { exact: true })).toBeVisible();
+    const editorCsrf = await (await viewer.request.get('/api/v1/auth/csrf')).json();
+    for (const method of ['put', 'delete']) {
+      const response = await viewer.request[method](`/api/v1/projects/${project.id}/members/${owner.id}`, { headers: { [editorCsrf.headerName]: editorCsrf.token }, ...(method === 'put' ? { data: { role: 'VIEWER' } } : {}) });
+      expect(response.status()).toBe(403);
+    }
     await page.getByRole('button', { name: /Gỡ/ }).click();
+    await page.getByRole('button', { name: /^Xác nhận gỡ / }).click();
     await expect(page.getByRole('button', { name: /Gỡ/ })).toHaveCount(0);
     await viewer.getByRole('button', { name: 'Kiểm tra lại quyền dự án' }).click();
     await expect(viewer.getByRole('alert')).toContainText('không còn quyền');
@@ -68,7 +81,7 @@ test('real Spring/PostgreSQL: S3 disabled fails closed with 503; unknown handove
   const project = projects.items.find(item => item.name === 'Live fail-closed project');
   expect(project.reservedBytes).toBe(0);
   expect((await page.request.post('/api/v1/projects', { data: { name: 'Must fail CSRF' } })).status()).toBe(403);
-  await page.getByLabel('UUID gói bàn giao', { exact: true }).fill('00000000-0000-0000-0000-000000000000');
+  await workspaceView(page, 'Mở gói bàn giao'); await page.getByLabel('UUID gói bàn giao', { exact: true }).fill('00000000-0000-0000-0000-000000000000');
   await page.getByRole('button', { name: 'Mở gói bàn giao', exact: true }).click();
   await expect(page.getByText('Gói không tồn tại', { exact: false })).toBeVisible();
 });

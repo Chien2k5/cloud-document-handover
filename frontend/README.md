@@ -32,6 +32,12 @@ không phải test backend hay AWS thật. Playwright dùng Chrome có sẵn; đ
 `PW_CHANNEL` theo môi trường nếu dùng browser khác được hỗ trợ.
 Không thu trace/video/cookie/token. Không lưu mật khẩu hoặc CSRF vào web storage.
 
+Nếu 5173 đang được worktree khác sử dụng, giữ server đó và chọn cổng trống riêng
+cho browser fixture tests: `$env:PW_PORT='5189'; npm run test:e2e` (PowerShell).
+Playwright tự chạy Vite từ worktree hiện tại với strictPort/reuseExistingServer=false;
+không thay đích proxy production. `PW_PORT` chỉ cấu hình test, live/business runners
+vẫn dùng cổng riêng do runner cấp. Không chạy hai lượt fixture tests cùng cổng.
+
 ## Chạy cùng backend thật
 
 Tạo database PostgreSQL **portal riêng** theo `backend/README.md`; không dùng
@@ -178,6 +184,53 @@ cần Nam review việc nâng toolchain khi bản hỗ trợ có dependency đã
 
 ## Tham chiếu
 
+### C09 Batch 02: thành viên và phiên bản tài liệu
+
+Trong workspace dự án, mục Thành viên hiển thị tên và role thực tế; UUID nằm trong
+Thông tin kỹ thuật. OWNER có thể thêm/cập nhật EDITOR hoặc VIEWER bằng UUID tài khoản
+đang hoạt động, và phải xác nhận trước khi gỡ. Backend xác minh quyền cuối cùng;
+giao diện không cung cấp chuyển OWNER hoặc tìm kiếm tài khoản toàn hệ thống.
+
+Mục Tài liệu hiển thị riêng từng FileVersion, kể cả khi hai tài liệu trùng tên.
+Thông tin kỹ thuật phân biệt File ID, FileVersion ID, Upload ID và S3 Version ID.
+Chỉ AVAILABLE + VERIFIED mới đủ điều kiện tải/chọn bàn giao. Lựa chọn của OWNER
+giữ theo FileVersion qua phân trang và điều hướng cùng dự án, không tự chuyển sang
+phiên bản mới hơn. Upload và tạo bàn giao vẫn dùng giao thức hiện hành.
+
+Link tải lấy từ backend theo đúng FileVersion ID, phải khớp S3 Version ID, HTTPS
+và còn hạn. Link hiển thị bị gỡ khi hết expiresAt; nếu còn quyền, người dùng có thể
+bấm Lấy link tải để xin link mới. Đây là kiểm tra UI, không phải bằng chứng kiểm thử
+S3 thật. Đổi dự án/tài khoản hoặc phản hồi mất quyền sẽ xóa giao diện bảo vệ.
+
+Browser mock kiểm tra role, identity, pagination, lỗi, keyboard, responsive và thời
+gian bằng fixture/clock. Live backend và business browser được phân loại riêng ở
+trên; không được coi các bài này là AWS_REAL_E2E.
+
 - [React + Vite](https://react.dev/learn/build-a-react-app-from-scratch)
 - [Vite](https://vite.dev/guide/)
 - [Playwright web server](https://playwright.dev/docs/test-webserver)
+
+## C09 Batch 03: upload và bàn giao
+
+Upload giữ nguyên file đã chọn, hash từ bytes thật và signed headers. Giao diện hiển thị
+size/type, phân biệt tài liệu mới với thêm phiên bản, và chỉ trình bày các bước thực tế
+được quan sát. AVAILABLE khác VERIFIED; mở phần Đối chiếu SHA-256 để xem hai giá trị
+backend trả về. Không có phần trăm tiến độ giả.
+
+Dừng chờ chỉ hủy việc chờ ở trình duyệt, không chứng minh server đã hủy. Khi complete
+lỗi nhưng đã có S3 Version ID, nút thử lại chỉ complete cùng ID, không PUT lại. Không
+đoán latest/ETag. Một lần upload mới tạo phiên mới. Polling vẫn tối đa 15 lần, cách 2
+giây; recovery danh sách tối đa 3 phiên đồng thời, dừng sau 60 giây. Có thể kiểm tra lại
+thủ công khi kết quả hợp lệ đến muộn. Đổi project/logout hủy và xóa state thuộc ngữ cảnh cũ.
+
+Owner rà soát các FileVersion đã chọn, nhập title/UUID người nhận/deadline local để tạo
+DRAFT; payload gửi UTC và giữ FileVersion ID. Không tự publish. Gói mở bằng UUID độc lập
+với membership; named recipient ngoài dự án vẫn được backend cấp quyền theo contract.
+Manifest hiển thị Workflow, Access, expiry và xác nhận từng người riêng. Sau publish,
+confirm, revoke, UI đọc lại aggregate state từ backend. Timeout/network không tự retry
+mutation; tải lại gói để kiểm tra trạng thái trước khi quyết định.
+
+Item download giữ đúng phiên bản đã pin, kiểm tra response Version ID/HTTPS/hạn URL.
+Link bị gỡ theo hạn URL hoặc hạn gói, và được kiểm tra lại ngay khi bấm. Thu hồi/hết hạn
+chặn cấp link mới; URL đã cấp có thể vẫn còn hiệu lực tới deadline riêng. Các bài browser
+clock/mock và storage fixture không chứng minh hành vi AWS thật.

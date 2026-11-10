@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { mockProject } from './fixtures.js';
+import { mockProject, workspaceView } from './fixtures.js';
 const file = { id: '20000000-0000-0000-0000-000000000001', fileId: '30000000-0000-0000-0000-000000000001', uploadId: '40000000-0000-0000-0000-000000000001', versionId: 'opaque-v1', filename: 'hello.txt', size: 3, expectedSha256: 'a'.repeat(64), actualSha256: null, uploadStatus: 'AVAILABLE', integrityStatus: 'INTEGRITY_PENDING' };
 test('mock backend: reload resumes by durable uploadId, download pins FileVersion ID, Viewer cannot add versions', async ({ page }) => {
   let reads = 0, downloadRequests = 0;
@@ -18,7 +18,7 @@ test('mock backend: reload resumes by durable uploadId, download pins FileVersio
   await page.getByRole('button', { name: 'Lấy link tải hello.txt' }).click();
   await expect(page.getByRole('link', { name: 'Tải phiên bản đã chọn' })).toHaveAttribute('href', 'https://s3.example.test/key?versionId=opaque-v1');
   await page.reload();
-  await page.getByRole('button', { name: 'Project fixture · VIEWER' }).click();
+  await workspaceView(page, 'Dự án'); await page.getByRole('button', { name: 'Project fixture · VIEWER' }).click();
   await expect(page.getByText('VERIFIED', { exact: true })).toBeVisible();
   expect(reads).toBeGreaterThanOrEqual(2); expect(downloadRequests).toBe(1);
 });
