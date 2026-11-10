@@ -21,7 +21,7 @@ test('C09.02: same-project hash navigation preserves selection and supports Back
   await page.goBack(); await expect(page).toHaveURL(new RegExp(`/members$`));
   await page.goBack(); await expect(page).toHaveURL(new RegExp(`/files$`)); await expect(selected).toBeChecked();
   await page.goForward(); await expect(page).toHaveURL(new RegExp(`/members$`));
-  await page.reload(); await expect(page.getByText('Project ID:', { exact: false })).toContainText(id);
+  await page.reload(); await page.getByText('Thông tin kỹ thuật dự án', { exact: true }).click(); await expect(page.getByText('Project ID:', { exact: false })).toContainText(id);
   await expect(page.getByRole('button', { name: 'Project fixture · OWNER', exact: true })).toHaveAttribute('aria-pressed', 'true');
   expect(writes).toBe(0); expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
 });

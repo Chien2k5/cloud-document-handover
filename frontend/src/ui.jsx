@@ -27,3 +27,7 @@ export function EmptyState({ title, description }) {
 export function StatusBadge({ children }) {
   return <span className="status-badge">{children}</span>;
 }
+
+export function TechnicalDetails({ title = 'Thông tin kỹ thuật', children }) {
+  return <details className="technical-details"><summary>{title}</summary>{children}</details>;
+}

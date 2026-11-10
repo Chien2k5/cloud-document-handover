@@ -32,7 +32,7 @@ test('real Spring/PostgreSQL: create/select project, Owner assigns Viewer then E
     await page.getByLabel('Tên dự án', { exact: true }).fill('Live role project');
     await page.getByLabel('Mô tả', { exact: true }).fill('Isolated fixture');
     await page.getByRole('button', { name: 'Tạo dự án', exact: true }).click();
-    await expect(page.getByText('Project ID:', { exact: false })).toBeVisible();
+    await page.getByText('Thông tin kỹ thuật dự án', { exact: true }).click(); await expect(page.getByText('Project ID:', { exact: false })).toBeVisible();
     const project = (await (await page.request.get('/api/v1/projects')).json()).items.find(item => item.name === 'Live role project');
     await page.getByLabel('UUID thành viên', { exact: true }).fill(person.id);
     await page.getByLabel('Vai trò thành viên', { exact: true }).selectOption('VIEWER');

@@ -16,7 +16,7 @@ async function project(page, name) {
   await page.getByText('Tạo dự án mới', { exact: true }).click();
   await page.getByLabel('Tên dự án', { exact: true }).fill(name);
   await page.getByRole('button', { name: 'Tạo dự án', exact: true }).click();
-  await expect(page.getByText('Project ID:', { exact: false })).toBeVisible();
+  await page.getByText('Thông tin kỹ thuật dự án', { exact: true }).click(); await expect(page.getByText('Project ID:', { exact: false })).toBeVisible();
   return (await (await page.request.get('/api/v1/projects')).json()).items.find(item => item.name === name).id;
 }
 async function upload(page, projectId, buffer, count, verifiedCount = count) {

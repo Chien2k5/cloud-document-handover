@@ -17,7 +17,8 @@ export async function mockProject(page, role = 'OWNER', overrides = async () => 
     await route.fulfill({ json: data });
   });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Project fixture · ' + role }).click();
-  await expect(page.getByText('Project ID:', { exact: false })).toBeVisible();
+  await expect(page.locator('#workspace-projects .project-tile').first()).toBeVisible();
+  await page.getByRole('button', { name: project.name + ' · ' + role, exact: true }).click();
+  await page.getByText('Thông tin kỹ thuật dự án', { exact: true }).click(); await expect(page.getByText('Project ID:', { exact: false })).toBeVisible();
   return { user, project };
 }

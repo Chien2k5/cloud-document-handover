@@ -4,6 +4,7 @@ import { ApiError, segment } from './api.js';
 import { canOwn, isUuid } from './rules.js';
 import { Button, Card, EmptyState, ErrorNotice, LoadingState, PageHeader, Pager, StatusBadge } from './ui.jsx';
 import Files from './Files.jsx';
+import ProjectOverview from './ProjectOverview.jsx';
 import { focusWorkspaceSection } from './navigation.js';
 
 export default function Projects({ user, selected, onSelectProject, navigation, onHandoverCreated }) {
@@ -85,7 +86,7 @@ function ProjectDetail({ projectId, user, navigation, onHandoverCreated }) {
   useEffect(() => {
     const controller = new AbortController(); setBusy(true); setError(null); setProject(null);
     Promise.all([api.request(base, { signal: controller.signal }), api.request(base + '/members', { signal: controller.signal })])
-      .then(([detail, people]) => { setProject(detail); setMembers(people); })
+      .then(([detail, people]) => { if (!controller.signal.aborted) { setProject(detail); setMembers(people); } })
       .catch(e => { if (e.name !== 'AbortError') setError(e); })
       .finally(() => { if (!controller.signal.aborted) setBusy(false); });
     return () => controller.abort();
@@ -100,12 +101,11 @@ function ProjectDetail({ projectId, user, navigation, onHandoverCreated }) {
       if ([401, 403, 404].includes(e.status)) setProject(null);
     } finally { setSaving(false); }
   }
-  return <section className="card workspace-section" id="project-overview" tabIndex={-1}><h2>Chi tiết dự án</h2><ErrorNotice error={error} />
-    <button disabled={busy} onClick={() => setReload(value => value + 1)}>Kiểm tra lại quyền dự án</button>
-    {busy && <p role="status">Đang tải quyền và thành viên…</p>}
+  return <section className="card workspace-section" id="project-overview" tabIndex={-1}>
+    <PageHeader title="Tổng quan dự án" actions={<Button variant="secondary" disabled={busy} onClick={() => setReload(value => value + 1)}>Kiểm tra lại quyền dự án</Button>} /><ErrorNotice error={error} />
+    {busy && <LoadingState>Đang tải quyền và thành viên…</LoadingState>}
     {project && <>
-      <h3>{project.name}</h3><p>{project.description}</p><p>Vai trò: <strong>{project.role}</strong></p>
-      <p>Project ID: <code>{project.id}</code></p><p>Quota: {project.usedBytes} đã dùng + {project.reservedBytes} đang giữ / {project.quotaBytes} byte.</p>
+      <ProjectOverview project={project} />
       <div className="workspace-section" id="project-members" tabIndex={-1}><h3>Thành viên</h3><ul>{members.map(member => <li key={member.userId}>{member.displayName} · {member.role} · <code>{member.userId}</code>{member.userId === user.id && ' (bạn)'}{' '}
         {canOwn(project) && member.role !== 'OWNER' && <button disabled={saving} onClick={() => changeMember(member.userId)}>Gỡ {member.displayName}</button>}</li>)}</ul>
       {canOwn(project) && <form onSubmit={event => { event.preventDefault(); if (isUuid(memberId.trim())) changeMember(memberId.trim(), role); }}>
