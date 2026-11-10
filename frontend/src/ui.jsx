@@ -20,3 +20,10 @@ export function ErrorNotice({ error }) {
 export function Pager({ page, count, size = 20, busy, onPage }) {
   return <nav className="pagination" aria-label="Phân trang"><Button variant="secondary" disabled={busy || page === 0} onClick={() => onPage(page - 1)}>Trang trước</Button><span> Trang {page + 1} </span><Button variant="secondary" disabled={busy || count < size} onClick={() => onPage(page + 1)}>Trang sau</Button></nav>;
 }
+
+export function EmptyState({ title, description }) {
+  return <div className="empty-state"><span className="empty-state__symbol" aria-hidden="true">▱</span><h3>{title}</h3><p>{description}</p></div>;
+}
+export function StatusBadge({ children }) {
+  return <span className="status-badge">{children}</span>;
+}
