@@ -15,6 +15,7 @@ import socket
 import subprocess
 import sys
 import time
+import zipfile
 import urllib.error
 import urllib.request
 import uuid
@@ -26,18 +27,24 @@ def main():
     parser.add_argument('--offline', action='store_true', help='Use cached Maven dependencies')
     parser.add_argument('--maven', help='Optional Maven executable instead of backend wrapper')
     parser.add_argument('--evidence', help='Optional summary path relative to repository root')
+    parser.add_argument('--business', action='store_true', help='Test-classpath-only HTTPS storage fixture and business browser flows')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
     frontend = root / 'frontend'
     out = root / 'runtime-data' / ('frontend-live-' + uuid.uuid4().hex[:10])
-    out.mkdir(parents=True)
+    out.mkdir(parents=True, exist_ok=False)
     evidence = (root / args.evidence).resolve() if args.evidence else out / 'verification.json'
+    if evidence.exists() or not evidence.is_relative_to(root):
+        raise ValueError('Evidence must be a new path inside this repository')
     container = 'handover-frontend-test-' + uuid.uuid4().hex[:10]
     started = False
     server = None
     summary = {'date': '2026-11-10', 'status': 'RUNNING', 'aws': 'NOT_RUN',
                'browserStorageAndHandover': 'MOCK_TESTS_SEPARATE_FROM_THIS_RUN',
                'database': 'NEW_DISPOSABLE_POSTGRESQL_17_CONTAINER', 'backendModified': False}
+    summary['testLevel'] = 'LOCAL_REAL_BACKEND_WITH_TEST_STORAGE' if args.business else 'LOCAL_REAL_BACKEND'
+    if args.business:
+        summary['browserStorageAndHandover'] = 'TEST_ONLY_HTTPS_STORAGE_NOT_AWS_OR_LAMBDA'
 
     def run(name, command, cwd=root, env=None, timeout=180):
         result = subprocess.run(command, cwd=cwd, env=env, capture_output=True, text=True,
@@ -103,8 +110,35 @@ def main():
                         LOCAL_DEMO_PASSWORD=secrets.token_urlsafe(24), SERVER_PORT=str(backend_port))
         jar = root / 'backend/target/document-handover-0.1.0-SNAPSHOT.jar'
         summary['jarSha256'] = hashlib.sha256(jar.read_bytes()).hexdigest()
+        launch = ['java', '-jar', str(jar)]
+        live_env['LIVE_BASE_URL'] = f'http://127.0.0.1:{frontend_port}'
+        if args.business:
+            with socket.socket() as storage_probe:
+                storage_probe.bind(('127.0.0.1', 0)); storage_port = storage_probe.getsockname()[1]
+            live_env.update(RUN_BUSINESS_E2E_TEST_HARNESS='true', UPLOAD_BUCKET='local-business-fixture',
+                            FIXTURE_STORAGE_PORT=str(storage_port), FIXTURE_KEYSTORE=str(out / 'fixture.p12'),
+                            FIXTURE_KEYSTORE_PASSWORD=secrets.token_urlsafe(24))
+            run('fixture-certificate', ['keytool', '-genkeypair', '-alias', 'fixture', '-keyalg', 'RSA',
+                '-keystore', live_env['FIXTURE_KEYSTORE'], '-storetype', 'PKCS12',
+                '-storepass:env', 'FIXTURE_KEYSTORE_PASSWORD', '-keypass:env', 'FIXTURE_KEYSTORE_PASSWORD',
+                '-dname', 'CN=127.0.0.1', '-ext', 'SAN=IP:127.0.0.1', '-validity', '1', '-noprompt'], env=live_env)
+            library = out / 'lib'; library.mkdir()
+            with zipfile.ZipFile(jar) as archive:
+                assert not any('LocalStorageHarness' in name for name in archive.namelist()), 'Test fixture leaked into production JAR'
+                for entry in archive.infolist():
+                    if not entry.filename.startswith('BOOT-INF/lib/') or not entry.filename.endswith('.jar'):
+                        continue
+                    name = entry.filename.removeprefix('BOOT-INF/lib/')
+                    if '/' in name or '\\' in name or ':' in name or name.startswith('.'):
+                        raise ValueError('Unsafe JAR library entry')
+                    target = library / name
+                    with target.open('xb') as destination:
+                        destination.write(archive.read(entry))
+            classpath = os.pathsep.join(map(str, [root / 'backend/target/test-classes', root / 'backend/target/classes', library / '*']))
+            launch = ['java', '--add-modules', 'jdk.httpserver', '-cp', classpath, 'local.fixture.LocalStorageHarness', '--server.address=127.0.0.1']
+            summary['productionJarExcludesFixture'] = True
         with (out / 'backend-server.log').open('w', encoding='utf-8') as log:
-            server = subprocess.Popen(['java', '-jar', str(jar)], cwd=root / 'backend', env=live_env,
+            server = subprocess.Popen(launch, cwd=root / 'backend', env=live_env,
                                       stdout=log, stderr=subprocess.STDOUT,
                                       creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
             deadline = time.monotonic() + 60
@@ -125,12 +159,15 @@ def main():
                                LIVE_DEMO_PASSWORD=live_env['LOCAL_DEMO_PASSWORD'],
                                API_PROXY_TARGET=f'http://127.0.0.1:{backend_port}')
             print('Running real browser through Vite proxy to Spring/PostgreSQL (no API mocks)...', flush=True)
-            output = run('browser-live', ['npm.cmd' if os.name == 'nt' else 'npm', 'run', 'test:live'],
+            script = 'test:business' if args.business else 'test:live'
+            output = run('browser-live', ['npm.cmd' if os.name == 'nt' else 'npm', 'run', script],
                          cwd=frontend, env=browser_env, timeout=300)
             summary['realBrowserTests'] = int(re.search(r'(\d+) passed', output).group(1))
-            assert summary['realBrowserTests'] == 3 and not re.search(r'\d+ (?:failed|skipped)', output)
-            summary['realBrowserScope'] = ['session/CSRF/login/logout/401', 'project/membership/Owner/Editor/Viewer/403/404', 'S3-disabled 503 fail-closed']
-        summary['status'] = 'PASS_LOCAL_REAL_BACKEND'
+            assert summary['realBrowserTests'] == (2 if args.business else 3) and not re.search(r'\d+ (?:failed|skipped)', output)
+            summary['realBrowserScope'] = (['upload/v2/exact-v1 bytes', 'checksum reconciliation/reload/mismatch',
+                'DRAFT/publish/two-recipient confirmation/revoke/expiry'] if args.business else
+                ['session/CSRF/login/logout/401', 'project/membership/Owner/Editor/Viewer/403/404', 'S3-disabled 503 fail-closed'])
+        summary['status'] = 'PASS_' + summary['testLevel']
     except Exception:
         summary['status'] = 'FAIL'
         raise
@@ -144,6 +181,8 @@ def main():
         if started:
             run('database-remove', ['docker', 'rm', '-f', container])
             summary['testDatabaseRemoved'] = True
+        if args.business and (out / 'fixture.p12').exists():
+            (out / 'fixture.p12').unlink()
         evidence.parent.mkdir(parents=True, exist_ok=True)
         evidence.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         print(json.dumps(summary, ensure_ascii=False, indent=2), flush=True)

@@ -13,7 +13,8 @@
     "lint": "eslint .",
     "test": "node --test tests/*.test.js",
     "test:e2e": "playwright test",
-    "test:live": "playwright test --config playwright.live.config.js"
+    "test:live": "playwright test --config playwright.live.config.js",
+    "test:business": "playwright test --config playwright.business.config.js"
   },
   "dependencies": {
     "react": "19.3.1",
