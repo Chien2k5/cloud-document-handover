@@ -17,10 +17,10 @@ def make_cases():
     base = json.loads(fixture.s3.saved[fixture.SHARED_KEY])
     cases = []
 
-    def add(name, payload, expected=None, size=3, version=fixture.VERSION):
-        cases.append(dict(name=name, bucket=fixture.BUCKET, objectKey=fixture.KEY,
+    def add(name, payload, expected=None, size=3, version=fixture.VERSION, key=fixture.KEY):
+        cases.append(dict(name=name, bucket=fixture.BUCKET, objectKey=key,
                           versionId=version, size=size,
-                          resultKey=worker.result_key(fixture.BUCKET, fixture.KEY, version),
+                          resultKey=worker.result_key(fixture.BUCKET, key, version),
                           document=payload if isinstance(payload, str) else json.dumps(payload),
                           expectedHash=expected))
 
@@ -40,6 +40,23 @@ def make_cases():
     bad = copy.deepcopy(base); bad.pop("schemaVersion"); add("missing-schema", bad)
     bad = copy.deepcopy(base); bad["writeStatus"] = "CREATED"; add("extra-field", bad)
     add("duplicate-field", json.dumps(base).replace('"schemaVersion": 1', '"schemaVersion": 1, "schemaVersion": 1'))
+    for field, value in (("schemaVersion", True), ("schemaVersion", 1.0), ("size", True),
+                         ("size", 3.0), ("actualSha256", None), ("actualSha256", "A" * 64),
+                         ("errorCode", "unexpected")):
+        bad = copy.deepcopy(base); bad[field] = value
+        add("strict-type-"+field+"-"+str(value), bad)
+    for timestamp in ("2026-11-10 10:00:00+00:00", "2026-11-10T10:00:00+0000",
+                      "20261110T100000Z", "2026-11-10T10:00:00+19:00",
+                      "2026-11-10T10:00:00.1234567890Z", "2026-11-10T10:00:00+00:60"):
+        bad = dict(base, processedAt=timestamp); add("invalid-timestamp-"+timestamp, bad)
+    add("valid-nanosecond-offset", dict(base, processedAt="2026-11-10T17:00:00.123456789+07:00"), base["actualSha256"])
+    add("trailing-document", json.dumps(base)+" {}")
+    add("oversized-document", json.dumps(base)+" "*65537)
+    key, version = "uploads/nhóm 5/đề +%=😀.bin", "v+/=%đ😀"
+    fixture.s3.reported_size = None; fixture.s3.sources[version] = b"\x00\xff\x80"
+    fixture.run_event(fixture.event(version=version, key=key))
+    unicode_result = json.loads(fixture.s3.saved[worker.result_key(fixture.BUCKET, key, version)])
+    add("unicode-exact-identity", unicode_result, unicode_result["actualSha256"], version=version, key=key)
     return cases
 
 

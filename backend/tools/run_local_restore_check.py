@@ -99,13 +99,16 @@ class RestoreCheck:
         (self.output / 'run-status.json').write_text(json.dumps(dict(status=status, runId=self.run_id,
             stage=self.stage, recordedAt=datetime.now(timezone.utc).isoformat()), indent=2) + '\n', encoding='utf-8')
 
-    def command(self, name, arguments, sql=None):
+    def command(self, name, arguments, sql=None, expected_failure=False):
         exe = Path(self.args.pg_bin) / (name + ('.exe' if os.name == 'nt' else ''))
         require(exe.is_file(), 'Missing PostgreSQL tool: ' + name)
         connection = ['--host', self.args.host, '--port', str(self.args.port), '--username', self.args.user, '--no-password']
         result = subprocess.run([str(exe)] + connection + arguments, input=sql, text=True,
                                 encoding='utf-8', errors='replace', capture_output=True,
                                 env=self.env, timeout=120)
+        if expected_failure:
+            require(result.returncode != 0, 'Deliberately conflicting restore unexpectedly succeeded')
+            return result.stderr
         if result.returncode:
             # Keep diagnostics out of published evidence, and never echo SQL or environment.
             (self.runtime / (self.stage + '-tool-error.log')).write_text(result.stderr, encoding='utf-8')
@@ -266,6 +269,17 @@ class RestoreCheck:
         start = time.monotonic()
         self.command('pg_dump', ['--dbname', self.source, '--format=custom', '--no-owner', '--no-privileges', '--file', str(archive)])
         dump_seconds = round(time.monotonic() - start, 3)
+        self.stage = 'verify-restore-rollback'
+        failed_target = 'handover_restore_' + self.run_id + '_rollback'
+        self.command('createdb', ['--maintenance-db', 'postgres', failed_target])
+        self.sql(failed_target, "CREATE TABLE public.upload_sessions (sentinel text); INSERT INTO public.upload_sessions VALUES ('preserved');")
+        failure = self.command('pg_restore', ['--dbname', failed_target, '--exit-on-error', '--single-transaction',
+            '--no-owner', '--no-privileges', str(archive)], expected_failure=True)
+        require('upload_sessions' in failure and 'already exists' in failure, 'Restore did not reach the deliberate table conflict')
+        require(self.sql(failed_target, "SELECT count(*) FROM information_schema.tables WHERE table_schema='public';") == '1',
+                'Failed restore left partial schema changes')
+        require(self.sql(failed_target, "SELECT sentinel FROM public.upload_sessions;") == 'preserved',
+                'Failed restore changed preexisting sentinel data')
         self.stage = 'create-target'
         self.command('createdb', ['--maintenance-db', 'postgres', self.target])
         self.stage = 'pg-restore'
@@ -295,6 +309,7 @@ class RestoreCheck:
                         archiveSha256=hashlib.sha256(archive.read_bytes()).hexdigest(),
                         jarSha256=hashlib.sha256(self.jar.read_bytes()).hexdigest(),
                         pinnedVersionPreserved=True, confirmationTimesPreserved=True, noUnexpectedDataChanges=True,
+                        failedRestoreRolledBack=True, rollbackFixtureDatabase=failed_target,
                         archiveCommitted=False, fixtureDescription='Local-profile seeded users; API-created projects/membership; SQL synthetic file/version/handover fixtures; no S3 bytes or Lambda execution')
         (self.output / 'restore-result.json').write_text(json.dumps(evidence, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
         (self.output / 'restore-report.md').write_text(render_report(evidence), encoding='utf-8')

@@ -1,0 +1,9 @@
+# A14 — Isolated local PostgreSQL recovery
+
+Two local reruns passed on 2026-11-10. The second adds a previously missing negative restore case: create a third NEW database with a conflicting `upload_sessions` sentinel table, run `pg_restore --single-transaction --exit-on-error`, require failure at that conflict, and verify all earlier schema changes rolled back while the original sentinel row survived. It then restores successfully into another NEW database.
+
+Evidence: `evidence/pre-aws-restore-84275d3a6b/` (existing positive check) and `evidence/pre-aws-restore-684e5724b7/` (positive plus negative rollback). Each run matched row counts/canonical hashes across 11 tables, validated 18 foreign keys, found zero invalid quota/link invariants and passed 51 HTTP checks. Source backend is stopped before dumping; target backend starts from restored accounts without reseeding. Confirmations, audit, exact-version references and idempotent actions survive restart/restore.
+
+The outer runner created its own PostgreSQL 17 container and removed it afterward, including all three databases. The underlying standalone restore script retains its generated databases when run directly, as its generated report says; that retention statement does not describe the outer container runner. No shared PostgreSQL/Nextcloud database was used. Archives and raw logs are ignored and were not committed; evidence contains only synthetic identifiers, counts, hashes and outcomes. This is LOCAL_REAL_BACKEND, not AWS backup/restore or an RTO/RPO claim. AWS recovery remains NOT_RUN.
+
+Rerun directly using `docs/week-04/local-restore-runbook.md`, a loopback-only disposable PostgreSQL instance, and a new `--evidence-dir`. Script requires compatible PostgreSQL client tools and a role permitted to create its unique fixture databases. No cloud permission is required.

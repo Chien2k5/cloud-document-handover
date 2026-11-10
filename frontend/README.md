@@ -114,6 +114,24 @@ Nextcloud và database người dùng giữ nguyên. Log mặc định trong `ru
 bị ignore; không chia sẻ raw log/cookie/trace. Summary không có secret. Xem
 `docs/pilot/checkpoints.json`, `docs/pilot/live-verification.json` và test report.
 
+## Local business integration (PRE_AWS A13)
+
+Run `python tools/run_live_check.py --business` after `npm ci`. This launches real
+Spring Boot and a new PostgreSQL container, with an HTTPS `StoragePort` fixture on
+the **test classpath only**. JDK `keytool` creates a temporary self-signed certificate;
+only the isolated Playwright business configuration ignores that certificate error.
+The fixture class is outside production component scanning and is checked to be
+absent from the packaged production JAR. No production test endpoint/profile is added.
+
+The two business browser cases use real API calls (no route interception), real
+bytes and cookie/CSRF authentication: upload v1/v2, delayed checksum reconciliation,
+MISMATCH rejection, DRAFT/publish, two recipients, exact v1 download, revoke and
+expiry. The test-only checksum producer hashes the uploaded bytes; it is **not**
+the Python Lambda or AWS S3. Classification: `LOCAL_REAL_BACKEND_WITH_TEST_STORAGE`.
+The original `python tools/run_live_check.py` still checks production JAR startup
+with storage disabled. Both runners clean their owned container/server; raw logs
+remain ignored. Explicit `--evidence` paths must be new paths inside the repository.
+
 ## Deploy cùng origin/HTTPS
 
 `npm run build` sinh `frontend/dist/`. Chiến phục vụ thư mục này cùng hostname HTTPS

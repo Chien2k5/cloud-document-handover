@@ -217,6 +217,32 @@ class TestChecksumLambda(unittest.TestCase):
         with self.assertRaises(TimeoutError): self.run_event()
         self.assertTrue(body.closed)
 
+    def test_duplicate_timestamp_must_match_java_offset_datetime_contract(self):
+        self.run_event()
+        original = json.loads(self.s3.saved[self.SHARED_KEY])
+        for timestamp in ("2026-11-10 10:00:00+00:00", "2026-11-10T10:00:00+0000",
+                          "20261110T100000Z", "2026-11-10T10:00:00+19:00",
+                          "2026-11-10T10:00:00.1234567890Z", "2026-11-10T10:00:00+00:60"):
+            with self.subTest(timestamp=timestamp):
+                data = json.dumps(dict(original, processedAt=timestamp)).encode()
+                self.s3.saved[self.SHARED_KEY] = data
+                with self.assertRaises(ValueError): self.run_event()
+                self.assertEqual(self.s3.saved[self.SHARED_KEY], data)
+        for timestamp in ("2026-11-10T10:00:00Z", "2026-11-10T17:00:00.123456789+07:00"):
+            self.s3.saved[self.SHARED_KEY] = json.dumps(dict(original, processedAt=timestamp)).encode()
+            self.assertEqual(self.run_event(), {"created": 0, "skipped": 1})
+
+    def test_malformed_upload_events_never_write_success(self):
+        for field in ("s3", "eventName"):
+            event = self.event(); del event["Records"][0][field]
+            if field == "eventName":
+                self.assertEqual(self.run_event(event), {"created": 0, "skipped": 0})
+            else:
+                with self.assertRaises(KeyError): self.run_event(event)
+        event = self.event(); del event["Records"][0]["s3"]["object"]["key"]
+        with self.assertRaises(KeyError): self.run_event(event)
+        self.assertEqual(self.s3.saved, {})
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -42,3 +42,33 @@ test('anonymous startup is silent but later protected 401 notifies session expir
   await assert.rejects(api.request('/auth/me', { notifyUnauthorized: false })); assert.equal(expired, 0);
   await assert.rejects(api.request('/projects')); assert.equal(expired, 1);
 });
+
+test('concurrent first mutations share one CSRF bootstrap and cannot split the anonymous cookie session', async () => {
+  let bootstraps = 0, cookieSession = 0, writes = 0;
+  const api = new ApiClient({ fetchImpl: async (path, options) => {
+    if (path.endsWith('/csrf')) {
+      const session = ++bootstraps; cookieSession = session;
+      return { ok: true, status: 200, json: async () => { await new Promise(resolve => setTimeout(resolve, 10)); return { headerName: 'X-CSRF', token: String(session) }; } };
+    }
+    writes++;
+    return options.headers['X-CSRF'] === String(cookieSession) ? json({ id: 'project' }) : json({ code: 'ACCESS_DENIED' }, 403);
+  } });
+  const results = await Promise.allSettled([api.request('/projects', { method: 'POST', body: { name: 'one' } }), api.request('/projects', { method: 'POST', body: { name: 'two' } })]);
+  assert.equal(bootstraps, 1); assert.equal(writes, 2);
+  assert.ok(results.every(result => result.status === 'fulfilled'));
+});
+
+test('a late 401 from the previous session cannot invalidate a newly logged-in account', async () => {
+  let finishOld, expired = 0, loggedIn = false;
+  const api = new ApiClient({ onUnauthorized: () => expired++, fetchImpl: async path => {
+    if (path.endsWith('/projects')) return new Promise(resolve => { finishOld = resolve; });
+    if (path.endsWith('/csrf')) return json({ headerName: 'X-CSRF', token: loggedIn ? 'new-session' : 'old-session' });
+    if (path.endsWith('/login')) { loggedIn = true; return json({ id: 'new-account' }); }
+    return json({ id: 'new-account' });
+  } });
+  const old = api.request('/projects');
+  await api.login('new@example.test', 'fixture-only');
+  finishOld(json({ code: 'UNAUTHENTICATED' }, 401));
+  await assert.rejects(old, error => error.status === 401);
+  assert.equal(expired, 0); assert.equal(api.csrf.token, 'new-session');
+});

@@ -149,3 +149,26 @@ Nguồn kiểm chứng: [audit](contribution-audit.md), [PR #3](https://github.c
 [backend evidence](../../evidence/backend-2026-11-09/verification.json),
 [Lambda evidence](../../aws/verification-2026-11-09.json),
 [hồ sơ backend lịch sử](../week-05/contributions.md).
+
+## 7. PRE_AWS hardening do Dũng tổ chức — 10/11/2026
+
+Dũng cung cấp MASTER PROMPT, yêu cầu audit tuần tự A01–A15, test trước push,
+bảo toàn tác giả và dừng trước triển khai AWS. Dũng đã chấp thuận rõ ba tài liệu
+của PR #4 và merge vào `dung`; không suy chấp thuận đó thành nghiệm thu thủ công
+toàn bộ hardening hoặc chấp thuận của Nam/Đăng/Chiến.
+
+Theo chỉ đạo này, **Codex sinh/sửa code và test, chạy lệnh, commit/push** trên
+`task/C08-pre-aws-hardening`: CSRF/session race, signed upload validation,
+Lambda timestamp compatibility, FileVersion polling, traceability, local business
+E2E, negative pg_restore rollback và CI/readiness. Các test tự động đã chạy là
+bằng chứng kỹ thuật do công cụ thực hiện; không phải bằng chứng Dũng tự viết tay
+từng dòng hoặc nhóm đã ký nghiệm thu. Dũng phụ trách định hướng, tổ chức tích hợp,
+yêu cầu chất lượng và xem xét nghiệm thu; chưa có xác nhận nghiệm thu thủ công mới
+từ Dũng hay chủ module trong phiên này.
+
+Commit, file và test cụ thể được ghi tại [báo cáo checkpoint PRE_AWS](../verification/pre-aws-checkpoints.md)
+và [readiness](../integration/pre-aws-readiness.md). Các checkpoint PASS_NO_CHANGE
+được ghi riêng, không tạo commit rỗng hoặc tính thêm công việc sửa code.
+Nguồn giao diện ban đầu của Nam và Nextcloud/S3/Lambda ban đầu của Đăng vẫn giữ
+nguyên attribution ở trên. Không gán mã hardening mới cho Nam/Đăng hoặc mã hạ tầng
+chưa được cung cấp cho Chiến; không suy tỷ lệ/giờ công từ số commit.

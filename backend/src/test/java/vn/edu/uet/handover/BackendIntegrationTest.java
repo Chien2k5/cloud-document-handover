@@ -177,6 +177,35 @@ class BackendIntegrationTest {
         assertThat(session.isInvalid()).isTrue();
         mvc.perform(get("/api/v1/auth/me")).andExpect(status().isUnauthorized());
     }
+    @Test void paginationAndMembershipChangesUseCurrentDatabaseState() throws Exception {
+        MockHttpSession a=login("owner"), e=login("editor");
+        UUID first=project(a), second=project(a); member(first,editor,"EDITOR");
+        for (String query:new String[]{"page=-1", "size=0", "size=101", "page=2147483648"}) {
+            mvc.perform(get("/api/v1/projects?"+query).session(a)).andExpect(status().isBadRequest());
+        }
+        String page0=mvc.perform(get("/api/v1/projects?page=0&size=1").session(a)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1)).andReturn().getResponse().getContentAsString();
+        String page1=mvc.perform(get("/api/v1/projects?page=1&size=1").session(a)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1)).andReturn().getResponse().getContentAsString();
+        assertThat(json.readTree(page0).at("/items/0/id")).isNotEqualTo(json.readTree(page1).at("/items/0/id"));
+        mvc.perform(get("/api/v1/projects?page=2147483647&size=100").session(a)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(0));
+        for (String body:new String[]{"{}", "{\"role\":null}", "{\"role\":\"\"}", "{\"role\":\"OWNER\"}", "{\"role\":\"VIEWER\",\"userId\":\"forged\"}"}) {
+            mvc.perform(put("/api/v1/projects/"+first+"/members/"+editor).session(a).with(csrf()).contentType("application/json").content(body))
+                    .andExpect(status().isBadRequest());
+        }
+        jdbc.update("UPDATE app_users SET enabled=false WHERE id=?",outsider);
+        mvc.perform(put("/api/v1/projects/"+first+"/members/"+outsider).session(a).with(csrf()).contentType("application/json").content("{\"role\":\"VIEWER\"}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(put("/api/v1/projects/"+first+"/members/"+editor).session(a).with(csrf()).contentType("application/json").content("{\"role\":\"VIEWER\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/v1/projects/"+first).session(e)).andExpect(status().isOk()).andExpect(jsonPath("$.role").value("VIEWER"));
+        mvc.perform(get("/api/v1/projects/"+second+"/members").session(e)).andExpect(status().isNotFound());
+        mvc.perform(delete("/api/v1/projects/"+first+"/members/"+editor).session(a).with(csrf())).andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/projects").session(e)).andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(0));
+        mvc.perform(get("/api/v1/projects/"+first+"/members").session(e)).andExpect(status().isNotFound());
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM audit_events WHERE project_id=?",Integer.class,first)).isEqualTo(3);
+    }
     @Test void databaseConstraintsProtectVersionAndCrossProjectReferences() throws Exception {
         UUID a=project(login("owner")), b=project(login("outsider"));
         UUID file=UUID.randomUUID(), version=UUID.randomUUID(), handover=UUID.randomUUID();

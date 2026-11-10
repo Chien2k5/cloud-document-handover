@@ -29,7 +29,7 @@ Thay port/user theo PostgreSQL local của bạn. Role `handover` trong ví dụ
 2. Start JAR; Flyway chạy V1 từ DB trống; local seed tạo user mẫu với mật khẩu ngẫu nhiên trong bộ nhớ.
 3. Tạo project/membership qua API. Tạo fixture SQL gồm v1 VERIFIED, v2 MISMATCH, một upload PENDING, gói DRAFT/READY/CONFIRMED/REVOKED và audit. Đây là dữ liệu tổng hợp, không mô phỏng thành công AWS.
 4. Kiểm API nguồn rồi dừng JAR để nguồn ổn định. Lấy row count và SHA-256 dữ liệu canonical của 10 bảng nghiệp vụ + Flyway.
-5. Chạy pg_dump custom; tạo DB `_dst` mới, chạy pg_restore với --exit-on-error/--single-transaction, không --clean hoặc ghi đè DB cũ.
+5. Chạy pg_dump custom; tạo DB `_rollback` mới với một bảng sentinel cố ý xung đột. Kiểm pg_restore thất bại đúng tại xung đột và rollback toàn bộ schema/dữ liệu mới, giữ nguyên sentinel. Sau đó tạo DB `_dst` mới, chạy pg_restore với --exit-on-error/--single-transaction, không --clean hoặc ghi đè DB cũ.
 6. Đối chiếu toàn bộ bảng, FK validated, used/reserved quota và liên kết HandoverItem.
 7. Start JAR trỏ target, **không seed lại user**. Login bằng tài khoản đã phục hồi; kiểm manifest/quyền/confirmedAt, confirm lặp và state. Download thiếu adapter phải trả 503.
 8. Dừng JAR; so snapshot target lần nữa để chắc request đọc/confirm lặp không thay dữ liệu.

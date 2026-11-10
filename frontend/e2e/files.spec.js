@@ -32,3 +32,28 @@ test('mock backend: MISMATCH is visible and download disabled; new version targe
   await page.getByRole('button', { name: 'Thêm phiên bản hello.txt' }).click();
   await expect(page.getByText('Thêm phiên bản cho', { exact: false })).toContainText(file.fileId);
 });
+
+test('mock backend: an older polling response cannot undo a newer manual verification', async ({ page }) => {
+  let release, reads = 0;
+  const gate = new Promise(resolve => { release = resolve; });
+  await mockProject(page, 'OWNER', async route => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith('/files')) { await route.fulfill({ json: { items: [file], page: 0, size: 20 } }); return true; }
+    if (path.endsWith('/uploads/' + file.uploadId)) {
+      const read = ++reads;
+      if (read === 1) await gate;
+      await route.fulfill({ json: { uploadId: file.uploadId, fileVersion: { ...file, integrityStatus: read === 1 ? 'INTEGRITY_PENDING' : 'VERIFIED' } } });
+      return true;
+    }
+    return false;
+  });
+  try {
+    await expect.poll(() => reads).toBe(1);
+    await page.getByRole('button', { name: 'Kiểm tra lại hello.txt', exact: true }).click();
+    await expect(page.getByText('VERIFIED', { exact: true })).toBeVisible();
+    const oldResponse = page.waitForResponse(response => response.url().includes('/uploads/' + file.uploadId));
+    release(); await oldResponse;
+    await expect(page.getByRole('button', { name: 'Lấy link tải hello.txt' })).toBeEnabled();
+    await expect(page.getByText('VERIFIED', { exact: true })).toBeVisible();
+  } finally { release(); }
+});
