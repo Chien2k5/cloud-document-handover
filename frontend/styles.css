@@ -318,3 +318,43 @@ label { font-size: 1.0625rem; font-weight: 550; }
 #workspace-handovers > form { max-width: 760px; margin-top: 28px; }
 #workspace-handovers > p { max-width: 65ch; }
 @media (max-width: 650px) { .create-project { padding: 24px; } .project-list .project-tile { padding: 24px; } }
+
+/* Batch 01 review: project identity and storage values remain API driven. */
+.project-summary { padding-top: 28px; border-top: 1px solid var(--border); }
+.project-summary__identity { display: flex; align-items: flex-start; gap: 20px; min-width: 0; }
+.project-summary__identity > div { min-width: 0; }
+.project-summary__identity h3 { font-size: 2rem; line-height: 1.25; }
+.project-summary__identity .project-symbol { width: 64px; height: 64px; border-radius: 16px; }
+.project-summary__identity .project-symbol svg { width: 32px; height: 32px; }
+.project-role { padding: 8px 12px; background: var(--background); border: 1px solid var(--border); border-radius: 10px; }
+.project-description { max-width: 75ch; margin: 24px 0; }
+.project-shortcuts { gap: 12px; margin: 28px 0; }
+.project-shortcuts a { min-height: 48px; background: white; padding: 10px 16px; font-weight: 550; }
+.quota-panel { padding: 28px; }
+.quota-metrics { gap: 16px; margin: 0 0 24px; }
+.quota-metric { min-width: 0; padding: 20px; border: 1px solid var(--border); border-top: 3px solid #94a3b8; border-radius: 12px; background: white; }
+.quota-metric--used { border-top-color: var(--primary); }
+.quota-metric--reserved { border-top-color: #b77900; background: #fffbeb; }
+.quota-metric dt { color: var(--text); font-size: 1rem; font-weight: 600; }
+.quota-metric dd { gap: 8px; margin-top: 12px; }
+.quota-track { height: 12px; }
+.quota-note { margin: 16px 0; gap: 10px; }
+.quota-key { width: 10px; height: 10px; }
+.quota-explanation { max-width: 90ch; line-height: 1.7; }
+.technical-details { margin-top: 24px; padding-top: 20px; }
+@media (max-width: 650px) {
+  .project-summary__identity { gap: 12px; }
+  .project-summary__identity h3 { font-size: 1.75rem; }
+  .project-summary__identity .project-symbol { width: 48px; height: 48px; border-radius: 12px; }
+  .project-summary__identity .project-symbol svg { width: 26px; height: 26px; }
+  .quota-panel { padding: 16px; }
+  .quota-metric { padding: 16px; }
+}
+
+.project-role { flex-shrink: 0; white-space: nowrap; }
+@media (max-width: 1200px) { .project-summary__heading { flex-direction: column; } }
+@media (min-width: 651px) and (max-width: 1200px) {
+  .quota-metrics { grid-template-columns: minmax(0, 1fr); }
+  .quota-metric { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); align-items: center; gap: 16px; }
+  .quota-metric dd { margin: 0; text-align: right; }
+}

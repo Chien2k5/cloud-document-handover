@@ -88,3 +88,13 @@ test('C09.04: long description, name and UUID wrap at 375px without hiding conte
   await expect(page.getByText('Project ID:', { exact: false })).toContainText(id);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+for (const width of [768, 1024]) test(`C09 UI review: quota values and role label do not wrap unevenly at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 1024 });
+  await overview(page, { usedBytes: 2097152, reservedBytes: 1048576, quotaBytes: 10485760 }, 'VIEWER');
+  for (const metric of await summary(page).locator('.quota-metric strong').all()) {
+    expect(await metric.evaluate(element => { const range = document.createRange(); range.selectNodeContents(element); return new Set([...range.getClientRects()].map(rect => Math.round(rect.top))).size; })).toBe(1);
+  }
+  expect(await summary(page).locator('.project-role').evaluate(element => { const range = document.createRange(); range.selectNode(element.firstChild); return new Set([...range.getClientRects()].map(rect => Math.round(rect.top))).size; })).toBe(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});

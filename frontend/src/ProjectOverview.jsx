@@ -1,11 +1,11 @@
-import { StatusBadge, TechnicalDetails } from './ui.jsx';
+import { ProjectSymbol, StatusBadge, TechnicalDetails } from './ui.jsx';
 import { formatBytes, storageQuota } from './presentation.js';
 import { projectHash } from './navigation.js';
 
 export default function ProjectOverview({ project }) {
   const quota = storageQuota(project);
   return <div className="project-summary">
-    <div className="project-summary__heading"><div><p className="eyebrow">Dự án đang chọn</p><h3>{project.name}</h3></div><div className="project-role">Vai trò: <StatusBadge>{project.role}</StatusBadge></div></div>
+    <div className="project-summary__heading"><div className="project-summary__identity"><ProjectSymbol /><div><p className="eyebrow">Dự án đang chọn</p><h3>{project.name}</h3></div></div><div className="project-role">Vai trò: <StatusBadge>{project.role}</StatusBadge></div></div>
     <p className="project-description">{project.description || 'Chưa có mô tả.'}</p>
     <nav className="project-shortcuts" aria-label="Truy cập nhanh dự án">
       <a href={projectHash(project.id, 'files')}>Mở tài liệu <span aria-hidden="true">→</span></a>
