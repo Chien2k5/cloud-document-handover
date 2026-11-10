@@ -426,5 +426,16 @@ label { font-size: 1.0625rem; font-weight: 550; }
 .upload-selection dd { margin: 2px 0 0; overflow-wrap: anywhere; }
 .upload-safety, .upload-target { padding: 16px 20px; border-radius: 10px; background: var(--background); font-size: 1rem; }
 .upload-target { border-left: 3px solid var(--primary); overflow-wrap: anywhere; }
+.upload-progress { padding: 24px; margin: 24px 0; border: 1px solid #bfdbfe; background: #f8fbff; border-radius: 12px; }
+.upload-progress h4 { margin: 24px 0 8px; font-size: 1.15rem; }
+.upload-progress p { margin: 0; font-size: 1rem; }
+.upload-steps { display: flex; flex-wrap: wrap; list-style: none; gap: 16px 28px; margin: 0; padding: 0; font-size: .9375rem; }
+.upload-steps li { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.upload-steps li > span { width: 28px; height: 28px; display: grid; place-items: center; background: #e2e8f0; color: var(--muted); border-radius: 50%; flex: 0 0 auto; }
+.upload-steps li[aria-current="step"] { color: #1d4ed8; font-weight: 650; }
+.upload-steps li[aria-current="step"] > span { background: #2563eb; color: white; }
+.upload-progress[data-failed="true"], .upload-progress[data-phase="mismatch"], .upload-progress[data-phase="failed"] { border-color: #fecaca; background: #fffafa; }
+.upload-progress[data-phase="verified"] { border-color: #bbf7d0; background: #f0fdf4; }
+.upload-panel .version-state { padding: 20px; margin: 24px 0; border: 1px solid var(--border); border-radius: 12px; }
 @media (max-width: 650px) { .upload-selection { padding: 16px; gap: 12px; } .upload-selection dl { display: grid; } .upload-form .actions > button { width: 100%; } .upload-form input[type="file"] { font-size: 1rem; } }
 @media (max-width: 650px) { .files-section > .section-heading { flex-direction: column; } .files-section > .section-heading > button { width: 100%; } .version-list > .file-card { padding: 20px; } .file-card__heading { gap: 12px; } .file-card__actions { flex-direction: column; } .file-card__actions > button { width: 100%; } .technical-grid { grid-template-columns: minmax(0, 1fr); } }
