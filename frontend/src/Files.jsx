@@ -7,13 +7,16 @@ import { pollUpload, shouldPoll } from './upload.js';
 import { Button, EmptyState, ErrorNotice, LoadingState, Pager } from './ui.jsx';
 import UploadPanel from './UploadPanel.jsx';
 import { FileVersionDetails, FileVersionStatus } from './FileVersionInfo.jsx';
+import ExpiringDownloadLink from './ExpiringDownloadLink.jsx';
 import { CreateHandover } from './Handovers.jsx';
 
-export default function Files({ project, members, onHandoverCreated }) {
+export default function Files({ project, members, onHandoverCreated, onAccessLost }) {
   const [page, setPage] = useState(0), [items, setItems] = useState([]), [reload, setReload] = useState(0);
   const [busy, setBusy] = useState(false), [error, setError] = useState(null), [polling, setPolling] = useState(false);
   const [target, setTarget] = useState(null), [download, setDownload] = useState(null), [actionBusy, setActionBusy] = useState(false);
   const manual = useRef(null);
+  const accessLost = useRef(onAccessLost);
+  useEffect(() => { accessLost.current = onAccessLost; }, [onAccessLost]);
   const [selected, setSelected] = useState({});
   const [uploadBusy, setUploadBusy] = useState(false);
   function reconcileSelection(versions) {
@@ -25,6 +28,12 @@ export default function Files({ project, members, onHandoverCreated }) {
   }
   const base = `/projects/${segment(project.id)}/files`;
   const refresh = () => setReload(value => value + 1);
+  function showError(e) {
+    setError(e);
+    if ([401, 403, 404].includes(e.status)) {
+      setItems([]); setSelected({}); setDownload(null); accessLost.current?.(e);
+    }
+  }
   useEffect(() => () => manual.current?.abort(), []);
   useEffect(() => {
     const controller = new AbortController(); let timer, disposed = false;
@@ -43,26 +52,28 @@ export default function Files({ project, members, onHandoverCreated }) {
             onState: state => { setItems(current => updateVersion(current, state.fileVersion)); reconcileSelection([state.fileVersion]); } });
         }
       }));
-    })().catch(e => { if (e.name !== 'AbortError') { setError(e); controller.abort(); } })
+    })().catch(e => { if (!controller.signal.aborted && e.name !== 'AbortError') { showError(e); controller.abort(); } })
       .finally(() => { clearTimeout(timer); if (!disposed) { setBusy(false); setPolling(false); } });
     return () => { disposed = true; clearTimeout(timer); controller.abort(); };
   }, [base, page, reload, project.id]);
   async function check(file) {
-    const controller = new AbortController(); manual.current = controller; setActionBusy(true); setError(null);
+    if (manual.current) return;
+    const controller = new AbortController(); manual.current = controller; setActionBusy(true); setError(null); setDownload(null);
     try {
       const state = await api.request(`${base}/uploads/${segment(file.uploadId)}`, { signal: controller.signal });
       controller.signal.throwIfAborted(); setItems(current => updateVersion(current, state.fileVersion)); reconcileSelection([state.fileVersion]);
-    } catch (e) { if (e.name !== 'AbortError') setError(e); }
-    finally { manual.current = null; setActionBusy(false); }
+    } catch (e) { if (!controller.signal.aborted && e.name !== 'AbortError') showError(e); }
+    finally { if (manual.current === controller) manual.current = null; if (!controller.signal.aborted) setActionBusy(false); }
   }
   async function prepareDownload(file) {
+    if (manual.current) return;
     const controller = new AbortController(); manual.current = controller; setActionBusy(true); setError(null); setDownload(null);
     try {
       const result = await api.request(`${base}/${segment(file.id)}/download`, { signal: controller.signal });
       if (result.versionId !== file.versionId) throw new ApiError(0, 'INVALID_DOWNLOAD');
       controller.signal.throwIfAborted(); setDownload({ id: file.id, url: downloadUrl(result), expiresAt: result.expiresAt });
-    } catch (e) { if (e.name !== 'AbortError') setError(e); }
-    finally { manual.current = null; setActionBusy(false); }
+    } catch (e) { if (!controller.signal.aborted && e.name !== 'AbortError') showError(e); }
+    finally { if (manual.current === controller) manual.current = null; if (!controller.signal.aborted) setActionBusy(false); }
   }
   return <>
     <UploadPanel project={project} targetFile={target} onChanged={refresh} onUploaded={() => setTarget(null)} onBusyChange={setUploadBusy} />
@@ -79,9 +90,9 @@ export default function Files({ project, members, onHandoverCreated }) {
         {canOwn(project) && <label className="select-file"><input type="checkbox" aria-label={`Chọn bàn giao ${file.filename} · ${file.id}`} checked={Boolean(selected[file.id])} disabled={!isVerified(file)} onChange={event => setSelected(current => { const next = { ...current }; if (event.target.checked) next[file.id] = file; else delete next[file.id]; return next; })} />Chọn phiên bản bàn giao</label>}
         <div className="actions file-card__actions"><Button variant="secondary" disabled={actionBusy} onClick={() => check(file)}>Kiểm tra lại {file.filename}</Button>
           <Button disabled={actionBusy || !isVerified(file)} onClick={() => prepareDownload(file)}>Lấy link tải {file.filename}</Button>
-          {canWrite(project) && <Button variant="secondary" disabled={actionBusy || uploadBusy} onClick={() => setTarget(file)}>Thêm phiên bản {file.filename}</Button>}
+          {canWrite(project) && <Button variant="secondary" disabled={actionBusy || uploadBusy} onClick={() => { setDownload(null); setTarget(file); }}>Thêm phiên bản {file.filename}</Button>}
         </div>
-        {download?.id === file.id && <p><a href={download.url} target="_blank" rel="noopener noreferrer">Tải phiên bản đã chọn</a> · Hết hạn {new Date(download.expiresAt).toLocaleString('vi-VN')}</p>}
+        {download?.id === file.id && <ExpiringDownloadLink key={`${download.id}:${download.expiresAt}`} download={download} />}
         <FileVersionDetails file={file} />
       </li>)}</ul>
       <Pager page={page} count={items.length} busy={busy || actionBusy} onPage={setPage} />

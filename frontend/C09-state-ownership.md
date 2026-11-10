@@ -46,3 +46,26 @@ Only changing project ID or account keeps the existing reset/unmount behavior. S
 upload/polling, selected FileVersions, DRAFT fields and handover state survive hidden screens.
 Hash parser/API semantics are unchanged. Existing assertions are kept; tests navigate to the visible screen
 before interacting rather than depending on all screens sharing one long document.
+
+## Batch 02 — Member actions and FileVersion download
+
+Member mutation state stays in the project-keyed ProjectDetail. A single AbortController
+guards PUT/DELETE; project/account unmount aborts it and late results are ignored. Removing
+a member requires inline confirmation. OWNER is immutable in both row and form controls;
+the backend remains authoritative. UUID validation accepts trimmed canonical UUIDs.
+
+FileVersion page and selection ownership are unchanged. IDs in the selection map and
+handover payload remain FileVersion IDs; filename and S3 Version ID are never substituted.
+UploadPanel, its session, bounded polling helpers and handover lifecycle are unchanged.
+
+Files owns one manual read/download controller and one validated download response. A new
+download, state check, list reload or new-version target clears the prior URL. HTTP
+401/403/404 clears the project detail through onAccessLost; the existing global 401
+session handler still owns authentication expiry. Other failures retain valid selection.
+Cancellation is checked before publishing read results or errors.
+
+ExpiringDownloadLink owns only a timeout for that response's expiresAt. It removes the
+anchor at expiry and rechecks the existing protected downloadUrl helper on activation.
+Hidden same-project screens retain the component and its expiry timer; project/account
+unmount clears it. A renewed response uses a new keyed instance. No URL or selection is
+persisted in browser storage, and no automatic request/retry is added.

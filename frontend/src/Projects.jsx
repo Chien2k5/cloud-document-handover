@@ -161,7 +161,7 @@ function ProjectDetail({ projectId, user, navigation, onHandoverCreated }) {
           {saving && <p role="status">Đang xử lý thay đổi thành viên…</p>}
         </form>
       </div>}</div>
-      <div className="workspace-section" id="project-files" tabIndex={-1}><Files project={project} members={members} onHandoverCreated={onHandoverCreated} /></div>
+      <div className="workspace-section" id="project-files" tabIndex={-1}><Files project={project} members={members} onHandoverCreated={onHandoverCreated} onAccessLost={e => { setError(e); setProject(null); }} /></div>
     </>}
   </section>;
 }

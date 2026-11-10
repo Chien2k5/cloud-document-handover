@@ -184,6 +184,28 @@ cần Nam review việc nâng toolchain khi bản hỗ trợ có dependency đã
 
 ## Tham chiếu
 
+### C09 Batch 02: thành viên và phiên bản tài liệu
+
+Trong workspace dự án, mục Thành viên hiển thị tên và role thực tế; UUID nằm trong
+Thông tin kỹ thuật. OWNER có thể thêm/cập nhật EDITOR hoặc VIEWER bằng UUID tài khoản
+đang hoạt động, và phải xác nhận trước khi gỡ. Backend xác minh quyền cuối cùng;
+giao diện không cung cấp chuyển OWNER hoặc tìm kiếm tài khoản toàn hệ thống.
+
+Mục Tài liệu hiển thị riêng từng FileVersion, kể cả khi hai tài liệu trùng tên.
+Thông tin kỹ thuật phân biệt File ID, FileVersion ID, Upload ID và S3 Version ID.
+Chỉ AVAILABLE + VERIFIED mới đủ điều kiện tải/chọn bàn giao. Lựa chọn của OWNER
+giữ theo FileVersion qua phân trang và điều hướng cùng dự án, không tự chuyển sang
+phiên bản mới hơn. Upload và tạo bàn giao vẫn dùng giao thức hiện hành.
+
+Link tải lấy từ backend theo đúng FileVersion ID, phải khớp S3 Version ID, HTTPS
+và còn hạn. Link hiển thị bị gỡ khi hết expiresAt; nếu còn quyền, người dùng có thể
+bấm Lấy link tải để xin link mới. Đây là kiểm tra UI, không phải bằng chứng kiểm thử
+S3 thật. Đổi dự án/tài khoản hoặc phản hồi mất quyền sẽ xóa giao diện bảo vệ.
+
+Browser mock kiểm tra role, identity, pagination, lỗi, keyboard, responsive và thời
+gian bằng fixture/clock. Live backend và business browser được phân loại riêng ở
+trên; không được coi các bài này là AWS_REAL_E2E.
+
 - [React + Vite](https://react.dev/learn/build-a-react-app-from-scratch)
 - [Vite](https://vite.dev/guide/)
 - [Playwright web server](https://playwright.dev/docs/test-webserver)
