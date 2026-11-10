@@ -26,6 +26,7 @@ const messages = {
   NETWORK_ERROR: 'Không kết nối được máy chủ. Kiểm tra mạng và backend.',
   REQUEST_TIMEOUT: 'Yêu cầu hết thời gian chờ; thao tác có thể đã được máy chủ nhận. Kiểm tra trạng thái trước khi thử lại.',
   INVALID_RESPONSE: 'Máy chủ trả dữ liệu không đúng định dạng API.',
+  SESSION_CHANGED: 'Phiên đăng nhập đã thay đổi trong lúc chờ. Kiểm tra trạng thái trước khi thử lại thao tác.',
   INVALID_FILE_SIZE: 'Chọn file từ 1 byte đến 100 MiB.',
   FILE_NAME_CONFLICT: 'Phiên bản mới phải giữ nguyên tên file của tài liệu đã chọn.',
   INVALID_DOWNLOAD: 'Liên kết tải không hợp lệ hoặc đã hết hạn. Lấy link mới từ backend.',
@@ -47,18 +48,32 @@ export function errorText(error) {
 }
 export class ApiClient {
   constructor({ fetchImpl = (...args) => fetch(...args), onUnauthorized = () => {}, timeoutMs = 20000 } = {}) {
-    this.fetchImpl = fetchImpl; this.onUnauthorized = onUnauthorized; this.timeoutMs = timeoutMs; this.csrf = null;
+    this.fetchImpl = fetchImpl; this.onUnauthorized = onUnauthorized; this.timeoutMs = timeoutMs;
+    this.csrf = null; this.csrfPending = null; this.authEpoch = 0;
+  }
+  invalidateCsrf() {
+    this.csrf = null; this.csrfPending = null; this.authEpoch++;
   }
   async refreshCsrf() {
-    const csrf = await this.request('/auth/csrf');
-    if (!csrf?.headerName || !csrf?.token) throw new ApiError(0, 'INVALID_RESPONSE');
-    this.csrf = csrf; return csrf;
+    if (this.csrfPending?.epoch === this.authEpoch) return this.csrfPending.promise;
+    const epoch = this.authEpoch;
+    const promise = this.request('/auth/csrf').then(csrf => {
+      if (epoch !== this.authEpoch) throw new ApiError(0, 'SESSION_CHANGED');
+      if (!csrf?.headerName || !csrf?.token) throw new ApiError(0, 'INVALID_RESPONSE');
+      this.csrf = csrf; return csrf;
+    }).finally(() => { if (this.csrfPending?.promise === promise) this.csrfPending = null; });
+    this.csrfPending = { epoch, promise };
+    return promise;
   }
   async request(path, { method = 'GET', body, form, signal, timeoutMs = this.timeoutMs, notifyUnauthorized = true } = {}) {
     if (!path.startsWith('/') || path.startsWith('//') || path.includes('://')) throw new Error('Internal API path required');
+    signal?.throwIfAborted();
+    const epoch = this.authEpoch;
     const headers = { Accept: 'application/json' };
     if (!['GET', 'HEAD'].includes(method)) {
       if (!this.csrf) await this.refreshCsrf();
+      signal?.throwIfAborted();
+      if (epoch !== this.authEpoch) throw new ApiError(0, 'SESSION_CHANGED');
       headers[this.csrf.headerName] = this.csrf.token;
     }
     let payload;
@@ -74,9 +89,10 @@ export class ApiClient {
       }
       if (!response.ok) {
         const error = new ApiError(response.status, data?.code || 'HTTP_ERROR', data?.requestId || '');
-        if (response.status === 401 && path !== '/auth/login') { this.csrf = null; if (notifyUnauthorized) this.onUnauthorized(error); }
+        if (response.status === 401 && path !== '/auth/login' && epoch === this.authEpoch) { this.invalidateCsrf(); if (notifyUnauthorized) this.onUnauthorized(error); }
         throw error;
       }
+      if (path !== '/auth/csrf' && epoch !== this.authEpoch) throw new ApiError(0, 'SESSION_CHANGED');
       return data;
     } catch (error) {
       if (error instanceof ApiError) throw error;
@@ -85,13 +101,14 @@ export class ApiClient {
     } finally { clearTimeout(timeout); }
   }
   async login(email, password) {
+    this.invalidateCsrf();
     await this.refreshCsrf();
     await this.request('/auth/login', { method: 'POST', form: { email, password } });
-    this.csrf = null; await this.refreshCsrf(); return this.request('/auth/me');
+    this.invalidateCsrf(); await this.refreshCsrf(); return this.request('/auth/me');
   }
   async logout() {
     await this.request('/auth/logout', { method: 'POST' });
-    this.csrf = null; await this.refreshCsrf();
+    this.invalidateCsrf(); await this.refreshCsrf();
   }
 }
 export const segment = value => encodeURIComponent(value);
