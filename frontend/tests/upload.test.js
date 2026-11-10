@@ -4,17 +4,26 @@ import { ApiError } from '../src/api.js';
 import { completeUpload, fileSha256, MAX_FILE_BYTES, pollUpload, startUpload } from '../src/upload.js';
 const bytes = new File(['abc'], 'hello.txt', { type: 'text/plain' });
 const digest = 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad';
-function fixture({ completeError } = {}) {
+function fixture({ completeError, headers } = {}) {
   const calls = [];
   return { calls, async request(path, options = {}) {
     calls.push({ path, ...options });
     if (path.endsWith('/complete')) { if (completeError) throw completeError; return { fileVersion: { uploadStatus: 'AVAILABLE', integrityStatus: 'INTEGRITY_PENDING' } }; }
-    return { uploadId: 'upload', fileVersionId: 'version', fileId: 'file', presignedUpload: { method: 'PUT', url: 'https://s3.example.test/object?fixture=not-a-signature', headers: { 'Content-Type': 'text/plain', 'If-None-Match': '*' } } };
+    return { uploadId: 'upload', fileVersionId: 'version', fileId: 'file', presignedUpload: { method: 'PUT', url: 'https://s3.example.test/object?fixture=not-a-signature', headers: headers || { 'Content-Type': options.body.contentType, 'If-None-Match': '*' } } };
   } };
 }
 test('SHA-256 uses exact bytes and rejects empty/oversize before creating any upload', async () => {
   assert.equal(await fileSha256(bytes), digest);
   for (const size of [0, MAX_FILE_BYTES + 1]) await assert.rejects(fileSha256({ size }), e => e.code === 'INVALID_FILE_SIZE');
+});
+
+test('unsafe or inconsistent signed headers are rejected before PUT and complete', async () => {
+  for (const headers of [{ 'Content-Type': 'text/plain' }, { 'Content-Type': 'text/plain', 'If-None-Match': 'wrong' },
+    { 'Content-Type': 'application/pdf', 'If-None-Match': '*' }, { 'Content-Type': 'text/plain', 'content-type': 'text/plain', 'If-None-Match': '*' }]) {
+    const api = fixture({ headers }); let puts = 0;
+    await assert.rejects(startUpload(api, 'p', bytes, { fetchImpl: async () => { puts++; return new Response(null, { headers: { 'x-amz-version-id': 'v' } }); } }), e => e.code === 'INVALID_SIGNED_UPLOAD');
+    assert.equal(puts, 0); assert.equal(api.calls.length, 1);
+  }
 });
 test('S3 receives original file and every signed header, no credentials/CSRF; complete pins opaque version', async () => {
   const api = fixture(), sessions = [];

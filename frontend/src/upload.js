@@ -29,7 +29,15 @@ export async function startUpload(api, projectId, file, {
   onSession(session); signal?.throwIfAborted();
   const signed = created.presignedUpload;
   if (signed?.method !== 'PUT' || typeof signed.url !== 'string' || !signed.headers || !created.uploadId) throw new ApiError(0, 'INVALID_SIGNED_UPLOAD');
-  const destination = new URL(signed.url);
+  const names = new Set(), headers = {};
+  for (const [name, value] of Object.entries(signed.headers)) {
+    const normalized = name.toLowerCase();
+    if (names.has(normalized) || typeof value !== 'string') throw new ApiError(0, 'INVALID_SIGNED_UPLOAD');
+    names.add(normalized); headers[normalized] = value;
+  }
+  if (headers['content-type'] !== body.contentType || headers['if-none-match'] !== '*') throw new ApiError(0, 'INVALID_SIGNED_UPLOAD');
+  let destination;
+  try { destination = new URL(signed.url); } catch { throw new ApiError(0, 'INVALID_SIGNED_UPLOAD'); }
   if (destination.protocol !== 'https:' || destination.username || destination.password) throw new ApiError(0, 'INVALID_SIGNED_UPLOAD');
   const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), putTimeoutMs);
   let response;
