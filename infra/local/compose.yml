@@ -1,0 +1,58 @@
+# TV1 - Local AWS emulation (A02). NOT an AWS deployment.
+# PostgreSQL 17 (same major as the planned RDS) + LocalStack (S3 + Lambda) + Nginx emulating EB.
+# Spring Boot runs on the host (java -jar) on port 5000, like the EB Java SE platform.
+#
+#   docker compose -f infra/local/compose.yml up -d
+#   python infra/local/bootstrap_localstack.py
+#
+# Credentials used here are LocalStack dummies ("test"); never reuse them anywhere.
+name: handover-local-aws
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: handover
+      POSTGRES_USER: handover
+      POSTGRES_PASSWORD: ${LOCAL_PG_PASSWORD:-local-only-not-a-secret}
+    ports:
+      - "127.0.0.1:15432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U handover -d handover"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  localstack:
+    # Pinned: 4.4 is the last tested community image that runs without an auth token.
+    image: localstack/localstack:4.4
+    environment:
+      SERVICES: s3,lambda,logs,iam,sts
+      AWS_DEFAULT_REGION: us-east-1
+      LAMBDA_RUNTIME_ENVIRONMENT_TIMEOUT: "60"
+      DEBUG: "0"
+    ports:
+      - "127.0.0.1:4566:4566"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "127.0.0.1:8088:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./nginx-eb-emulation.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../../deploy/eb/.platform/nginx/conf.d/elasticbeanstalk:/etc/nginx/eb-extensions:ro
+      - ../../frontend/dist:/var/app/current/frontend/dist:ro
+
+volumes:
+  pgdata:

@@ -1,0 +1,11 @@
+{
+  "CORSRules": [
+    {
+      "AllowedOrigins": ["https://REPLACE_WITH_PORTAL_ORIGIN"],
+      "AllowedMethods": ["PUT", "GET", "HEAD"],
+      "AllowedHeaders": ["content-type", "if-none-match"],
+      "ExposeHeaders": ["x-amz-version-id", "etag"],
+      "MaxAgeSeconds": 300
+    }
+  ]
+}
