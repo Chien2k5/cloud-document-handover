@@ -62,3 +62,44 @@ Khi có phiên AWS Academy Learner Lab đang chạy (đã nạp `aws_access_key_
 ```powershell
 .\deploy\redeploy_aws.ps1 -ProjectName "nhom5-handover" -Region "us-east-1"
 ```
+
+## F011 PostgreSQL server identity verification
+
+The EB DB_URL uses `sslmode=verify-full` and
+`sslrootcert=/var/app/current/certs/rds-global-bundle.pem`. pgJDBC validates both
+certificate chain and endpoint hostname. No SSL factory or trust bypass is used.
+The RDS CA identifier is explicit (`rds-ca-rsa2048-g1` by default); confirm support
+for the selected PostgreSQL engine/version and region before any real deployment.
+
+The public RDS global bundle is vendored under `deploy/eb/certs/`, with source URL,
+download timestamp and SHA-256 provenance. A scoped Git attribute preserves LF
+for this public PEM even on Windows checkouts, keeping the pinned bytes stable. Bundle creation is offline and fails
+if this file is missing, malformed or differs from the reviewed SHA-256. The EB ZIP
+contains `certs/rds-global-bundle.pem` with mode 0644, never a private key. No runtime
+network download or system truststore mutation is needed. The path survives app
+restart and must be present in every redeployed bundle, including old release tooling.
+
+For CA rotation: retrieve a fresh global bundle over verified HTTPS from the official
+RDS truststore, review its certificates/provenance, update the pinned builder SHA,
+run the TLS/bundle/negative/startup tests and deploy the new trust material before
+changing the RDS CA. Do not replace an endpoint hostname to mask a certificate error.
+A missing/unreadable trust file must fail startup. Do not reuse old release bundles
+that omit the CA. The actual RDS leaf certificate and EB Linux runtime need AWS
+verification; local fixture certificates are not evidence of RDS AWS verification.
+
+TLS integration uses a fresh PostgreSQL 17 container, ephemeral fixture CA/server
+keys, the actual pgJDBC from a fresh offline build of unchanged backend source, and
+Spring Boot/Flyway startup. TLS is required for its TCP connections. Host runtime
+paths are mapped to temporary fixture paths; fixture CA is used for local server
+handshakes, while the deployment ZIP is separately checked against the official RDS
+bundle hash. Test private keys remain in scoped temporary directories and are deleted.
+The tests do not claim F006 DB privilege separation; that provisioning decision is
+still blocked independently.
+
+```powershell
+& ops/tests/.venv/Scripts/python.exe -m pip install -r deploy/tests/requirements-security.txt
+& ops/tests/.venv/Scripts/python.exe -B deploy/tests/test_database_tls.py
+```
+
+Tests require an installed JDK 21 (or `WAVE3_JAVA_HOME`), Docker's already-present PostgreSQL 17 image and a
+working offline Maven distribution/dependency cache. No AWS credentials are used.

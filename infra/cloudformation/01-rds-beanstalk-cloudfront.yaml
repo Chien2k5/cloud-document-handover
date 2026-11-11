@@ -53,6 +53,11 @@ Parameters:
     Type: String
     Default: "17.2"
     Description: PostgreSQL engine version supported by RDS in the target region.
+  DbCaCertificateIdentifier:
+    Type: String
+    Default: rds-ca-rsa2048-g1
+    AllowedValues: [rds-ca-rsa2048-g1, rds-ca-rsa4096-g1, rds-ca-ecc384-g1]
+    Description: Confirm support for the target engine/region before deployment; public trust roots ship in the EB bundle.
   DbAllocatedStorageGb:
     Type: Number
     Default: 20
@@ -129,6 +134,7 @@ Resources:
       DBInstanceIdentifier: !Sub "${ProjectName}-postgres"
       Engine: postgres
       EngineVersion: !Ref DbEngineVersion
+      CACertificateIdentifier: !Ref DbCaCertificateIdentifier
       DBInstanceClass: !Ref DbInstanceClass
       AllocatedStorage: !Ref DbAllocatedStorageGb
       StorageType: gp3
@@ -227,7 +233,7 @@ Resources:
           Value: "5000"
         - Namespace: aws:elasticbeanstalk:application:environment
           OptionName: DB_URL
-          Value: !Sub "jdbc:postgresql://${PortalDatabase.Endpoint.Address}:${PortalDatabase.Endpoint.Port}/${DbName}?sslmode=require"
+          Value: !Sub "jdbc:postgresql://${PortalDatabase.Endpoint.Address}:${PortalDatabase.Endpoint.Port}/${DbName}?sslmode=verify-full&sslrootcert=/var/app/current/certs/rds-global-bundle.pem"
         - Namespace: aws:elasticbeanstalk:application:environment
           OptionName: DB_USERNAME
           Value: !Ref DbMasterUsername

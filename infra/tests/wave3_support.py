@@ -73,7 +73,7 @@ def decision(statements,action,resource,principal=None):
         matches.append(statement['Effect'])
     return 'Deny' if 'Deny' in matches else 'Allow' if 'Allow' in matches else 'ImplicitDeny'
 
-def run_tests(module,label):
+def run_tests(module,label,environment=None):
     class Results(unittest.TextTestResult):
         records=[]
         def save(self,test,status,actual):
@@ -87,5 +87,20 @@ def run_tests(module,label):
     code=0 if result.wasSuccessful() and not result.skipped else 1
     paths=[p for folder in ['infra/cloudformation','infra/iam','infra/tests','deploy/tests'] for p in (ROOT/folder).glob('*') if p.is_file() and p.suffix in ['.py','.json','.yaml','.ps1']]
     paths += [ROOT/'deploy/deploy_aws.ps1',ROOT/'deploy/redeploy_aws.ps1',ROOT/'deploy/build_eb_bundle.py',ROOT/'infra/README.md']
-    report=dict(head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True,encoding="utf-8").strip(),workingTree=subprocess.check_output(['git','status','--short'],cwd=ROOT,text=True,encoding="utf-8"),workspace=str(ROOT),command=[sys.executable,*sys.argv],environment='Local CloudFormation/IAM subset model only; no AWS effective permissions claim',sourceHashes={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths},python=sys.version,timestamp=time.strftime('%Y-%m-%dT%H:%M:%S%z'),durationSeconds=time.time()-started,exitCode=code,cases=result.records,testsRun=result.testsRun,failed=len(result.failures)+len(result.errors),blocked=len(result.skipped),aws='NOT_RUN')
+    paths += list((ROOT/'deploy/eb/certs').glob('*'))+[ROOT/'deploy/tests/requirements-security.txt',ROOT/'deploy/tests/JdbcTlsProbe.java',ROOT/'deploy/README.md',ROOT/'backend/pom.xml',ROOT/'backend/src/main/resources/application.yml',ROOT/'backend/src/main/resources/db/migration/V1__initial_schema.sql']
+    paths=list(dict.fromkeys(p for p in paths if p.is_file()))
+    resources=[]
+    support=sys.modules.get('wave2_support')
+    if support:
+        for pg in support.Postgres.instances:
+            removed=subprocess.run(['docker','inspect',pg.container],capture_output=True).returncode!=0
+            resources.append(dict(container=pg.container,version=getattr(pg,'version','UNKNOWN'),removed=removed))
+            if not removed:code=1
+    runtime={}
+    for cls in vars(sys.modules[module]).values():
+        if isinstance(cls,type) and hasattr(cls,'fixture'):
+            f=cls.fixture;runtime['pgjdbc']=getattr(f,'jdbc_version','UNKNOWN');runtime['java']=getattr(f,'java_version','UNKNOWN')
+    if resources:
+        runtime['docker']=subprocess.check_output(['docker','version','--format','{{.Server.Version}}'],text=True,encoding='utf-8').strip()
+    report=dict(head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True,encoding="utf-8").strip(),workingTree=subprocess.check_output(['git','status','--short'],cwd=ROOT,text=True,encoding="utf-8"),workspace=str(ROOT),command=[sys.executable,*sys.argv],environment=environment or 'Local CloudFormation/IAM subset model only; no AWS effective permissions claim',resources=resources,runtime=runtime,sourceHashes={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths},python=sys.version,timestamp=time.strftime('%Y-%m-%dT%H:%M:%S%z'),durationSeconds=time.time()-started,exitCode=code,cases=result.records,testsRun=result.testsRun,failed=len(result.failures)+len(result.errors),blocked=len(result.skipped),aws='NOT_RUN')
     path=ROOT/'infra/tests'/f'{label}-{uuid.uuid4().hex}.log';path.write_text(json.dumps(report,indent=2),encoding='utf-8');print('EVIDENCE='+str(path));return code
