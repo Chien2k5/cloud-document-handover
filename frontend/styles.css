@@ -55,6 +55,14 @@ body {
 .guest-panel input { min-height: 54px; }
 .guest-panel form > button { min-height: 56px; margin-top: 8px; }
 @media (max-width: 650px) { .container--guest { padding: 24px 16px; } .guest-panel > .card { padding: 24px; } }
+.guest-panel .auth-mode-switch { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px; margin: 20px 0 0; font-size: 1rem; }
+.guest-panel .auth-mode-switch .button { min-height: 44px; padding: 4px 8px; border: 0; background: transparent; color: var(--primary); text-decoration: underline; text-underline-offset: .2em; }
+.guest-panel .auth-register-form .auth-field { display: grid; gap: 6px; min-width: 0; }
+.guest-panel .auth-register-form label { margin: 0; }
+.guest-panel .auth-field-hint { margin: 0; font-size: .9375rem; color: var(--muted); }
+.guest-panel .auth-field-error { margin: 0; font-size: 1rem; color: var(--danger); }
+.guest-panel .auth-register-form input[aria-invalid="true"] { border-color: var(--danger); }
+.guest-panel .auth-registration-notice { margin: 0; padding: 12px 16px; background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 1rem; }
 [hidden] { display: none !important; }
 .app-shell { min-height: 100svh; }
 .app-header { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: var(--space-5); min-height: 88px; padding: var(--space-4) var(--space-6); background: var(--surface); border-bottom: 1px solid var(--border); }
