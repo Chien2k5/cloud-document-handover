@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const observations = new WeakMap();
 test.beforeEach(async ({ page }) => {
-  const state = { registerRequests: 0, errors: [] }; observations.set(page, state);
+  const state = { registerRequests: 0, expectedRegisterRequests: 0, errors: [] }; observations.set(page, state);
   page.on('request', request => {
     if (new URL(request.url()).pathname === '/api/v1/auth/register') state.registerRequests++;
   });
@@ -12,17 +12,24 @@ test.beforeEach(async ({ page }) => {
   });
 });
 test.afterEach(async ({ page }) => {
-  expect(observations.get(page).registerRequests).toBe(0);
+  expect(observations.get(page).registerRequests).toBe(observations.get(page).expectedRegisterRequests);
   expect(observations.get(page).errors).toEqual([]);
 });
 
 async function mockGuest(page, { loginFails = false, loginGate = Promise.resolve() } = {}) {
-  const state = { loggedIn: false, calls: [], loginCalls: 0 };
+  const state = { loggedIn: false, calls: [], loginCalls: 0, registrationPayloads: [] };
   const user = { id: 'r04-fixture-user', displayName: 'Fixture account', email: 'login@example.test' };
   await page.route('**/api/v1/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname;
     state.calls.push({ method: request.method(), path });
-    if (path === '/api/v1/auth/register') return route.abort(); // Never fake registration success.
+    if (path === '/api/v1/auth/register') {
+      expect(request.method()).toBe('POST'); expect(request.headers()['content-type']).toContain('application/json');
+      expect(request.headers()['x-fixture-csrf']).toBe('before');
+      const body = request.postDataJSON(); state.registrationPayloads.push(body);
+      expect(Object.keys(body).sort()).toEqual(['confirmPassword', 'displayName', 'email', 'password']);
+      expect(body.confirmPassword).toBe(body.password);
+      return route.fulfill({ status: 201, json: { id: '10000000-0000-0000-0000-000000000004', displayName: body.displayName.trim(), email: body.email.trim().toLowerCase() } });
+    }
     if (path.endsWith('/auth/me')) return route.fulfill({ status: state.loggedIn ? 200 : 401, json: state.loggedIn ? user : { code: 'UNAUTHENTICATED' } });
     if (path.endsWith('/auth/csrf')) return route.fulfill({ json: { headerName: 'X-Fixture-CSRF', token: state.loggedIn ? 'after' : 'before' } });
     if (path.endsWith('/auth/login')) {
@@ -55,7 +62,7 @@ async function fillRegister(page, { displayName = 'Fixture Name', email = 'regis
   await page.getByLabel('Nhập lại mật khẩu', { exact: true }).fill(confirmPassword);
 }
 
-// UI-only fixtures: these tests never return a fake successful registration response.
+// Controlled browser mocks; persistence is verified separately with the real Spring/PostgreSQL runner.
 test('R04: defaults to unchanged login and switches within the same Card without navigation or new auth requests', async ({ page }) => {
   await page.addInitScript(() => { window.r04DocumentIdentity = crypto.randomUUID(); });
   const api = await mockGuest(page);
@@ -144,24 +151,27 @@ for (const scenario of [
   await mockGuest(page); await page.goto('/'); await openRegister(page); await fillRegister(page, scenario.values); await submit(page).click();
   await expect(page.locator(`#register-${scenario.field}-error`)).toHaveText(scenario.message);
   await expect(page.locator(`#register-${scenario.field}`)).toHaveAttribute('aria-invalid', 'true');
-  await expect(page.getByText('Chức năng đăng ký chưa kết nối máy chủ.', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.', { exact: true })).toHaveCount(0);
 });
 
-for (const [name, password] of [['ASCII minimum', '12345678'], ['ASCII maximum', 'a'.repeat(72)], ['two-byte maximum', 'á'.repeat(36)], ['four-byte maximum', '😀'.repeat(18)], ['unchanged spaces and case', '  MixedFixtureR04  ']]) test(`R04: valid ${name} only shows the honest disconnected notice`, async ({ page }) => {
+for (const [name, password] of [['ASCII minimum', '12345678'], ['ASCII maximum', 'a'.repeat(72)], ['two-byte maximum', 'á'.repeat(36)], ['four-byte maximum', '😀'.repeat(18)], ['unchanged spaces and case', '  MixedFixtureR04  ']]) test(`R04: valid ${name} submits once and returns to login only after confirmed 201`, async ({ page }) => {
+  observations.get(page).expectedRegisterRequests = 1;
   const api = await mockGuest(page); await page.goto('/'); await openRegister(page); await fillRegister(page, { password });
   const url = page.url(); await expect(page.getByLabel('Mật khẩu', { exact: true })).toHaveValue(password); await submit(page).click();
-  await expect(page.getByRole('status')).toHaveText('Chức năng đăng ký chưa kết nối máy chủ.');
-  await expect(page.getByRole('alert')).toHaveCount(0); await expect(page.getByRole('heading', { name: 'Đăng ký', exact: true })).toBeVisible();
+  await expect(page.getByRole('status')).toHaveText('Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.');
+  await expect(page.getByRole('alert')).toHaveCount(0); await expect(page.getByRole('heading', { name: 'Đăng nhập', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Đăng xuất', exact: true })).toHaveCount(0);
-  expect(await page.locator('body').innerText()).not.toMatch(/đăng ký thành công/i); expect(page.url()).toBe(url);
-  expect(api.calls).toEqual([{ method: 'GET', path: '/api/v1/auth/me' }]);
+  await expect(page.getByLabel('Mật khẩu', { exact: true })).toHaveValue(''); expect(page.url()).toBe(url);
+  expect(api.calls).toEqual([{ method: 'GET', path: '/api/v1/auth/me' }, { method: 'GET', path: '/api/v1/auth/csrf' }, { method: 'POST', path: '/api/v1/auth/register' }]);
+  expect(api.registrationPayloads).toEqual([{ displayName: 'Fixture Name', email: 'registration@example.test', password, confirmPassword: password }]);
   expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
 });
 
 test('R04: Enter on a valid register form does not navigate or submit a native password query', async ({ page }) => {
+  observations.get(page).expectedRegisterRequests = 1;
   await mockGuest(page); await page.goto('/?fixture=keyboard#/projects'); await openRegister(page); await fillRegister(page);
   const url = page.url(); await page.getByLabel('Nhập lại mật khẩu', { exact: true }).press('Enter');
-  await expect(page.getByRole('status')).toHaveText('Chức năng đăng ký chưa kết nối máy chủ.'); expect(page.url()).toBe(url);
+  await expect(page.getByRole('status')).toHaveText('Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.'); expect(page.url()).toBe(url);
 });
 
 test('R04: login errors and register validation never cross modes; login success and logout remain unchanged', async ({ page }) => {

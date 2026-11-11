@@ -60,3 +60,38 @@ test('upload and handover helpers produce schema field sets and exact opaque Ver
   assert.ok(contract.components.schemas.FileVersion.required.includes('uploadId'));
   assert.deepEqual(new Set(contract.components.schemas.IntegrityStatus.enum), new Set(['INTEGRITY_PENDING', 'VERIFIED', 'MISMATCH', 'FAILED']));
 });
+
+
+test('registration contract traces strict JSON, dynamic CSRF, byte limits and credential-free 201 User', async () => {
+  const op = contract.paths['/api/v1/auth/register'].post;
+  assert.equal(op.operationId, 'register'); assert.equal(op['x-implementation-status'], 'implemented'); assert.deepEqual(op.security, []);
+  assert.equal(op.parameters.find(p => p.in === 'header').required, true); assert.match(op.description, /headerName/); assert.match(op.description, /Does not authenticate/);
+  assert.equal(op.requestBody.required, true); assert.deepEqual(Object.keys(op.requestBody.content), ['application/json']);
+  assert.equal(op.requestBody.content['application/json'].schema.$ref, '#/components/schemas/RegistrationRequest');
+  const schema = contract.components.schemas.RegistrationRequest, fields = ['displayName', 'email', 'password', 'confirmPassword'];
+  assert.deepEqual(schema.required, fields); assert.deepEqual(Object.keys(schema.properties), fields); assert.equal(schema.additionalProperties, false);
+  for (const field of fields) { assert.equal(schema.properties[field].type, 'string'); assert.notEqual(schema.properties[field].nullable, true); }
+  assert.equal(schema.properties.displayName['x-stripped-maxLength'], 100); assert.equal(schema.properties.displayName.maxLength, undefined);
+  assert.match(schema.properties.displayName.description, /String.strip/);
+  assert.equal(schema.properties.email.maxLength, 254); assert.equal(schema.properties.email['x-max-utf16-code-units'], 254);
+  assert.equal(schema.properties.password.minLength, 8); assert.equal(schema.properties.password['x-max-utf8-bytes'], 72);
+  assert.equal(schema.properties.password.maxLength, undefined); assert.equal(schema.properties.confirmPassword['x-exact-match'], 'password');
+  for (const field of ['password', 'confirmPassword']) assert.equal(schema.properties[field].writeOnly, true);
+  assert.equal(op.responses['201'].content['application/json'].schema.$ref, '#/components/schemas/User');
+  assert.deepEqual(Object.keys(contract.components.schemas.User.properties), ['id', 'email', 'displayName']); assert.equal(contract.components.schemas.User.additionalProperties, false);
+  for (const status of ['400', '403', '409', '415', '406', '500']) assert.ok(op.responses[status]);
+  assert.match(op.responses['400'].description, /VALIDATION_ERROR/); assert.match(op.responses['409'].description, /EMAIL_ALREADY_EXISTS/);
+  assert.ok(!contract.paths['/api/v1/auth/login'].post.description.includes('No registration endpoint'));
+  const calls = [], input = { displayName: 'Fixture', email: 'fixture@example.test', password: '  CaseFixture  ', confirmPassword: '  CaseFixture  ' };
+  const user = { id: '10000000-0000-0000-0000-000000000005', email: input.email, displayName: input.displayName };
+  const api = new ApiClient({ fetchImpl: async (path, options) => {
+    calls.push(path); if (path.endsWith('/csrf')) return Response.json({ headerName: 'X-Contract-CSRF', token: 'masked' });
+    assert.equal(path, '/api/v1/auth/register'); assert.equal(options.method, 'POST'); assert.equal(options.credentials, 'include');
+    assert.equal(options.headers['Content-Type'], 'application/json'); assert.equal(options.headers['X-Contract-CSRF'], 'masked');
+    shape('RegistrationRequest', JSON.parse(options.body)); assert.deepEqual(JSON.parse(options.body), input);
+    return Response.json(user, { status: 201 });
+  } });
+  assert.deepEqual(await api.register(input), user); assert.deepEqual(calls, ['/api/v1/auth/csrf', '/api/v1/auth/register']);
+  const rows = trace.filter(row => row.path === '/api/v1/auth/register'); assert.equal(rows.length, 1);
+  assert.deepEqual(rows[0], { method: 'post', path: '/api/v1/auth/register', operationId: 'register', controller: 'backend/src/main/java/vn/edu/uet/handover/auth/AuthController.java', controllerMethod: 'register', frontend: 'frontend/src/api.js', caller: 'register', backendTest: 'backend/src/test/java/vn/edu/uet/handover/RegistrationHttpIntegrationTest.java' });
+});
