@@ -33,6 +33,7 @@ public class ActiveAccountFilter extends OncePerRequestFilter {
         // Login still checks enabled through the authentication provider; logout
         // remains protected by Spring Security's CSRF handling.
         String path = request.getRequestURI().substring(request.getContextPath().length());
+        if ("POST".equals(request.getMethod()) && "/api/v1/auth/register".equals(path)) return true;
         return switch (path) {
             case "/api/v1/health", "/api/v1/auth/csrf", "/api/v1/auth/login", "/api/v1/auth/logout" -> true;
             default -> false;
