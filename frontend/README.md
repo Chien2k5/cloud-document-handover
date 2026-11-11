@@ -66,6 +66,42 @@ Bucket cần Versioning, CORS đúng origin, cho phép signed headers và expose
 `x-amz-version-id`. Không đưa AWS credentials vào frontend. Các bước đó chưa được
 thực hiện bởi bộ test local này.
 
+## C09 — Đăng ký tài khoản
+
+Từ màn hình guest khi chưa đăng nhập:
+
+1. Mặc định Card hiển thị **Đăng nhập**; chọn **Đăng ký** để đổi form ngay trong Card.
+2. Nhập **Tên tài khoản**, **Email**, **Mật khẩu** và **Nhập lại mật khẩu**.
+3. Bấm **Đăng ký** và chờ backend xác nhận. Trong lúc chờ, form chặn gửi lặp và đổi mode.
+4. Chỉ khi nhận response HTTP 201 hợp lệ, UI báo thành công và trở về **Đăng nhập**.
+5. Email được điền lại, mật khẩu để trống. Chủ động nhập mật khẩu và đăng nhập bằng
+   tài khoản vừa tạo; đăng ký không tự đăng nhập hay tạo project/membership.
+
+Không có route Register riêng, không đổi URL hoặc reload khi chuyển mode. Có thể
+đăng ký tài khoản mới thay vì dùng seed demo tùy chọn ở trên. Client validation hỗ trợ
+nhập liệu; backend vẫn kiểm tra bắt buộc cả bốn chuỗi và từ chối trường JSON lạ.
+Tên sau strip tối đa 100 ký tự Unicode; email phải hợp lệ và tối đa 254 ký tự theo
+validation backend. Mật khẩu tối thiểu 8 ký tự Unicode, tối đa **72 byte UTF-8**,
+không chỉ 72 ký tự; xác nhận phải khớp chính xác. Không trim/normalize mật khẩu.
+
+API gửi JSON tới `POST /api/v1/auth/register`, dùng tên CSRF header/token do backend
+trả và cookie qua proxy cùng origin. CSRF vẫn bắt buộc. Không lưu password vào
+localStorage/sessionStorage; các ô mật khẩu được xóa sau request. Không tự retry POST
+khi lỗi mạng/timeout, vì server có thể đã tạo tài khoản dù trình duyệt chưa nhận được
+kết quả. Thử đăng nhập hoặc kiểm tra kết quả trước khi chủ động gửi đăng ký lại.
+
+| Lỗi đăng ký | Cách xử lý |
+| --- | --- |
+| 409 EMAIL_ALREADY_EXISTS | Email đã được giữ bởi tài khoản hiện có, kể cả disabled; dùng tài khoản đúng hoặc email khác. Không reset mật khẩu cũ. |
+| 400 VALIDATION_ERROR | Kiểm tra bốn trường, độ dài Unicode/UTF-8 và xác nhận mật khẩu; nhập lại mật khẩu rồi gửi thủ công. |
+| 403 CSRF | Bấm **Làm mới CSRF**, kiểm tra thông báo lấy token mới rồi chủ động nhập/gửi lại; nút này không retry POST. |
+| Network error | Kiểm tra backend/proxy/kết nối; lỗi này không xác nhận tài khoản đã hay chưa được tạo. |
+| Timeout hoặc response chưa xác nhận | Không coi là thành công, không tự gửi lại; thử đăng nhập để kiểm tra kết quả trước. |
+
+C09 chưa triển khai reset password, xác minh email, OTP, Google Login hoặc hệ thống
+mời tài khoản. Xem [final review R08](../docs/registration/C09-R08-final-review.md)
+và [các rủi ro còn mở](../docs/registration/C09-R06-security-review.md).
+
 ## Luồng sử dụng và quyền
 
 - Chọn dự án từ danh sách phân trang; backend trả vai trò hiện tại.
@@ -175,7 +211,7 @@ không nhúng hostname backend hoặc secret. Origin S3 CORS phải khớp hostn
 | Không đọc được Version ID | Versioning và CORS ExposeHeaders trên S3 |
 | Không chuyển CONFIRMED | Xem từng người nhận; có thể còn người chưa xác nhận |
 
-Không có đăng ký/reset password, chuyển Owner, sửa gói hoặc tìm người dùng toàn hệ
+Không có reset password, chuyển Owner, sửa gói hoặc tìm người dùng toàn hệ
 thống vì backend không cung cấp API đó. Không có multipart/upload tiếp tục, hard
 quota byte S3 hoặc vô hiệu URL tức thì. Chưa deploy AWS/production, chưa chạy pilot.
 ESLint 9.39.5 là dev dependency được khóa vì audit ở lần kiểm phát hiện minimatch

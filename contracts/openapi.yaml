@@ -58,6 +58,52 @@
         "406":
           "$ref": "#/components/responses/Error406"
       "security": []
+  "/api/v1/auth/register":
+    "post":
+      "operationId": "register"
+      "summary": "Register an account without signing in"
+      "x-implementation-status": "implemented"
+      "description": "Public JSON registration with valid CSRF from GET /api/v1/auth/csrf and the same cookie jar. Send the token under the headerName returned by that endpoint (currently X-CSRF-TOKEN). Anonymous CSRF sessions are allowed. Does not authenticate, replace an existing principal, create projects or grant memberships. Returns only the committed public User view; email is trimmed and lowercased, displayName is stripped, passwords remain unchanged. Do not automatically retry POST after timeout or a lost response: creation may already have committed."
+      "security": []
+      "parameters":
+        - {"name": "X-CSRF-TOKEN", "in": "header", "required": true, "description": "Current backend header name; obtain headerName and masked token dynamically from GET /api/v1/auth/csrf with the same cookies.", "schema": {"type": "string"}}
+      "requestBody":
+        "required": true
+        "content":
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/RegistrationRequest"
+      "responses":
+        "201":
+          "description": "Account committed; session remains unchanged. Explicit login is required."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/User"
+        "400":
+          "description": "VALIDATION_ERROR: invalid fields, types, required body, unknown fields, byte limits or exact confirmation."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Error"
+        "403":
+          "$ref": "#/components/responses/Error403"
+        "409":
+          "description": "EMAIL_ALREADY_EXISTS: normalized email already belongs to an account, including a disabled account or concurrent registration."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Error"
+        "415":
+          "$ref": "#/components/responses/Error415"
+        "406":
+          "$ref": "#/components/responses/Error406"
+        "500":
+          "description": "INTERNAL_ERROR: sanitized unexpected server or persistence failure; never assume an email conflict."
+          "content":
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Error"
   "/api/v1/auth/login":
     "post":
       "operationId": "login"
@@ -65,7 +111,7 @@
       "tags":
         - "Implemented week 1"
       "x-implementation-status": "implemented"
-      "description": "Uses Spring Security form authentication, NOT JSON. Returns HttpOnly JSESSIONID; session ID and CSRF token rotate on success. Invalid credentials return 401 INVALID_CREDENTIALS. No registration endpoint in week 1."
+      "description": "Uses Spring Security form authentication, NOT JSON. Returns HttpOnly JSESSIONID; session ID and CSRF token rotate on success. Invalid credentials return 401 INVALID_CREDENTIALS. Registration uses a separate JSON endpoint and does not sign in the new account."
       "responses":
         "200":
           "description": "Success"
@@ -980,6 +1026,43 @@
           "format": "email"
         "displayName":
           "type": "string"
+    "RegistrationRequest":
+      "type": "object"
+      "additionalProperties": false
+      "required":
+        - "displayName"
+        - "email"
+        - "password"
+        - "confirmPassword"
+      "description": "Exactly four non-null JSON strings; blank Unicode whitespace is rejected. Backend validation remains authoritative. Name limit is measured after Java String.strip(), email length in UTF-16 code units before trim and after normalization, and password length in Unicode code points and UTF-8 bytes. No password transformations."
+      "properties":
+        "displayName":
+          "type": "string"
+          "minLength": 1
+          "x-stripped-maxLength": 100
+          "description": "Nonblank; at most 100 Unicode code points after String.strip(). Raw maxLength is intentionally absent because leading/trailing whitespace does not count toward this backend limit."
+        "email":
+          "type": "string"
+          "format": "email"
+          "minLength": 1
+          "maxLength": 254
+          "x-max-utf16-code-units": 254
+          "description": "Valid email after trim(); raw input and normalized trim().toLowerCase(Locale.ROOT) are each limited to 254 UTF-16 code units."
+        "password":
+          "type": "string"
+          "format": "password"
+          "writeOnly": true
+          "minLength": 8
+          "x-max-utf8-bytes": 72
+          "description": "Nonblank; at least 8 Unicode code points and at most 72 UTF-8 bytes, including spaces. Never trim, lowercase, normalize or truncate. A 72-character maxLength would not express this byte limit."
+        "confirmPassword":
+          "type": "string"
+          "format": "password"
+          "writeOnly": true
+          "minLength": 8
+          "x-max-utf8-bytes": 72
+          "x-exact-match": "password"
+          "description": "Must match password exactly, without any transformations; therefore shares its code point and UTF-8 byte limits."
     "Login":
       "type": "object"
       "additionalProperties": false

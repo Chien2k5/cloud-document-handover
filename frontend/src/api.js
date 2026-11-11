@@ -22,6 +22,7 @@ const messages = {
   OBJECT_NOT_READY: 'Phiên bản S3 chưa sẵn sàng hoặc không còn tồn tại.',
   UPLOAD_OBJECT_INVALID: 'Kích thước hoặc Content-Type trên S3 không khớp.',
   HANDOVER_EXPIRED: 'Gói bàn giao đã hết hạn.', HANDOVER_REVOKED: 'Gói bàn giao đã bị thu hồi.',
+  EMAIL_ALREADY_EXISTS: 'Email này đã được sử dụng. Vui lòng dùng email khác hoặc đăng nhập.',
   VALIDATION_ERROR: 'Dữ liệu không hợp lệ. Kiểm tra các trường bắt buộc.',
   NETWORK_ERROR: 'Không kết nối được máy chủ. Kiểm tra mạng và backend.',
   REQUEST_TIMEOUT: 'Yêu cầu hết thời gian chờ; thao tác có thể đã được máy chủ nhận. Kiểm tra trạng thái trước khi thử lại.',
@@ -38,9 +39,15 @@ const messages = {
   S3_TIMEOUT: 'Upload S3 hết thời gian chờ. File có thể đã được gửi; không đoán Version ID hoặc tự retry PUT.',
   S3_NETWORK_ERROR: 'Không nhận được phản hồi S3. Kiểm tra mạng/CORS; file có thể đã được gửi. Không tự retry PUT.',
 };
+const registrationMessages = {
+  VALIDATION_ERROR: 'Thông tin đăng ký không hợp lệ. Vui lòng kiểm tra lại.',
+  REQUEST_TIMEOUT: 'Chưa xác nhận được kết quả đăng ký. Hãy thử đăng nhập bằng email vừa nhập trước khi gửi đăng ký lại.',
+  NETWORK_ERROR: 'Không kết nối được máy chủ. Chưa xác nhận được kết quả đăng ký; hãy kiểm tra mạng và thử đăng nhập trước khi gửi lại.',
+  INVALID_RESPONSE: 'Phản hồi máy chủ không xác nhận được kết quả đăng ký. Hãy thử đăng nhập trước khi gửi đăng ký lại.',
+};
 export function errorText(error) {
   if (error?.name === 'AbortError') return 'Đã hủy thao tác.';
-  const message = messages[error?.code] || (error?.status === 403 ? messages.ACCESS_DENIED
+  const message = (error?.operation === 'register' && registrationMessages[error?.code]) || messages[error?.code] || (error?.status === 403 ? messages.ACCESS_DENIED
     : error?.status === 404 ? 'Không tìm thấy dữ liệu hoặc không có quyền truy cập.'
       : error?.status === 409 ? 'Trạng thái đã thay đổi. Tải lại dữ liệu trước khi thử lại.'
         : error?.status >= 500 ? 'Dịch vụ tạm thời không sẵn sàng.' : 'Không thực hiện được thao tác.');
@@ -65,7 +72,7 @@ export class ApiClient {
     this.csrfPending = { epoch, promise };
     return promise;
   }
-  async request(path, { method = 'GET', body, form, signal, timeoutMs = this.timeoutMs, notifyUnauthorized = true } = {}) {
+  async request(path, { method = 'GET', body, form, signal, timeoutMs = this.timeoutMs, notifyUnauthorized = true, expectedStatus } = {}) {
     if (!path.startsWith('/') || path.startsWith('//') || path.includes('://')) throw new Error('Internal API path required');
     signal?.throwIfAborted();
     const epoch = this.authEpoch;
@@ -89,16 +96,32 @@ export class ApiClient {
       }
       if (!response.ok) {
         const error = new ApiError(response.status, data?.code || 'HTTP_ERROR', data?.requestId || '');
-        if (response.status === 401 && path !== '/auth/login' && epoch === this.authEpoch) { this.invalidateCsrf(); if (notifyUnauthorized) this.onUnauthorized(error); }
+        if (response.status === 401 && !['/auth/login', '/auth/register'].includes(path) && epoch === this.authEpoch) { this.invalidateCsrf(); if (notifyUnauthorized) this.onUnauthorized(error); }
         throw error;
       }
       if (path !== '/auth/csrf' && epoch !== this.authEpoch) throw new ApiError(0, 'SESSION_CHANGED');
+      if (expectedStatus !== undefined && response.status !== expectedStatus) throw new ApiError(response.status, 'INVALID_RESPONSE');
       return data;
     } catch (error) {
       if (error instanceof ApiError) throw error;
       if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError');
       throw new ApiError(0, controller.signal.aborted ? 'REQUEST_TIMEOUT' : 'NETWORK_ERROR');
     } finally { clearTimeout(timeout); }
+  }
+  async register({ displayName, email, password, confirmPassword }) {
+    try {
+      const user = await this.request('/auth/register', {
+        method: 'POST', body: { displayName, email, password, confirmPassword }, expectedStatus: 201,
+      });
+      if (!user || Array.isArray(user) || Object.keys(user).length !== 3 ||
+        !['id', 'email', 'displayName'].every(key => typeof user[key] === 'string' && user[key].trim()) ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id)) {
+        throw new ApiError(201, 'INVALID_RESPONSE');
+      }
+      return user;
+    } catch (error) {
+      error.operation = 'register'; throw error;
+    }
   }
   async login(email, password) {
     this.invalidateCsrf();

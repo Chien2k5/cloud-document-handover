@@ -50,6 +50,43 @@ $env:LOCAL_DEMO_PASSWORD = [System.Net.NetworkCredential]::new('', $demoPassword
 
 Health `GET http://localhost:8080/api/v1/health` kiểm tra `SELECT 1`; UP=200, DB lỗi=503. Không xuất credential/chi tiết database. Startup không có DB hoặc migration sai sẽ thất bại.
 
+## C09 — Đăng ký tài khoản
+
+`POST /api/v1/auth/register` nhận `Content-Type: application/json`. Body là object JSON
+chứa đúng bốn key dưới đây, đều bắt buộc và có giá trị string; không nhận null,
+số/boolean hoặc trường lạ. Không có mật khẩu mẫu hay credential mặc định.
+
+| JSON field | Validation và xử lý |
+| --- | --- |
+| `displayName` | Không trắng; strip hai đầu rồi tối đa 100 Unicode code point. |
+| `email` | Không trắng; tối đa 254 theo validation backend, kiểm định dạng sau trim; lưu `trim().toLowerCase(Locale.ROOT)`, kiểm lại độ dài sau normalize. |
+| `password` | Không trắng; tối thiểu 8 Unicode code point và tối đa 72 byte UTF-8; không trim/normalize. |
+| `confirmPassword` | Không trắng và phải khớp chính xác `password`; chỉ dùng để kiểm tra, không lưu. |
+
+Lấy `GET /api/v1/auth/csrf` trước, giữ cùng cookie/session và gửi token bằng tên header
+trong response (`headerName`). Anonymous được phép đăng ký nhưng CSRF vẫn bắt buộc;
+login vẫn là form-urlencoded, logout vẫn không cần body. Token/cookie/password không
+được ghi vào tài liệu hoặc minh chứng.
+
+| Status | Kết quả |
+| --- | --- |
+| 201 | User JSON chỉ có `id`, `email`, `displayName`; không trả password/hash. |
+| 400 VALIDATION_ERROR | JSON/field/validation không hợp lệ. |
+| 403 ACCESS_DENIED | CSRF thiếu hoặc không hợp lệ. |
+| 409 EMAIL_ALREADY_EXISTS | Email đã tồn tại, kể cả tài khoản disabled; không đổi account cũ. |
+| 415 UNSUPPORTED_MEDIA_TYPE | Content-Type không được hỗ trợ. |
+
+Service dùng PasswordEncoder BCrypt hiện có (cost 12), hash nguyên mật khẩu trong
+bộ nhớ rồi INSERT bằng parameterized SQL trong transaction. Unique constraint email
+hiện có xử lý cả race; không thêm migration. Không lưu plaintext/confirmation, không
+re-enable/reset tài khoản cũ, không tạo project hoặc membership mặc định, không tự
+đăng nhập/tạo principal. Sau 201, người dùng phải chủ động login bằng tài khoản mới.
+
+Chưa có xác minh quyền sở hữu email, rate limit hoặc công tắc registration riêng;
+409 có thể hỗ trợ dò email tồn tại. Xem [contract C09](../docs/registration/C09-R01-contract.md),
+[security review](../docs/registration/C09-R06-security-review.md) và
+[final review R08](../docs/registration/C09-R08-final-review.md) trước quyết định public exposure.
+
 ## Login và smoke bằng PowerShell
 
 Mở terminal khác khi backend đang chạy. Form login sử dụng **application/x-www-form-urlencoded**, còn API nghiệp vụ dùng JSON. Không gửi JSON vào login. Cookie được giữ trong `$portalSession`; mọi request thay đổi phải gửi masked CSRF token.
@@ -75,6 +112,7 @@ Lấy lại `/auth/csrf` sau login/logout vì Spring Security xoay token. Không
 | --- | --- | --- |
 | GET | /health | DB readiness |
 | GET | /auth/csrf | Token CSRF |
+| POST | /auth/register | JSON bốn trường + CSRF, tạo tài khoản, 201; không tự login |
 | POST | /auth/login | Form login, trả user và session cookie |
 | GET | /auth/me | Tài khoản hiện tại |
 | POST | /auth/logout | Hủy session, 204 |

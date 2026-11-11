@@ -23,6 +23,40 @@ test('real Spring/PostgreSQL: form login, session rotation, reload, logout, 401 
   await expect(page.getByRole('button', { name: 'Đăng nhập', exact: true })).toBeVisible();
   expect((await page.request.get('/api/v1/auth/me')).status()).toBe(401);
   expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
+
+  // Registration is a real UI -> Spring -> disposable PostgreSQL round trip, without API mocks.
+  const email = `registration-${crypto.randomUUID()}@example.test`, password = `  Registration-${crypto.randomUUID()}  `;
+  const calls = []; page.on('request', request => { if (new URL(request.url()).pathname.startsWith('/api/')) calls.push(request); });
+  const url = page.url();
+  await page.locator('.auth-mode-switch button').click();
+  await page.getByLabel('Tên tài khoản', { exact: true }).fill('  Real Registration Fixture  ');
+  await page.getByLabel('Email', { exact: true }).fill(email);
+  await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
+  await page.getByLabel('Nhập lại mật khẩu', { exact: true }).fill(password);
+  const responsePromise = page.waitForResponse(response => new URL(response.url()).pathname === '/api/v1/auth/register' && response.request().method() === 'POST');
+  await page.locator('.guest-panel form button[type="submit"]').click();
+  const response = await responsePromise; expect(response.status()).toBe(201);
+  const created = await response.json();
+  expect(Object.keys(created).sort()).toEqual(['displayName', 'email', 'id']); expect(created.email).toBe(email); expect(created.displayName).toBe('Real Registration Fixture');
+  expect(created.id).toMatch(/^[0-9a-f-]{36}$/);
+  await expect(page.getByRole('status')).toHaveText('Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.');
+  await expect(page.getByRole('heading', { name: 'Đăng nhập', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Email', { exact: true })).toHaveValue(email);
+  await expect(page.getByLabel('Mật khẩu', { exact: true })).toHaveValue('');
+  await expect(page.locator('.app-shell')).toHaveCount(0); expect(page.url()).toBe(url);
+  expect(calls.filter(request => request.url().endsWith('/auth/register'))).toHaveLength(1);
+  expect(calls.some(request => /\/auth\/(login|logout|me)$/.test(request.url()))).toBe(false);
+  expect((await page.request.get('/api/v1/auth/me')).status()).toBe(401);
+  await page.getByLabel('Mật khẩu', { exact: true }).fill(password);
+  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Đăng xuất', exact: true })).toBeVisible();
+  expect(await (await page.request.get('/api/v1/auth/me')).json()).toEqual(created);
+  const projects = await page.request.get('/api/v1/projects'); expect(projects.status()).toBe(200); expect((await projects.json()).items).toEqual([]);
+  await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Đăng nhập', exact: true })).toBeVisible();
+  await expect(page.getByRole('status')).toHaveCount(0);
+  expect((await page.request.get('/api/v1/auth/me')).status()).toBe(401);
+  expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
 });
 test('real Spring/PostgreSQL: create/select project, Owner assigns Viewer then Editor; backend rejects Viewer mutation', async ({ page, browser }) => {
   const context = await browser.newContext({ baseURL: process.env.LIVE_BASE_URL }), viewer = await context.newPage();

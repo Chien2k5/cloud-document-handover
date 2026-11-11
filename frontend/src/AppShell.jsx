@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Button } from './ui.jsx';
 import { focusWorkspaceSection, projectHash } from './navigation.js';
 
@@ -13,6 +13,46 @@ function NavIcon({ kind }) {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[kind]} /></svg>;
 }
 
+function AccountProfile({ user, busy }) {
+  const [open, setOpen] = useState(false), [copying, setCopying] = useState(false), [notice, setNotice] = useState(null);
+  const trigger = useRef(null), attempt = useRef({ sequence: 0, pending: false });
+  const panelId = useId(), uuidId = useId();
+  useEffect(() => () => { attempt.current.sequence++; }, []);
+  function setExpanded(value) {
+    attempt.current.sequence++; attempt.current.pending = false;
+    setCopying(false); setNotice(null); setOpen(value);
+  }
+  async function copyUuid() {
+    if (attempt.current.pending) return;
+    const sequence = ++attempt.current.sequence;
+    attempt.current.pending = true; setCopying(true); setNotice(null);
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(user.id);
+      if (sequence === attempt.current.sequence) setNotice({ success: true, text: 'Đã sao chép UUID.' });
+    } catch {
+      if (sequence === attempt.current.sequence) setNotice({ success: false, text: 'Không thể sao chép tự động. Vui lòng chọn UUID và sao chép thủ công.' });
+    } finally {
+      if (sequence === attempt.current.sequence) { attempt.current.pending = false; setCopying(false); }
+    }
+  }
+  return <div className="account-profile" onKeyDown={event => {
+    if (event.key === 'Escape' && open) { event.stopPropagation(); setExpanded(false); trigger.current?.focus(); }
+  }}>
+    <Button ref={trigger} variant="secondary" disabled={busy} aria-expanded={open} aria-controls={panelId} onClick={() => setExpanded(!open)}>Thông tin tài khoản</Button>
+    {open && <section className="account-profile__panel" id={panelId} aria-label="Thông tin tài khoản">
+      <h2>Thông tin tài khoản</h2>
+      <dl>
+        <div><dt>Tên tài khoản</dt><dd>{user.displayName}</dd></div>
+        <div><dt>Email</dt><dd>{user.email}</dd></div>
+        <div><dt><label htmlFor={uuidId}>UUID tài khoản</label></dt><dd><textarea id={uuidId} readOnly rows={2} value={user.id} onFocus={event => event.currentTarget.select()} /></dd></div>
+      </dl>
+      <Button type="button" disabled={busy || copying} onClick={copyUuid}>{copying ? 'Đang sao chép…' : 'Sao chép UUID'}</Button>
+      {notice && <p className="account-profile__notice" role={notice.success ? 'status' : 'alert'}>{notice.text}</p>}
+    </section>}
+  </div>;
+}
+
 export default function AppShell({ user, busy, onLogout, route, selectedProjectId, onNavigate, children }) {
   const [open, setOpen] = useState(false), toggle = useRef(null);
   const navigate = (event, hash) => { event.preventDefault(); setOpen(false); onNavigate(hash); };
@@ -21,7 +61,7 @@ export default function AppShell({ user, busy, onLogout, route, selectedProjectI
     <a className="skip-link" href="#workspace-main" onClick={event => { event.preventDefault(); focusWorkspaceSection('workspace-main'); }}>Bỏ qua điều hướng</a>
     <header className="app-header">
       <div className="app-header__brand"><span className="brand-mark" aria-hidden="true">CH</span><div><h1>Cloud Handover</h1><p>Không gian tài liệu của nhóm</p></div></div>
-      <div className="account-area"><div className="account-area__identity"><strong>{user.displayName}</strong><span>{user.email}</span></div><Button variant="secondary" disabled={busy} onClick={onLogout}>Đăng xuất</Button></div>
+      <div className="account-area account-area--profile"><div className="account-area__identity"><strong>{user.displayName}</strong><span>{user.email}</span></div><AccountProfile key={user.id} user={user} busy={busy} /><Button variant="secondary" disabled={busy} onClick={onLogout}>Đăng xuất</Button></div>
       <button ref={toggle} className="sidebar-toggle button--secondary" type="button" aria-label={open ? 'Đóng điều hướng' : 'Mở điều hướng'} aria-expanded={open} aria-controls="workspace-sidebar" onClick={() => setOpen(value => !value)}><span aria-hidden="true">☰</span> Điều hướng</button>
     </header>
     <div className="app-layout">
