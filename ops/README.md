@@ -75,3 +75,57 @@ project. Manifest cu tao tu thu tu co tie khong co bao dam digest on dinh; khong
 bo qua mismatch hoac sua hash de lam ket qua PASS.
 
 Moi lan backup can `--evidence-out` moi; script tu choi duong dan evidence da ton tai de tranh nham ket qua cu voi run vua that bai.
+
+## Restore verification semantics (F007)
+
+`status=PASS` means the database was restored and its recorded references/states
+were preserved. Read `verificationScope`, `fullIntegrityVerified`, the separate
+DB/table/FK/S3/contract statuses and the per-version counters before making a file
+integrity claim. `allMatched` remains for compatibility and means preservation
+checks passed; it does not mean every file is VERIFIED.
+
+| Upload / integrity state from current backend | Restore verifier behavior |
+| --- | --- |
+| AVAILABLE / INTEGRITY_PENDING, actual NULL | Exact object must exist; absent result is pending, not corruption. A valid result is awaiting reconciliation; DB stays pending. |
+| AVAILABLE / VERIFIED | Exact object and valid SUCCEEDED JSON required; JSON actual = DB actual = expected. |
+| AVAILABLE / MISMATCH | Exact object and valid SUCCEEDED JSON required; JSON actual = DB actual != expected. Preserved mismatch never means VERIFIED. |
+| AVAILABLE / FAILED, actual NULL | Missing result or valid FAILED result does not prove data loss. Valid SUCCEEDED evidence may await backend retry/reconciliation; never update DB here. |
+| PENDING, FAILED or EXPIRED / INTEGRITY_PENDING, actual NULL, version NULL | Not eligible for exact-version checking; report state and zero eligible coverage explicitly. |
+
+These combinations follow `UploadRepository.transition/integrity` and
+`UploadService.state`; the database constraints alone allow some combinations the
+backend does not produce. Unexpected combinations fail verification. A malformed
+result fails contract validation in every eligible state. 403 is permission denied,
+404 is missing, and timeout/service failures are indeterminate failures. There is
+no latest-version fallback for file objects. The checksum result key is the v1
+SHA-256 identity-derived key (results are read by that key as in the Java consumer).
+JSON is bounded to 65,536 bytes and its stream is closed on success/failure.
+
+The manifest is still v1. Its bucket/key/version must match the requested backup;
+an explicit conflicting backup VersionId is rejected before creating databases.
+The manifest itself is selected by its existing `.meta.json` key, not a separately
+pinned manifest VersionId; immutable/trusted manifest storage remains an operational
+assumption, not an authenticity guarantee. Dump version/size/SHA are checked before
+PostgreSQL changes. Restore uses fresh UUID-suffixed databases and a scoped local
+temporary dump. On failure, newly created target/rollback databases are retained for
+inspection; this tool never drops databases. Caller-owned test containers clean up
+all their databases on exit. Existing target names fail creation, never overwrite.
+
+Wave 2 tests require Docker with the already-present `postgres:17-alpine` image.
+S3 is a stateful strict boundary fake, not LocalStack or AWS integration evidence.
+Host-mode clients are exercised only if `psql`, `pg_dump`, `pg_restore` are installed.
+From the repository root on Windows:
+
+```powershell
+python -m venv ops/tests/.venv
+& ops/tests/.venv/Scripts/python.exe -m pip install -r ops/tests/requirements-wave2.txt
+& ops/tests/.venv/Scripts/python.exe -B ops/tests/run_wave2_checks.py test_backup_snapshot test_restore_integrity test_backup_restore_regression --label wave2-final
+& ops/tests/.venv/Scripts/python.exe -B ops/tests/run_java_checksum_contract.py
+python -B -m unittest discover -s aws/tests -p 'test_checksum*.py' -v
+```
+
+The optional Java checker compiles the unchanged production consumer with the JDK
+and exact Spring Boot BOM/AWS SDK versions already in the local Maven cache. It
+runs the existing Lambda-to-Java parser/result-key cases without booting Spring,
+connecting to a DB, or creating AWS clients. It is not Java service/AWS E2E.
+`ops/tests/*.log`, `.venv/` and `target/` are ignored evidence/build artifacts.

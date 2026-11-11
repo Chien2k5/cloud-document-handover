@@ -54,9 +54,11 @@ class MemoryS3:
         return {'ContentLength':len(self.objects[ref]),'VersionId':kw.get('VersionId')}
 
 class Postgres:
+    instances=[]
     def __enter__(self):
         self.owner=runner.OwnedStack(uuid.uuid4().hex);self.owner.__enter__()
         self.container=self.owner.create_container('postgres',['--tmpfs','/var/lib/postgresql/data','-p','127.0.0.1::5432','-e','POSTGRES_HOST_AUTH_METHOD=trust'],'postgres:17-alpine')
+        self.instances.append(self)
         try:
             subprocess.check_output(['docker','start',self.container])
             runner.wait_ready(lambda:subprocess.run(['docker','exec',self.container,'pg_isready','-q','-h','127.0.0.1','-U','postgres'],capture_output=True).returncode==0,'Wave 2 PostgreSQL',timeout=45)
