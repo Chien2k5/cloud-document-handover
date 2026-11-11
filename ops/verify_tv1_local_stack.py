@@ -10,6 +10,11 @@ import hashlib
 import http.cookiejar
 import json
 import os
+import re
+import shutil
+import socket
+import tempfile
+import uuid
 import subprocess
 import sys
 import time
@@ -18,17 +23,153 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-import boto3
 
 ROOT = Path(__file__).resolve().parents[1]
 JAR_PATH = ROOT / "backend" / "target" / "document-handover-0.1.0-SNAPSHOT.jar"
 EVIDENCE_DIR = ROOT / "evidence" / "tv1-local-stack"
-NGINX_BASE = "http://localhost:8088"
-S3_ENDPOINT = "https://s3.localhost.localstack.cloud:4566"
-LOCALSTACK_ENDPOINT = "http://localhost:4566"
+NGINX_BASE = ""
+S3_ENDPOINT = ""
+LOCALSTACK_ENDPOINT = ""
 UPLOAD_BUCKET = "handover-uploads-local"
 BACKUP_BUCKET = "handover-backups-local"
 DEMO_PASS = "local-demo-pass-1234"
+
+
+OWNER_LABEL = "handover.tv1.run"
+PG_CONTAINER = ""
+PG_PORT = 0
+BACKEND_PORT = 0
+JAVA_EXE = ""
+
+
+class OwnedStack:
+    """Only immutable Docker IDs created by this instance can be removed."""
+    def __init__(self, token):
+        if not isinstance(token, str) or not re.fullmatch(r"[0-9a-f]{32}", token):
+            raise ValueError("A unique 32-hex run token is required")
+        self.token = token
+        self.containers = []
+        self.network = None
+
+    def __enter__(self):
+        return self
+
+    def create_container(self, service, options, image):
+        name = f"tv1-{self.token}-{service}"
+        rid = subprocess.check_output([
+            "docker", "create", "--pull=never", "--name", name,
+            "--label", f"{OWNER_LABEL}={self.token}", *options, image,
+        ], text=True).strip()
+        if not rid:
+            raise RuntimeError("Docker did not return a container ID")
+        self.containers.append(rid)
+        return rid
+
+    def remove_container(self, rid):
+        if rid not in self.containers:
+            raise RuntimeError("Refusing container cleanup: ownership not recorded")
+        info = json.loads(subprocess.check_output(["docker", "inspect", rid], text=True))[0]
+        if info["Id"] != rid or info.get("Config", {}).get("Labels", {}).get(OWNER_LABEL) != self.token:
+            raise RuntimeError("Refusing container cleanup: ownership marker mismatch")
+        subprocess.check_output(["docker", "rm", "-f", rid], text=True)
+        self.containers.remove(rid)
+
+    def cleanup(self):
+        errors = []
+        for rid in list(reversed(self.containers)):
+            try:
+                self.remove_container(rid)
+            except Exception as exc:
+                errors.append(str(exc))
+        if self.network:
+            info = json.loads(subprocess.check_output(["docker", "network", "inspect", self.network], text=True))[0]
+            if info["Id"] != self.network or info.get("Labels", {}).get(OWNER_LABEL) != self.token:
+                errors.append("Refusing network cleanup: ownership marker mismatch")
+            else:
+                subprocess.check_output(["docker", "network", "rm", self.network], text=True)
+                self.network = None
+        if errors:
+            raise RuntimeError("; ".join(errors))
+
+    def __exit__(self, exc_type, exc, tb):
+        self.cleanup()
+
+
+def docker_port(rid, port):
+    address = subprocess.check_output(["docker", "port", rid, f"{port}/tcp"], text=True).strip()
+    if not address.startswith("127.0.0.1:") or "\n" in address:
+        raise RuntimeError("Expected a single loopback Docker port")
+    return int(address.rsplit(":", 1)[1])
+
+
+def wait_ready(check, description, timeout=90):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if check():
+            return
+        time.sleep(0.5)
+    raise RuntimeError(f"Timed out waiting for {description}")
+
+
+def prepare_stack(stack, config_dir):
+    global PG_CONTAINER, PG_PORT, BACKEND_PORT, NGINX_BASE, LOCALSTACK_ENDPOINT, S3_ENDPOINT, JAVA_EXE
+    # No remote Docker contexts, automatic image pulls, shared DBs or shared LocalStack.
+    endpoint = subprocess.check_output([
+        "docker", "context", "inspect", "--format", "{{.Endpoints.docker.Host}}"
+    ], text=True).strip()
+    if not endpoint.startswith(("npipe://", "unix://")):
+        raise RuntimeError("A local disposable Docker engine is required")
+    JAVA_EXE = shutil.which("java") or ""
+    if not JAVA_EXE or not JAR_PATH.is_file() or not (ROOT / "frontend/dist/index.html").is_file():
+        raise RuntimeError("Build the JAR and /portal/ frontend and provide Java before starting the disposable stack")
+    import boto3  # Check the existing dependency before creating resources.
+    for image in ("postgres:17-alpine", "localstack/localstack:4.4", "nginx:stable-alpine"):
+        subprocess.check_output(["docker", "image", "inspect", image], stderr=subprocess.DEVNULL)
+    network_name = f"tv1-{stack.token}"
+    stack.network = subprocess.check_output([
+        "docker", "network", "create", "--label", f"{OWNER_LABEL}={stack.token}", network_name
+    ], text=True).strip()
+    database = f"tv1_{stack.token}"
+    PG_CONTAINER = stack.create_container("postgres", [
+        "--network", network_name, "--tmpfs", "/var/lib/postgresql/data",
+        "-p", "127.0.0.1::5432", "-e", f"POSTGRES_DB={database}",
+        "-e", "POSTGRES_USER=handover", "-e", "POSTGRES_PASSWORD=local-only-not-a-secret",
+    ], "postgres:17-alpine")
+    subprocess.check_output(["docker", "start", PG_CONTAINER])
+    PG_PORT = docker_port(PG_CONTAINER, 5432)
+    wait_ready(lambda: subprocess.run(["docker", "exec", PG_CONTAINER, "pg_isready", "-q", "-h", "127.0.0.1", "-U", "handover", "-d", database],
+                                      capture_output=True).returncode == 0, "owned PostgreSQL")
+    localstack = stack.create_container("localstack", [
+        "--network", network_name, "-p", "127.0.0.1::4566",
+        "-v", "/var/run/docker.sock:/var/run/docker.sock", "-e", "SERVICES=s3,lambda,logs,iam,sts",
+        "-e", f"LAMBDA_DOCKER_NETWORK={network_name}", "-e", "AWS_DEFAULT_REGION=us-east-1",
+    ], "localstack/localstack:4.4")
+    subprocess.check_output(["docker", "start", localstack])
+    ls_port = docker_port(localstack, 4566)
+    LOCALSTACK_ENDPOINT = f"http://localhost:{ls_port}"
+    S3_ENDPOINT = f"https://s3.localhost.localstack.cloud:{ls_port}"
+    def localstack_ready():
+        try:
+            return raw_http("GET", LOCALSTACK_ENDPOINT + "/_localstack/health")[0] == 200
+        except (OSError, urllib.error.URLError):
+            return False
+    wait_ready(localstack_ready, "owned LocalStack")
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        BACKEND_PORT = probe.getsockname()[1]
+    nginx_conf = (ROOT / "infra/local/nginx-eb-emulation.conf").read_text(encoding="utf-8")
+    nginx_file = config_dir / "default.conf"
+    nginx_file.write_text(nginx_conf.replace(":5000;", f":{BACKEND_PORT};"), encoding="utf-8")
+    nginx = stack.create_container("nginx", [
+        "--network", network_name, "-p", "127.0.0.1::80", "--add-host", "host.docker.internal:host-gateway",
+        "-v", f"{nginx_file}:/etc/nginx/conf.d/default.conf:ro",
+        "-v", f"{ROOT / 'deploy/eb/.platform/nginx/conf.d/elasticbeanstalk'}:/etc/nginx/eb-extensions:ro",
+        "-v", f"{ROOT / 'frontend/dist'}:/var/app/current/frontend/dist:ro",
+    ], "nginx:stable-alpine")
+    subprocess.check_output(["docker", "start", nginx])
+    NGINX_BASE = f"http://localhost:{docker_port(nginx, 80)}"
+    subprocess.check_output(["docker", "exec", nginx, "nginx", "-t"], stderr=subprocess.STDOUT)
+    return database
 
 
 class PortalClient:
@@ -97,11 +238,10 @@ def raw_http(method: str, url: str, headers=None, data: bytes | None = None, fol
         return e.code, {k.lower(): v for k, v in e.headers.items()}, e.read()
 
 
-def start_backend(db_name: str, seed_demo: bool, log_file: Path, port: int = 5000) -> subprocess.Popen:
-    env = os.environ.copy()
+def start_backend(db_name: str, seed_demo: bool, log_file: Path, port: int) -> subprocess.Popen:
+    env = local_environment()
     env.update({
-        "JAVA_HOME": r"C:\Program Files\Java\jdk-25",
-        "DB_URL": f"jdbc:postgresql://127.0.0.1:15432/{db_name}",
+        "DB_URL": f"jdbc:postgresql://127.0.0.1:{PG_PORT}/{db_name}",
         "DB_USERNAME": "handover",
         "DB_PASSWORD": "local-only-not-a-secret",
         "SERVER_PORT": str(port),
@@ -116,7 +256,7 @@ def start_backend(db_name: str, seed_demo: bool, log_file: Path, port: int = 500
         "AWS_ENDPOINT_URL": S3_ENDPOINT,
         "AWS_ENDPOINT_URL_S3": S3_ENDPOINT,
     })
-    java_exe = r"C:\Program Files\Java\jdk-25\bin\java.exe"
+    java_exe = JAVA_EXE
     log_file.parent.mkdir(parents=True, exist_ok=True)
     f = log_file.open("w", encoding="utf-8")
     proc = subprocess.Popen(
@@ -196,21 +336,26 @@ def upload_and_complete(client: PortalClient, project_id: str, filename: str, co
     return upload_id, fv["fileId"], fv["id"], s3_version_id
 
 
-def main():
-    EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
-    # Reset primary database 'handover' to clean state before full E2E run
-    subprocess.check_call([
-        "docker", "exec", "-e", "PGPASSWORD=local-only-not-a-secret", "handover-local-aws-postgres-1",
-        "psql", "-U", "handover", "-d", "postgres",
-        "-c", "DROP DATABASE IF EXISTS handover WITH (FORCE);",
-        "-c", "CREATE DATABASE handover;",
-    ], stdout=subprocess.DEVNULL)
+def local_environment():
+    env = os.environ.copy()
+    for key in ("AWS_SESSION_TOKEN", "AWS_PROFILE"):
+        env.pop(key, None)
+    env.update(AWS_ACCESS_KEY_ID="test", AWS_SECRET_ACCESS_KEY="test",
+               AWS_EC2_METADATA_DISABLED="true", AWS_CONFIG_FILE=os.devnull,
+               AWS_SHARED_CREDENTIALS_FILE=os.devnull)
+    return env
 
+
+def run_checks(database):
+    import boto3
+    EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
     # Re-bootstrap LocalStack buckets & Lambda cleanly
-    boot_out = subprocess.check_output([sys.executable, str(ROOT / "infra" / "local" / "bootstrap_localstack.py")], text=True)
+    boot_env = local_environment()
+    boot_env["LOCALSTACK_ENDPOINT"] = LOCALSTACK_ENDPOINT
+    boot_out = subprocess.check_output([sys.executable, str(ROOT / "infra" / "local" / "bootstrap_localstack.py")], text=True, env=boot_env)
     (EVIDENCE_DIR / "01-localstack-bootstrap.json").write_text(boot_out, encoding="utf-8")
 
-    backend_proc = start_backend("handover", seed_demo=True, log_file=EVIDENCE_DIR / "backend-primary.log")
+    backend_proc = start_backend(database, seed_demo=True, log_file=EVIDENCE_DIR / "backend-primary.log", port=BACKEND_PORT)
     try:
         # 1. Verify Nginx EB configuration (A04)
         st_root, hdr_root, _ = raw_http("GET", f"{NGINX_BASE}/", follow_redirects=False)
@@ -271,8 +416,8 @@ def main():
                            aws_access_key_id="test", aws_secret_access_key="test")
         # Find exact object key of v1 from DB
         v1_key = subprocess.check_output([
-            "docker", "exec", "-e", "PGPASSWORD=local-only-not-a-secret", "handover-local-aws-postgres-1",
-            "psql", "-X", "-A", "-t", "-U", "handover", "-d", "handover", "-c",
+            "docker", "exec", "-e", "PGPASSWORD=local-only-not-a-secret", PG_CONTAINER,
+            "psql", "-X", "-A", "-t", "-U", "handover", "-d", database, "-c",
             f"SELECT object_key FROM file_versions WHERE id='{fv1_id}';",
         ], text=True).strip()
         dup_event = {
@@ -321,9 +466,10 @@ def main():
         subprocess.check_call([
             sys.executable, str(ROOT / "ops" / "backup_db_to_s3.py"),
             "--endpoint-url", LOCALSTACK_ENDPOINT,
+            "--pg-container", PG_CONTAINER, "--dbname", database,
             "--label", "e2e-verified",
             "--evidence-out", str(backup_manifest_path),
-        ])
+        ], env=local_environment())
         backup_manifest = json.loads(backup_manifest_path.read_text(encoding="utf-8"))
 
         # 9. Restore from S3 backup bucket into a brand-new isolated DB and verify 11 tables + 18 FKs + S3 objects (K11)
@@ -331,17 +477,18 @@ def main():
         subprocess.check_call([
             sys.executable, str(ROOT / "ops" / "restore_db_from_s3.py"),
             "--endpoint-url", LOCALSTACK_ENDPOINT,
+            "--pg-container", PG_CONTAINER,
             "--backup-key", backup_manifest["backupKey"],
             "--backup-version-id", backup_manifest["backupS3VersionId"],
             "--evidence-dir", str(restore_evidence_dir),
-        ])
+        ], env=local_environment())
         restore_result = json.loads((restore_evidence_dir / "restore-result.json").read_text(encoding="utf-8"))
         restored_db_name = restore_result["restoredDatabase"]
     finally:
         stop_backend(backend_proc)
 
     # 10. Redeploy / restart backend pointing at the RESTORED isolated database with LOCAL_DEMO_PASSWORD="" (K11 + K13)
-    restored_proc = start_backend(restored_db_name, seed_demo=False, log_file=EVIDENCE_DIR / "backend-restored.log")
+    restored_proc = start_backend(restored_db_name, seed_demo=False, log_file=EVIDENCE_DIR / "backend-restored.log", port=BACKEND_PORT)
     try:
         viewer_after = PortalClient(NGINX_BASE)
         viewer_after.login("viewer@example.test", DEMO_PASS)
@@ -395,6 +542,17 @@ def main():
     }
     (EVIDENCE_DIR / "00-summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     print(json.dumps(summary, indent=2))
+
+
+def main():
+    global EVIDENCE_DIR
+    token = uuid.uuid4().hex
+    EVIDENCE_DIR = EVIDENCE_DIR / token
+    # Every mutable service is owned by this invocation. Existing compose services are untouched.
+    with tempfile.TemporaryDirectory(prefix="tv1-nginx-") as config_dir:
+        with OwnedStack(token) as stack:
+            database = prepare_stack(stack, Path(config_dir))
+            run_checks(database)
 
 
 if __name__ == "__main__":
