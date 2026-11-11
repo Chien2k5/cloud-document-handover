@@ -42,16 +42,32 @@ $AccountId = $Identity.Account
 $GitCommit = (git rev-parse --short=12 HEAD).Trim()
 Write-Host "      Account: $AccountId | Principal: $($Identity.Arn) | Commit: $GitCommit"
 
-if (-not $EbSolutionStackName) {
-    Write-Host "      Detecting latest Corretto 21 AL2023 Elastic Beanstalk solution stack..."
-    $EbSolutionStackName = (aws elasticbeanstalk list-available-solution-stacks `
-        --region $Region `
-        --query "SolutionStacks[?contains(@, 'AL2023') && contains(@, 'Corretto 21')] | [0]" `
-        --output text).Trim()
-    if (-not $EbSolutionStackName -or $EbSolutionStackName -eq "None") {
-        throw "Could not auto-detect Corretto 21 AL2023 solution stack in $Region. Pass -EbSolutionStackName explicitly."
+function Get-EbSolutionStack([string]$Override, [string]$Region) {
+    if ($Override) { return $Override }
+    $response = aws elasticbeanstalk list-available-solution-stacks --region $Region --output json
+    if ($LASTEXITCODE -ne 0) { throw "Elastic Beanstalk platform discovery failed." }
+    try { $document = ($response -join "`n") | ConvertFrom-Json -ErrorAction Stop }
+    catch { throw "Elastic Beanstalk platform discovery returned invalid JSON." }
+    if ($null -eq $document -or $document.SolutionStacks -isnot [array]) {
+        throw "Elastic Beanstalk platform discovery requires a SolutionStacks array."
     }
+    $candidates = @(
+        foreach ($name in $document.SolutionStacks) {
+            if ($name -isnot [string]) { throw "Elastic Beanstalk returned a non-string solution stack." }
+            $match = [regex]::Match($name, '^64bit Amazon Linux 2023 v(?<Version>\d+\.\d+\.\d+(?:\.\d+)?) running Corretto 21$')
+            if ($match.Success) {
+                [pscustomobject]@{ Name = $name; Version = [version]$match.Groups['Version'].Value }
+            }
+        }
+    )
+    if (-not $candidates.Count) {
+        throw "No Java SE Corretto 21 Amazon Linux 2023 solution stack is available in $Region. Pass -EbSolutionStackName explicitly."
+    }
+    $ordered = @($candidates | Sort-Object @{ Expression = { $_.Version }; Descending = $true }, @{ Expression = { $_.Name }; Descending = $true })
+    return $ordered[0].Name
 }
+
+$EbSolutionStackName = Get-EbSolutionStack -Override $EbSolutionStackName -Region $Region
 Write-Host "      EB Solution Stack: $EbSolutionStackName"
 
 if (-not $SkipBuild) {
