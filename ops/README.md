@@ -55,3 +55,23 @@ python ops/restore_db_from_s3.py `
     --evidence-dir evidence/week-04/tv1-rds-restore
 Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue
 ```
+
+
+## Backup snapshot consistency (F004)
+
+Backup giu mot transaction `REPEATABLE READ READ ONLY`, export snapshot va cho ca
+11 truy van metadata lan `pg_dump --snapshot` nhap dung snapshot do. Transaction
+duoc dong truoc khi upload S3, ke ca khi query/dump bi loi. Khong can CREATE DATABASE
+tren database nguon. Docker mode dung client PostgreSQL trong container; host mode
+can `psql`, `pg_dump`, `pg_restore` tuong thich voi server. Khong dua password vao
+command arguments; cung cap `PGPASSWORD` qua environment.
+
+Manifest van giu `schemaVersion=1` va cac field hien hanh. Run ID co them UUID de
+khong ghi de artifact khi backup lien tiep. Dump duoc kiem tra custom archive truoc
+upload. Neu upload manifest that bai sau dump, backup chua hoan tat; dump da upload
+khong bi xoa. `handover_items` duoc canonicalize theo khoa chinh
+`handover_id, file_version_id` de loai bo thu tu khong xac dinh khi nhieu item cung
+project. Manifest cu tao tu thu tu co tie khong co bao dam digest on dinh; khong duoc
+bo qua mismatch hoac sua hash de lam ket qua PASS.
+
+Moi lan backup can `--evidence-out` moi; script tu choi duong dan evidence da ton tai de tranh nham ket qua cu voi run vua that bai.
