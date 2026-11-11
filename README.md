@@ -55,3 +55,18 @@ Tool tạo `output/backend-handover-dung.zip` và manifest SHA-256 theo commit. 
 ## Lịch sử và bằng chứng theo tuần
 
 [Tuần 1](docs/week-01/report.md) · [Tuần 2](docs/week-02/backend-completion.md) · [Tuần 3](docs/week-03/backend-report.md) · [Tuần 4](docs/week-04/report.md). Mỗi kết quả thuộc source/commit và thời điểm ghi trong evidence tương ứng; dùng tuần 5 cho trạng thái chốt mới nhất. Tài liệu TV3 cũ ngoài phạm vi được giữ nguyên trên máy, không đưa vào bundle.
+
+## C09 — Đăng ký tài khoản
+
+Tính năng được triển khai trên feature branch `task/C09-registration`: API
+`POST /api/v1/auth/register` tạo tài khoản PostgreSQL, kiểm tra dữ liệu, bắt buộc
+CSRF và hash mật khẩu bằng BCrypt. Frontend chuyển Đăng nhập/Đăng ký trong cùng
+Card, không đổi URL; đăng ký thành công không tự đăng nhập hoặc tạo project/membership.
+
+Xem [hướng dẫn frontend](frontend/README.md#c09--đăng-ký-tài-khoản),
+[hướng dẫn API backend](backend/README.md#c09--đăng-ký-tài-khoản),
+[contract C09](docs/registration/C09-R01-contract.md),
+[security review](docs/registration/C09-R06-security-review.md) và
+[final review R08](docs/registration/C09-R08-final-review.md).
+Trạng thái review và các rủi ro public registration nằm trong báo cáo R08;
+việc merge vào `dung` và triển khai production cần quyết định riêng.
