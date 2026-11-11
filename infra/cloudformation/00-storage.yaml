@@ -37,6 +37,15 @@ Parameters:
     Default: 120
     MinValue: 10
     MaxValue: 900
+  LambdaDurationAlarmThresholdMs:
+    Type: Number
+    Default: 96000
+    MinValue: 8000
+    MaxValue: 720000
+    Description: >-
+      Lambda Duration threshold in milliseconds. Set this to LambdaTimeoutSeconds * 800
+      for an 80% timeout alarm. CloudFormation does not enforce this cross-parameter
+      arithmetic; update both parameters together when overriding the timeout.
   LambdaMemoryMb:
     Type: Number
     Default: 512
@@ -362,7 +371,7 @@ Resources:
       Statistic: Maximum
       Period: 300
       EvaluationPeriods: 1
-      Threshold: !Sub "${LambdaTimeoutSeconds}00"   # seconds*100 = 10% steps; 80% would be *800 ms
+      Threshold: !Ref LambdaDurationAlarmThresholdMs
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
       AlarmActions: !If [HasAlarmEmail, [!Ref AlarmTopic], !Ref AWS::NoValue]
