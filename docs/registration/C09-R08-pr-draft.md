@@ -125,3 +125,47 @@ chấp nhận rủi ro thay chủ dự án:
 
 Draft local để chủ dự án review. Không tự đánh dấu checklist approved, không tạo PR
 thật hoặc merge. Push/PR/merge cần lệnh riêng sau khi người dùng duyệt.
+
+## 10. Post-R08 Manual UAT Improvements
+
+C09-UAT-FIX01 sửa hai điểm phát hiện khi chuẩn bị manual UAT, không thay registration
+API/security: thêm favicon CH ICO bảy kích thước và link /favicon.ico; thêm panel
+Thông tin tài khoản trong header cùng nút Sao chép UUID. UUID hiển thị/copy nguyên
+user.id từ user authenticated, không tạo UUID frontend, project ID hoặc browser
+storage. Có success/status và failure/alert, UUID readonly select được để copy thủ
+công; Escape/focus, pending/stale-copy và account isolation được kiểm thử.
+
+Asset gốc chưa được người dùng tải về và không tồn tại tại đường dẫn đã nêu. Sau
+khi người dùng yêu cầu thêm, favicon được tạo local theo branding CH xanh/trắng hiện
+có; không giả rằng đã copy binary đính kèm. /favicon.ico trả200 và đúng ICO bytes qua
+Vite, không HTML fallback. Không backend API mới, schema migration, dependency,
+contract/deploy/AWS config change. Không sửa test cũ hoặc R08 final report.
+
+| FIX01 verification | Kết quả và mức bằng chứng |
+| --- | --- |
+| Lint / unit / build | PASS /71 PASS /PASS; no failure/skip |
+| New E2E | 18 PASS; mock account/clipboard và favicon HTTP thật |
+| Existing auth / registration UI/API/regression | 2/27/23/34 PASS, nguyên tests cũ |
+| Full browser | 408 PASS =390 cũ +18 mới, BROWSER_MOCK |
+| Backend verify | 268 PASS mỗi lượt,0 failure/error/skip;2 lượt trong real/business runner, DB riêng |
+| Real runner browser / storage fixture | 3/2 PASS; phân biệt LOCAL_REAL_BACKEND và TEST_STORAGE, không AWS |
+| Real localhost profile probe | PASS; Chrome/Spring/PostgreSQL/Clipboard thật: auth/me UUID = DB = displayed/copied UUID; reload/logout PASS |
+| Python offline / Java-Python contract | 27/29 PASS |
+| Pre-AWS | PASS_PRE_AWS_CHECKS; npm audit0; regression DB cleanup PASS |
+| AWS_REAL_E2E | NOT_RUN |
+
+Đây là số liệu FIX01 mới chạy; các phần trước của draft là snapshot R08. Full candidate
+sau FIX01 có38 file so với base dung ban đầu; riêng FIX01 tối đa7 file được phép.
+Focused test đầu có3 lỗi selector trong file mới đã sửa đúng ID thực và rerun18/18;
+Pre-AWS đầu bị Windows native-module lock tại npm ci, giữ log và rerun nguyên runner
+PASS sau giải phóng đúng owned preview/test process. Không đổi assertions cũ/runner
+hoặc lockfile. JAR UAT được pin riêng trong runtime-data để Maven clean không làm hỏng
+preview; DB UAT giữ nguyên, không dùng cho regression/TRUNCATE.
+
+Kiểm localhost là automation với backend thật; chủ dự án chưa approve manual UAT.
+Chrome window automation không khởi tạo được để quan sát trực tiếp tab favicon;
+DOM/network/ICO và Chrome headless đã kiểm, owner xem tab Chrome hiện có. Xem
+[FIX01 review](C09-UAT-FIX01-review.md) cho source/test evidence, screenshots và giới hạn.
+Known risks R06-F01/F02 MEDIUM OPEN, R06-F03/F04 LOW OPEN giữ nguyên. Không coi local
+PASS là public registration security approval. Không push, tạo PR thật, merge hoặc
+triển khai: **NOT_PUSHED — PR_NOT_CREATED — MERGE_NOT_APPROVED**.
