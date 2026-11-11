@@ -35,3 +35,34 @@ Sau khi khởi tạo, có thể chạy toàn bộ kịch bản kiểm thử tíc
 ```powershell
 python ops/verify_tv1_local_stack.py
 ```
+
+## F003 custom-mode operator boundary
+
+Custom mode (`UseLabRole=false`) requires `BackupOperatorPrincipalArn`, an existing
+IAM user/role independent of backend credentials. The template rule rejects a missing
+value. Root, STS session and wildcard principals are rejected. The deploy script
+validates before AWS calls and forwards the parameter on both storage updates.
+An administrator must confirm the real identity and authorize `sts:AssumeRole` on
+the exact backup-role output ARN as required by its account/policies. Authenticate
+through that operator's own CLI profile/federated session and pass `--assume-role-arn`
+to the backup/restore scripts. No real principal is assumed to exist in local tests.
+
+Backend has no Allow to assume backup and has an explicit Deny for that target ARN.
+Backup trust excludes backend even if supplied accidentally as operator principal.
+The deterministic target ARN avoids a CloudFormation circular dependency. S3/Lambda
+Allow permissions and bucket policies remain unchanged; no new delete/wildcard Allow.
+The existing operator lacks ListBucket on the upload bucket: missing-result S3 calls
+may return 403, which restore must report as permission/indeterminate, not VERIFIED.
+This existing diagnostic limitation needs an AWS permissions decision, not a silent
+permission expansion in this fix.
+
+Lab mode still requires no operator ARN and creates no IAM resources. A shared
+LabRole is not an independently verified least-privilege boundary. Actual policies,
+SCPs, principal existence and effective access remain `AWS_VERIFICATION_PENDING`.
+`IAM_EFFECTIVE_PERMISSIONS_ON_AWS: NOT_RUN`. Local tests evaluate only the explicit
+CloudFormation/IAM subset, not AWS effective permissions.
+
+```powershell
+& infra/tests.venv/Scripts/python.exe -B infra/tests/test_backup_iam.py F003
+& infra/tests.venv/Scripts/cfn-lint.exe infra/cloudformation/00-storage.yaml infra/cloudformation/01-rds-beanstalk-cloudfront.yaml
+```

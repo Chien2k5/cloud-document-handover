@@ -14,6 +14,11 @@ $before=(Get-Location).Path
 $success=$true; $message=''
 try {
     if ($ScriptPath.EndsWith('redeploy_aws.ps1')) { & $ScriptPath }
-    else { & $ScriptPath -VpcId vpc-fixture -AppSubnetIdsCsv 'subnet-a,subnet-b' -DbSubnetIdsCsv 'subnet-c,subnet-d' }
+    else {
+        $extra=@{}
+        if ($env:WAVE3_USE_LAB_ROLE) { $extra.UseLabRole=$env:WAVE3_USE_LAB_ROLE }
+        if ($env:WAVE3_OPERATOR_ARN) { $extra.BackupOperatorPrincipalArn=$env:WAVE3_OPERATOR_ARN }
+        & $ScriptPath -VpcId vpc-fixture -AppSubnetIdsCsv 'subnet-a,subnet-b' -DbSubnetIdsCsv 'subnet-c,subnet-d' @extra
+    }
 } catch { $success=$false; $message=$_.Exception.Message }
 Write-Output ('FIXTURE_RESULT:' + (@{success=$success;message=$message;before=$before;after=(Get-Location).Path;engine=$PSVersionTable.PSVersion.ToString()} | ConvertTo-Json -Compress))

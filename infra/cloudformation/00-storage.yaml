@@ -16,6 +16,15 @@ Parameters:
     Description: >-
       true = AWS Academy Learner Lab (IAM role creation is blocked; reuse LabRole /
       LabInstanceProfile). false = normal account, create least-privilege roles.
+  BackupOperatorPrincipalArn:
+    Type: String
+    Default: ""
+    MaxLength: 2048
+    AllowedPattern: '^$|^arn:aws:iam::[0-9]{12}:(role|user)/([A-Za-z0-9+=,.@_-]+/)*[A-Za-z0-9+=,.@_-]+$'
+    ConstraintDescription: Use an existing IAM role/user ARN; root, wildcard and STS session principals are forbidden.
+    Description: >-
+      Required when UseLabRole=false. Existing operator identity independent of the backend.
+      Empty is allowed only in Lab mode, which does not create a backup role or assert separation.
   LabRoleName:
     Type: String
     Default: LabRole
@@ -63,6 +72,13 @@ Parameters:
     Type: String
     Default: ""
     Description: Optional e-mail for alarm notifications (leave empty to create alarms without actions).
+
+Rules:
+  RequireCustomBackupOperator:
+    RuleCondition: !Equals [!Ref UseLabRole, "false"]
+    Assertions:
+      - Assert: !Not [!Equals [!Ref BackupOperatorPrincipalArn, ""]]
+        AssertDescription: Custom mode requires an existing dedicated BackupOperatorPrincipalArn; no fallback principal.
 
 Conditions:
   CreateRoles: !Equals [!Ref UseLabRole, "false"]
@@ -132,8 +148,8 @@ Resources:
                 Effect: Allow
                 Action: s3:ListBucket
                 Resource: !Sub "arn:aws:s3:::${ProjectName}-uploads-${AWS::AccountId}-${AWS::Region}"
-              - Sid: OperatorMayAssumeBackupRole
-                Effect: Allow
+              - Sid: DenyBackupAssumption
+                Effect: Deny
                 Action: sts:AssumeRole
                 Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-backup-operator"
 
@@ -152,8 +168,11 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
-            Principal: { AWS: !GetAtt BackendInstanceRole.Arn }
+            Principal: { AWS: !Ref BackupOperatorPrincipalArn }
             Action: sts:AssumeRole
+            Condition:
+              ArnNotEquals:
+                aws:PrincipalArn: !GetAtt BackendInstanceRole.Arn
       MaxSessionDuration: 3600
       Policies:
         - PolicyName: backup-bucket-only
@@ -390,7 +409,7 @@ Outputs:
     Value: !If [CreateRoles, !Ref BackendInstanceProfile, !Ref LabInstanceProfileName]
     Export: { Name: !Sub "${AWS::StackName}-InstanceProfile" }
   BackupOperatorRoleArn:
-    Description: Role ops/backup_db.py assumes (empty in Learner Lab mode - LabRole is used directly).
+    Description: Role a separate operator assumes via ops/backup_db_to_s3.py --assume-role-arn (empty in Lab mode; shared LabRole permissions are not isolated).
     Value: !If [CreateRoles, !GetAtt BackupOperatorRole.Arn, ""]
   AlarmTopicArn:
     Value: !If [HasAlarmEmail, !Ref AlarmTopic, ""]
