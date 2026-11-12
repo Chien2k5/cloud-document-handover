@@ -19,6 +19,10 @@ export default function Files({ project, members, onHandoverCreated, onAccessLos
   useEffect(() => { accessLost.current = onAccessLost; }, [onAccessLost]);
   const [selected, setSelected] = useState({});
   const [uploadBusy, setUploadBusy] = useState(false);
+  const [showUnsuccessful, setShowUnsuccessful] = useState(false);
+  const unsuccessful = file => ['FAILED', 'EXPIRED'].includes(file.uploadStatus);
+  const hiddenCount = items.filter(unsuccessful).length;
+  const visibleItems = showUnsuccessful ? items : items.filter(file => !unsuccessful(file));
   function reconcileSelection(versions) {
     setSelected(current => {
       const next = { ...current };
@@ -81,10 +85,12 @@ export default function Files({ project, members, onHandoverCreated, onAccessLos
     <section className="card files-section">
       <div className="section-heading"><div><h3>File và phiên bản</h3><p>Mỗi thẻ là một FileVersion. Mở thông tin kỹ thuật để đối chiếu định danh trước khi chọn bàn giao.</p></div><Button variant="secondary" disabled={busy || actionBusy} onClick={refresh}>Tải lại danh sách file</Button></div>
       <ErrorNotice error={error} />
+      {hiddenCount > 0 && <label className="upload-history-filter"><input type="checkbox" checked={showUnsuccessful} onChange={event => setShowUnsuccessful(event.target.checked)} aria-label="Hiện upload thất bại và hết hạn ở trang này" /><span>Hiện upload thất bại và hết hạn ở trang này ({hiddenCount})</span></label>}
       {busy && <LoadingState>Đang tải file…</LoadingState>}
       {polling && <p className="file-polling" role="status">Đang đối soát phiên bản chờ bằng Upload ID; tự dừng sau tối đa 60 giây.</p>}
       {!busy && !error && items.length === 0 && <EmptyState title="Chưa có file ở trang này." description="Phiên bản tài liệu được hiển thị từ phản hồi của backend. Dùng phân trang hoặc tải lại để kiểm tra." />}
-      <ul className="file-list version-list">{items.map(file => <li key={file.id} className="file-card" data-file-version-id={file.id}>
+      {!busy && !error && items.length > 0 && visibleItems.length === 0 && <EmptyState title="Không có phiên bản hiển thị ở trang này." description="Bật lịch sử upload để xem các lượt thất bại hoặc hết hạn, hoặc chuyển sang trang tiếp theo." />}
+      <ul className="file-list version-list">{visibleItems.map(file => <li key={file.id} className="file-card" data-file-version-id={file.id}>
         <div className="file-card__heading"><span className="file-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h8l4 4v14H6z M14 3v5h5 M9 12h6 M9 16h6" /></svg></span><h4>{file.filename}<span className="file-size"> · {file.size} byte</span></h4></div>
         <FileVersionStatus file={file} />
         {canOwn(project) && <label className="select-file"><input type="checkbox" aria-label={`Chọn bàn giao ${file.filename} · ${file.id}`} checked={Boolean(selected[file.id])} disabled={!isVerified(file)} onChange={event => setSelected(current => { const next = { ...current }; if (event.target.checked) next[file.id] = file; else delete next[file.id]; return next; })} />Chọn phiên bản bàn giao</label>}
@@ -97,6 +103,9 @@ export default function Files({ project, members, onHandoverCreated, onAccessLos
       </li>)}</ul>
       <Pager page={page} count={items.length} busy={busy || actionBusy} onPage={setPage} />
     </section>
-    <CreateHandover project={project} members={members} files={Object.values(selected)} onCreated={onHandoverCreated} onAccessLost={showError} />
+    <section className="workspace-section" id="project-draft" tabIndex={-1}>
+      <CreateHandover project={project} members={members} files={Object.values(selected)} onCreated={onHandoverCreated} onAccessLost={showError} />
+      {!canOwn(project) && <p>Chỉ OWNER của dự án có thể tạo gói bàn giao.</p>}
+    </section>
   </>;
 }

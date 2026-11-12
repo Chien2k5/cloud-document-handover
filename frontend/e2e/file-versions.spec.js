@@ -28,6 +28,7 @@ for (const role of ['OWNER', 'EDITOR', 'VIEWER']) test(`C09.06A: ${role} sees ex
 
 for (const [uploadStatus, integrityStatus] of [['AVAILABLE', 'INTEGRITY_PENDING'], ['AVAILABLE', 'MISMATCH'], ['AVAILABLE', 'FAILED'], ['PENDING', 'VERIFIED'], ['FAILED', 'FAILED'], ['EXPIRED', 'FAILED']]) test(`C09.06A: ${uploadStatus}/${integrityStatus} stays distinct and ineligible`, async ({ page }) => {
   const value = { ...v1, uploadStatus, integrityStatus }; await files(page, 'OWNER', [value]);
+  if (['FAILED', 'EXPIRED'].includes(uploadStatus)) await page.getByLabel('Hiện upload thất bại và hết hạn ở trang này', { exact: true }).check();
   await expect(card(page, v1.id).getByRole('checkbox')).toBeDisabled(); await expect(card(page, v1.id).getByRole('button', { name: 'Lấy link tải same-name.txt', exact: true })).toBeDisabled();
   await expect(card(page, v1.id).locator('[data-stage="upload"]')).toHaveText(uploadStatus); await expect(card(page, v1.id).locator('[data-stage="integrity"]')).toHaveText(integrityStatus);
   if (integrityStatus === 'MISMATCH') await expect(card(page, v1.id).getByText('Checksum không khớp.', { exact: false })).toBeVisible();

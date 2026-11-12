@@ -504,3 +504,6 @@ label { font-size: 1.0625rem; font-weight: 550; }
 @media (max-width: 650px) { .draft-selection { padding: 16px; } .draft-form .actions > button { width: 100%; } }
 @media (max-width: 650px) { .upload-selection { padding: 16px; gap: 12px; } .upload-selection dl { display: grid; } .upload-form .actions > button { width: 100%; } .upload-form input[type="file"] { font-size: 1rem; } }
 @media (max-width: 650px) { .files-section > .section-heading { flex-direction: column; } .files-section > .section-heading > button { width: 100%; } .version-list > .file-card { padding: 20px; } .file-card__heading { gap: 12px; } .file-card__actions { flex-direction: column; } .file-card__actions > button { width: 100%; } .technical-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.upload-history-filter { display: flex; align-items: center; gap: .65rem; margin-block: 1rem; color: var(--muted); font-size: .9rem; font-weight: 400; }
+.upload-history-filter input { width: 1rem; height: 1rem; flex: 0 0 auto; margin: 0; }
