@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "runId": "20261110T193617Z-e2e-verified",
+  "label": "e2e-verified",
+  "environment": "localstack-emulation",
+  "gitCommit": "d7b23139e0cb945a414caa42c9a7eb29676edd7e",
+  "sourceDatabase": "handover",
+  "backupBucket": "handover-backups-local",
+  "backupKey": "postgres/20261110T193617Z-e2e-verified/portal.dump",
+  "backupS3VersionId": "AaHG9aL7Q5Yd8x8smGmJUVetFb2hb3QG",
+  "dumpSizeBytes": 33948,
+  "dumpSha256": "f4546d9c479c25dadf5b2740c8fe8ab559e11e8d5dcae48dd9b29f93f5b1cdf5",
+  "serverSideEncryption": "AES256",
+  "timingsMs": {
+    "tableSnapshotMs": 1424.1,
+    "pgDumpMs": 347.2,
+    "s3UploadMs": 2319.7,
+    "totalMs": 4091.0
+  },
+  "tables": {
+    "flyway_schema_history": {
+      "rowCount": 1,
+      "canonicalSha256": "447cfbb86c92c2c968ccab7ffa74f12123f7ac910ede522f7ee107c45a5dfd3e"
+    },
+    "app_users": {
+      "rowCount": 4,
+      "canonicalSha256": "29f34e2237e7db59d8e783403d3460a1984f2c790719513553bab3a473860024"
+    },
+    "projects": {
+      "rowCount": 1,
+      "canonicalSha256": "a8c3727fdb6e6a29db2614f98e94560139003abf34e1107c144e360cf725d9ba"
+    },
+    "memberships": {
+      "rowCount": 2,
+      "canonicalSha256": "ce646a52d04ee74462779b6dbef1dfc06be97ca5be5ddbc694064996972c2707"
+    },
+    "file_metadata": {
+      "rowCount": 2,
+      "canonicalSha256": "3430803a039ebd600b067a2c21d3f8b18e90857287885f3c78261c0dfc794eeb"
+    },
+    "file_versions": {
+      "rowCount": 3,
+      "canonicalSha256": "d8fc4bad0f3b8bc66f502881d95d66ed59293d7f785a8db4e6a32b4cd9bf5248"
+    },
+    "upload_sessions": {
+      "rowCount": 3,
+      "canonicalSha256": "0c0c6d5d5ac3b34b5d77b4b570f2fc1b1ccd67a16f5d281dd049f509286a2336"
+    },
+    "handovers": {
+      "rowCount": 1,
+      "canonicalSha256": "68909c38cd5c25c7220b275b6a15aa7579226cbecbf8416636e8ed24939b6415"
+    },
+    "handover_items": {
+      "rowCount": 1,
+      "canonicalSha256": "abcaf36e75e335e091bb0ed2b27a2769764278382c05294b78fa095c36071e33"
+    },
+    "handover_recipients": {
+      "rowCount": 1,
+      "canonicalSha256": "e097b4c87196656a9972bdac7d09b74d8d930c4a9dc9a0ffb8c15f4cdff6ab30"
+    },
+    "audit_events": {
+      "rowCount": 11,
+      "canonicalSha256": "cdd0960b07192da8992a5990fc28bd6ff3268fc855e02c6cba0bc3695f8ba5b2"
+    }
+  },
+  "createdAt": "2026-11-11T02:36:21+0700"
+}

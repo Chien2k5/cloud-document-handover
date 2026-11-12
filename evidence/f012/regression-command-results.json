@@ -1,0 +1,33 @@
+[
+  {
+    "exitCode": 0,
+    "durationSeconds": 1.0279699,
+    "output": "evidence/f012/F010-regression-console.txt",
+    "id": "R",
+    "startedAt": "2026-11-12T02:53:00.7807864Z",
+    "command": [
+      "infra/tests.venv/Scripts/python.exe",
+      "-B",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "infra/tests",
+      "-p",
+      "test_rds_alarm_notifications.py",
+      "-v"
+    ]
+  },
+  {
+    "exitCode": 0,
+    "version": "cfn-lint 1.60.0",
+    "output": "evidence/f012/lint-console.txt",
+    "id": "L",
+    "startedAt": "2026-11-12T02:53:01.8374636Z",
+    "command": [
+      "infra/tests.venv/Scripts/cfn-lint.exe",
+      "infra/cloudformation/00-storage.yaml",
+      "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml"
+    ]
+  }
+]

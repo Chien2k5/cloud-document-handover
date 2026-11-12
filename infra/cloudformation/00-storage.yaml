@@ -1,0 +1,437 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Nhom 5 - Document handover - TV1 (A03/A05): S3 upload bucket (private, Versioning,
+  SSE, CORS), checksum Lambda triggered ONLY by uploads/, separate backup bucket,
+  log retention, alarms and (optionally) least-privilege IAM roles.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: nhom5-handover
+    AllowedPattern: "[a-z0-9-]{3,30}"
+  UseLabRole:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+    Description: >-
+      true = AWS Academy Learner Lab (IAM role creation is blocked; reuse LabRole /
+      LabInstanceProfile). false = normal account, create least-privilege roles.
+  BackupOperatorPrincipalArn:
+    Type: String
+    Default: ""
+    MaxLength: 2048
+    AllowedPattern: '^$|^arn:aws:iam::[0-9]{12}:(role|user)/([A-Za-z0-9+=,.@_-]+/)*[A-Za-z0-9+=,.@_-]+$'
+    ConstraintDescription: Use an existing IAM role/user ARN; root, wildcard and STS session principals are forbidden.
+    Description: >-
+      Required when UseLabRole=false. Existing operator identity independent of the backend.
+      Empty is allowed only in Lab mode, which does not create a backup role or assert separation.
+  LabRoleName:
+    Type: String
+    Default: LabRole
+  LabInstanceProfileName:
+    Type: String
+    Default: LabInstanceProfile
+  PortalOrigin:
+    Type: String
+    Default: https://placeholder.invalid
+    Description: Exact browser origin of the portal (e.g. https://dxxxx.cloudfront.net). Used by S3 CORS.
+  LambdaCodeBucket:
+    Type: String
+    Description: Artifact bucket that holds the checksum Lambda ZIP (created by deploy/deploy_aws.ps1).
+  LambdaCodeKey:
+    Type: String
+    Description: Key of the Lambda ZIP (lambda_function.py at ZIP root), e.g. lambda/checksum-<sha>.zip
+  LambdaTimeoutSeconds:
+    Type: Number
+    Default: 120
+    MinValue: 10
+    MaxValue: 900
+  LambdaDurationAlarmThresholdMs:
+    Type: Number
+    Default: 96000
+    MinValue: 8000
+    MaxValue: 720000
+    Description: >-
+      Lambda Duration threshold in milliseconds. Set this to LambdaTimeoutSeconds * 800
+      for an 80% timeout alarm. CloudFormation does not enforce this cross-parameter
+      arithmetic; update both parameters together when overriding the timeout.
+  LambdaMemoryMb:
+    Type: Number
+    Default: 512
+    AllowedValues: [256, 512, 1024, 1769]
+  LogRetentionDays:
+    Type: Number
+    Default: 14
+    AllowedValues: [7, 14, 30, 60, 90]
+  BackupRetentionDays:
+    Type: Number
+    Default: 30
+    MinValue: 7
+    MaxValue: 365
+  AlarmEmail:
+    Type: String
+    Default: ""
+    AllowedPattern: '^$|^[^@\s,;]+@[^@\s,;]+[.][^@\s,;]+$'
+    ConstraintDescription: Use one email address without whitespace/lists, or leave empty for manual monitoring.
+    Description: Optional e-mail for alarm notifications (leave empty to create alarms without actions).
+
+Rules:
+  RequireCustomBackupOperator:
+    RuleCondition: !Equals [!Ref UseLabRole, "false"]
+    Assertions:
+      - Assert: !Not [!Equals [!Ref BackupOperatorPrincipalArn, ""]]
+        AssertDescription: Custom mode requires an existing dedicated BackupOperatorPrincipalArn; no fallback principal.
+
+Conditions:
+  CreateRoles: !Equals [!Ref UseLabRole, "false"]
+  HasAlarmEmail: !Not [!Equals [!Ref AlarmEmail, ""]]
+
+Resources:
+  # ---------------------------------------------------------------- IAM (normal account only)
+  LambdaChecksumRole:
+    Type: AWS::IAM::Role
+    Condition: CreateRoles
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: checksum-least-privilege
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadExactUploadVersion
+                Effect: Allow
+                Action: s3:GetObjectVersion
+                Resource: !Sub "arn:aws:s3:::${ProjectName}-uploads-${AWS::AccountId}-${AWS::Region}/uploads/*"
+              - Sid: WriteAndReadResults
+                Effect: Allow
+                Action: [s3:PutObject, s3:GetObject]
+                Resource: !Sub "arn:aws:s3:::${ProjectName}-uploads-${AWS::AccountId}-${AWS::Region}/results/*"
+              - Sid: DistinguishMissingFromDenied
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !Sub "arn:aws:s3:::${ProjectName}-uploads-${AWS::AccountId}-${AWS::Region}"
+              - Sid: Logs
+                Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ProjectName}-checksum:*"
+
+  BackendInstanceRole:
+    Type: AWS::IAM::Role
+    Condition: CreateRoles
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: backend-s3-least-privilege
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: SignPutAndReadExactVersion
+                Effect: Allow
+                Action: [s3:PutObject, s3:GetObjectVersion]
+                Resource: !Sub "arn:aws:s3:::${ProjectName}-uploads-${AWS::AccountId}-${AWS::Region}/uploads/*"
+              - Sid: ReadChecksumResults
+                Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub "arn:aws:s3:::${ProjectName}-uploads-${AWS::AccountId}-${AWS::Region}/results/*"
+              - Sid: DistinguishMissingFromDenied
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !Sub "arn:aws:s3:::${ProjectName}-uploads-${AWS::AccountId}-${AWS::Region}"
+              - Sid: DenyBackupAssumption
+                Effect: Deny
+                Action: sts:AssumeRole
+                Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-backup-operator"
+
+  BackendInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Condition: CreateRoles
+    Properties:
+      Roles: [!Ref BackendInstanceRole]
+
+  BackupOperatorRole:
+    Type: AWS::IAM::Role
+    Condition: CreateRoles
+    Properties:
+      RoleName: !Sub "${ProjectName}-backup-operator"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { AWS: !Ref BackupOperatorPrincipalArn }
+            Action: sts:AssumeRole
+            Condition:
+              ArnNotEquals:
+                aws:PrincipalArn: !GetAtt BackendInstanceRole.Arn
+      MaxSessionDuration: 3600
+      Policies:
+        - PolicyName: backup-bucket-only
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [s3:PutObject, s3:GetObject, s3:GetObjectVersion]
+                Resource: !Sub "${BackupBucket.Arn}/postgres/*"
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt BackupBucket.Arn
+              - Sid: VerifyRestoredFileVersions
+                Effect: Allow
+                Action: [s3:GetObjectVersion, s3:GetObject]
+                Resource:
+                  - !Sub "arn:aws:s3:::${ProjectName}-uploads-${AWS::AccountId}-${AWS::Region}/uploads/*"
+                  - !Sub "arn:aws:s3:::${ProjectName}-uploads-${AWS::AccountId}-${AWS::Region}/results/*"
+
+  # ---------------------------------------------------------------- Checksum Lambda
+  ChecksumLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ProjectName}-checksum"
+      RetentionInDays: !Ref LogRetentionDays
+
+  ChecksumFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: ChecksumLogGroup
+    Properties:
+      FunctionName: !Sub "${ProjectName}-checksum"
+      Description: Dang's SHA-256 checksum Lambda (schema v1). Code owner TV2 - deployed by TV1.
+      Runtime: python3.12
+      Handler: lambda_function.lambda_handler
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref LambdaCodeKey
+      Role: !If
+        - CreateRoles
+        - !GetAtt LambdaChecksumRole.Arn
+        - !Sub "arn:aws:iam::${AWS::AccountId}:role/${LabRoleName}"
+      Timeout: !Ref LambdaTimeoutSeconds
+      MemorySize: !Ref LambdaMemoryMb
+      Architectures: [x86_64]
+      Environment:
+        Variables:
+          UPLOAD_BUCKET: !Sub "${ProjectName}-uploads-${AWS::AccountId}-${AWS::Region}"
+
+  ChecksumInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ChecksumFunction
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub "arn:aws:s3:::${ProjectName}-uploads-${AWS::AccountId}-${AWS::Region}"
+
+  # ---------------------------------------------------------------- Upload bucket
+  UploadBucket:
+    Type: AWS::S3::Bucket
+    DependsOn: ChecksumInvokePermission
+    DeletionPolicy: Retain          # versions pinned in handovers must survive stack deletion
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "${ProjectName}-uploads-${AWS::AccountId}-${AWS::Region}"
+      VersioningConfiguration: { Status: Enabled }
+      OwnershipControls:
+        Rules: [{ ObjectOwnership: BucketOwnerEnforced }]
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+            BucketKeyEnabled: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins: [!Ref PortalOrigin]
+            AllowedMethods: [PUT, GET, HEAD]
+            AllowedHeaders: [content-type, if-none-match]
+            ExposedHeaders: [x-amz-version-id, etag]
+            MaxAge: 300
+      LifecycleConfiguration:
+        Rules:
+          # Only housekeeping that can never delete a completed/pinned version.
+          - Id: abort-incomplete-multipart
+            Status: Enabled
+            AbortIncompleteMultipartUpload: { DaysAfterInitiation: 1 }
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:Put
+            Function: !GetAtt ChecksumFunction.Arn
+            Filter:
+              S3Key:
+                Rules: [{ Name: prefix, Value: uploads/ }]   # results/ never triggers -> no loop
+      Tags:
+        - { Key: Project, Value: !Ref ProjectName }
+        - { Key: Owner, Value: TV1-Chien }
+
+  UploadBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref UploadBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: s3:*
+            Resource: [!GetAtt UploadBucket.Arn, !Sub "${UploadBucket.Arn}/*"]
+            Condition: { Bool: { aws:SecureTransport: "false" } }
+
+  # ---------------------------------------------------------------- Backup bucket (separate)
+  BackupBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "${ProjectName}-backups-${AWS::AccountId}-${AWS::Region}"
+      VersioningConfiguration: { Status: Enabled }
+      OwnershipControls:
+        Rules: [{ ObjectOwnership: BucketOwnerEnforced }]
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+            BucketKeyEnabled: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-old-db-backups
+            Status: Enabled
+            Prefix: postgres/
+            ExpirationInDays: !Ref BackupRetentionDays
+            NoncurrentVersionExpiration: { NoncurrentDays: 7 }
+      Tags:
+        - { Key: Project, Value: !Ref ProjectName }
+        - { Key: Owner, Value: TV1-Chien }
+
+  BackupBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref BackupBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: s3:*
+            Resource: [!GetAtt BackupBucket.Arn, !Sub "${BackupBucket.Arn}/*"]
+            Condition: { Bool: { aws:SecureTransport: "false" } }
+          - !If
+            - CreateRoles
+            - Sid: PortalRuntimeNeverTouchesBackups
+              Effect: Deny
+              Principal: { AWS: !GetAtt BackendInstanceRole.Arn }
+              Action: s3:*
+              Resource: [!GetAtt BackupBucket.Arn, !Sub "${BackupBucket.Arn}/*"]
+            - !Ref AWS::NoValue
+
+  # ---------------------------------------------------------------- Alarms (A05)
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Condition: HasAlarmEmail
+    Properties:
+      Subscription:
+        - { Protocol: email, Endpoint: !Ref AlarmEmail }
+
+  AlarmTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Condition: HasAlarmEmail
+    Properties:
+      Topics: [!Ref AlarmTopic]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowSameAccountRegionCloudWatchAlarms
+            Effect: Allow
+            Principal: { Service: cloudwatch.amazonaws.com }
+            Action: sns:Publish
+            Resource: !Ref AlarmTopic
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+              ArnLike:
+                aws:SourceArn: !Sub "arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:*"
+
+  ChecksumErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Checksum Lambda raised errors (integrity stays pending/failed - investigate).
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions: [{ Name: FunctionName, Value: !Ref ChecksumFunction }]
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: !If [HasAlarmEmail, [!Ref AlarmTopic], !Ref AWS::NoValue]
+
+  ChecksumThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Checksum Lambda is throttled.
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+      Dimensions: [{ Name: FunctionName, Value: !Ref ChecksumFunction }]
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: !If [HasAlarmEmail, [!Ref AlarmTopic], !Ref AWS::NoValue]
+
+  ChecksumDurationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Checksum Lambda p-max duration above 80% of its timeout.
+      Namespace: AWS/Lambda
+      MetricName: Duration
+      Dimensions: [{ Name: FunctionName, Value: !Ref ChecksumFunction }]
+      Statistic: Maximum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: !Ref LambdaDurationAlarmThresholdMs
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: !If [HasAlarmEmail, [!Ref AlarmTopic], !Ref AWS::NoValue]
+
+Outputs:
+  UploadBucketName:
+    Value: !Ref UploadBucket
+    Export: { Name: !Sub "${AWS::StackName}-UploadBucket" }
+  BackupBucketName:
+    Value: !Ref BackupBucket
+    Export: { Name: !Sub "${AWS::StackName}-BackupBucket" }
+  ChecksumFunctionName:
+    Value: !Ref ChecksumFunction
+  InstanceProfileName:
+    Description: Instance profile for the Beanstalk EC2 instance.
+    Value: !If [CreateRoles, !Ref BackendInstanceProfile, !Ref LabInstanceProfileName]
+    Export: { Name: !Sub "${AWS::StackName}-InstanceProfile" }
+  BackupOperatorRoleArn:
+    Description: Role a separate operator assumes via ops/backup_db_to_s3.py --assume-role-arn (empty in Lab mode; shared LabRole permissions are not isolated).
+    Value: !If [CreateRoles, !GetAtt BackupOperatorRole.Arn, ""]
+  AlarmTopicArn:
+    Value: !If [HasAlarmEmail, !Ref AlarmTopic, ""]
+    Export: { Name: !Sub "${AWS::StackName}-AlarmTopic" }

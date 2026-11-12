@@ -1,0 +1,18 @@
+test_TC_F012_04_exception_cannot_leave_current_pass (test_tv1_evidence.EvidenceTests.test_TC_F012_04_exception_cannot_leave_current_pass) ... FAIL
+
+======================================================================
+FAIL: test_TC_F012_04_exception_cannot_leave_current_pass (test_tv1_evidence.EvidenceTests.test_TC_F012_04_exception_cannot_leave_current_pass)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\cloud-document-handover-chien\ops\tests\test_tv1_evidence.py", line 23, in test_TC_F012_04_exception_cannot_leave_current_pass
+    self.assertEqual(json.loads(current.read_text(encoding="utf-8"))["status"], "FAIL")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'PASS' != 'FAIL'
+- PASS
++ FAIL
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.026s
+
+FAILED (failures=1)

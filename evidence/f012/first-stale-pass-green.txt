@@ -1,0 +1,6 @@
+test_TC_F012_04_exception_cannot_leave_current_pass (test_tv1_evidence.EvidenceTests.test_TC_F012_04_exception_cannot_leave_current_pass) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.580s
+
+OK

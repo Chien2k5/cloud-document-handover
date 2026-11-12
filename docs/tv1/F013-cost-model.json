@@ -1,0 +1,774 @@
+{
+  "schema_version": 1,
+  "checked_date": "2026-11-12",
+  "region": "us-east-1",
+  "currency": "USD",
+  "pricing_basis": "Gross paid marginal rates; no account allowances, promotional credits or Free Tier deducted; before tax/support/FX.",
+  "month_hours": 720,
+  "source_head": "6b761c19f5415dce45c1eecb493d0c55c6453074",
+  "account_state": {
+    "target": "AWS_PERSONAL_ACCOUNT",
+    "credit": "UNVERIFIED",
+    "free_tier": "UNVERIFIED",
+    "actual_aws_spend": "UNVERIFIED",
+    "permissions": "ACCOUNT_DEPENDENT",
+    "budget_approved": "UNVERIFIED",
+    "aws_runtime": "NOT_RUN"
+  },
+  "sources": {
+    "EC2_CSV": {
+      "title": "EC2 regional public Price List",
+      "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "RDS_CSV": {
+      "title": "RDS regional public Price List",
+      "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.csv",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "S3_CSV": {
+      "title": "S3 regional public Price List",
+      "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonS3/current/us-east-1/index.csv",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "CF_CSV": {
+      "title": "CloudFront public Price List",
+      "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonCloudFront/current/index.csv",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "SNS_CSV": {
+      "title": "SNS regional public Price List",
+      "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonSNS/current/us-east-1/index.csv",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "LAMBDA": {
+      "title": "Lambda on-demand x86 pricing",
+      "url": "https://aws.amazon.com/lambda/pricing/",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "IPV4": {
+      "title": "VPC public IPv4 pricing",
+      "url": "https://aws.amazon.com/vpc/pricing/",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "CW": {
+      "title": "CloudWatch standard logs/alarms pricing",
+      "url": "https://aws.amazon.com/cloudwatch/pricing/",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "S3_DTO": {
+      "title": "AWS Storage Blog: S3 transfer cost example us-east-1",
+      "url": "https://aws.amazon.com/blogs/storage/amazon-s3-audit-logging-part-1-analyzing-server-access-logs-with-amazon-athena-for-performance-insights/",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "NETWORK": {
+      "title": "EC2 regional transfer pricing",
+      "url": "https://aws.amazon.com/ec2/pricing/on-demand/",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "EC2_CREDITS": {
+      "title": "T3 CPU-credit pricing",
+      "url": "https://aws.amazon.com/ec2/instance-types/t3/",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "RDS_PRICING": {
+      "title": "RDS PostgreSQL backup/credit pricing",
+      "url": "https://aws.amazon.com/rds/postgresql/pricing/",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "RDS_STOP": {
+      "title": "RDS stop/start behavior",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_StopInstance.html",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "BILLING": {
+      "title": "Billing console features",
+      "url": "https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-what-is.html",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "BUDGETS": {
+      "title": "Budgets update frequency and scope",
+      "url": "https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-managing-costs.html",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "FREE_TIER": {
+      "title": "Free Tier terms depend on account",
+      "url": "https://aws.amazon.com/free/",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "EB_SINGLE": {
+      "title": "EB SingleInstance includes EC2/EIP/ASG",
+      "url": "https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/using-features-managing-env-types.html",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "EB_S3": {
+      "title": "EB service-managed bucket and retained bundles",
+      "url": "https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/AWSHowTo.S3.html",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "EB_LOGS": {
+      "title": "EB service-created log groups",
+      "url": "https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/environments-cfg-logging.html",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "RDS_LOGS": {
+      "title": "RDS log export and indefinite retention",
+      "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.Procedural.UploadtoCloudWatch.html",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "S3_VERSIONS": {
+      "title": "S3 full-version storage billing",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/Versioning.html",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "S3_MARKERS": {
+      "title": "S3 delete-marker storage",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/DeleteMarker.html",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "CF_PRICING": {
+      "title": "CloudFront pay-as-you-go by edge location",
+      "url": "https://aws.amazon.com/cloudfront/pricing/pay-as-you-go/",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    },
+    "DELETION": {
+      "title": "CloudFormation retention and snapshots",
+      "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-attribute-deletionpolicy.html",
+      "checked_date": "2026-11-12",
+      "status": "PUBLIC_SOURCE_CHECKED_TIME_SENSITIVE"
+    }
+  },
+  "rates": {
+    "ec2_hour": {
+      "usd": "0.0208000000",
+      "unit": "Hrs",
+      "source": "EC2_CSV",
+      "status": "PUBLIC_REFERENCE_RATE",
+      "sku": "QA3NBPZEQKZ2K9AR",
+      "effective_date": "2026-11-01",
+      "dimensions": {
+        "Location": "US East (N. Virginia)",
+        "Instance Type": "t3.small",
+        "Operating System": "Linux",
+        "Tenancy": "Shared",
+        "CapacityStatus": "Used",
+        "operation": "RunInstances",
+        "StartingRange": "0",
+        "EndingRange": "Inf"
+      }
+    },
+    "ebs_gb_month": {
+      "usd": "0.0800000000",
+      "unit": "GB-Mo",
+      "source": "EC2_CSV",
+      "status": "PUBLIC_REFERENCE_RATE",
+      "sku": "JG3KUJMBRGHV3N8G",
+      "effective_date": "2026-11-01",
+      "dimensions": {
+        "Location": "US East (N. Virginia)",
+        "Volume Type": "General Purpose",
+        "StartingRange": "0",
+        "EndingRange": "Inf"
+      }
+    },
+    "rds_hour": {
+      "usd": "0.0180000000",
+      "unit": "Hrs",
+      "source": "RDS_CSV",
+      "status": "PUBLIC_REFERENCE_RATE",
+      "sku": "TGN7QDJF2AGFU9XA",
+      "effective_date": "2026-10-01",
+      "dimensions": {
+        "Location": "US East (N. Virginia)",
+        "Instance Type": "db.t3.micro",
+        "operation": "CreateDBInstance:0014",
+        "Database Engine": "PostgreSQL",
+        "Deployment Option": "Single-AZ",
+        "StartingRange": "0",
+        "EndingRange": "Inf"
+      }
+    },
+    "rds_storage_gb_month": {
+      "usd": "0.1150000000",
+      "unit": "GB-Mo",
+      "source": "RDS_CSV",
+      "status": "PUBLIC_REFERENCE_RATE",
+      "sku": "KYVYY29G957PKY3B",
+      "effective_date": "2026-10-01",
+      "dimensions": {
+        "Location": "US East (N. Virginia)",
+        "operation": "CreateDBInstance:0014",
+        "Database Engine": "PostgreSQL",
+        "Deployment Option": "Single-AZ",
+        "Volume Type": "General Purpose-GP3",
+        "StartingRange": "0",
+        "EndingRange": "Inf"
+      }
+    },
+    "rds_backup_gb_month": {
+      "usd": "0.0950000000",
+      "unit": "GB-Mo",
+      "source": "RDS_CSV",
+      "status": "PUBLIC_REFERENCE_RATE",
+      "sku": "6W8ECRFVDATCER7J",
+      "effective_date": "2026-10-01",
+      "dimensions": {
+        "Location": "US East (N. Virginia)",
+        "operation": "CreateDBInstance:0014",
+        "Database Engine": "PostgreSQL",
+        "Deployment Option": "Single-AZ",
+        "StartingRange": "0",
+        "EndingRange": "Inf"
+      }
+    },
+    "s3_gb_month": {
+      "usd": "0.0230000000",
+      "unit": "GB-Mo",
+      "source": "S3_CSV",
+      "status": "PUBLIC_REFERENCE_RATE",
+      "sku": "WP9ANXZGBYYSGJEA",
+      "effective_date": "2026-10-01",
+      "dimensions": {
+        "Location": "US East (N. Virginia)",
+        "Volume Type": "Standard",
+        "Storage Class": "General Purpose",
+        "StartingRange": "0",
+        "EndingRange": "51200"
+      }
+    },
+    "s3_put_request": {
+      "usd": "0.0000050000",
+      "unit": "Requests",
+      "source": "S3_CSV",
+      "status": "PUBLIC_REFERENCE_RATE",
+      "sku": "E9YHNFENF4XQBZR6",
+      "effective_date": "2026-10-01",
+      "dimensions": {
+        "Location": "US East (N. Virginia)",
+        "Group": "S3-API-Tier1",
+        "StartingRange": "0",
+        "EndingRange": "Inf"
+      }
+    },
+    "s3_get_request": {
+      "usd": "0.0000004000",
+      "unit": "Requests",
+      "source": "S3_CSV",
+      "status": "PUBLIC_REFERENCE_RATE",
+      "sku": "ZWQ6Q48CRJXX4FXE",
+      "effective_date": "2026-10-01",
+      "dimensions": {
+        "Location": "US East (N. Virginia)",
+        "Group": "S3-API-Tier2",
+        "StartingRange": "0",
+        "EndingRange": "Inf"
+      }
+    },
+    "cf_dto_gb": {
+      "usd": "0.0850000000",
+      "unit": "GB",
+      "source": "CF_CSV",
+      "status": "PUBLIC_REFERENCE_RATE",
+      "sku": "VU3485RNDU6HBQF6",
+      "effective_date": "2026-10-01",
+      "dimensions": {
+        "From Location": "Europe",
+        "To Location": "External",
+        "StartingRange": "0",
+        "EndingRange": "10240"
+      }
+    },
+    "cf_https_request": {
+      "usd": "0.0000012000",
+      "unit": "Requests",
+      "source": "CF_CSV",
+      "status": "PUBLIC_REFERENCE_RATE",
+      "sku": "YA5QZD7XG45UGHCH",
+      "effective_date": "2026-10-01",
+      "dimensions": {
+        "Location": "Europe",
+        "StartingRange": "0",
+        "EndingRange": "Inf"
+      }
+    },
+    "cf_to_origin_gb": {
+      "usd": "0.0200000000",
+      "unit": "GB",
+      "source": "CF_CSV",
+      "status": "PUBLIC_REFERENCE_RATE",
+      "sku": "C3HHMR3U9CR9AK63",
+      "effective_date": "2026-10-01",
+      "dimensions": {
+        "From Location": "Europe",
+        "To Location": "Data Origin",
+        "StartingRange": "0",
+        "EndingRange": "Inf"
+      }
+    },
+    "sns_request": {
+      "usd": "0.0000005000",
+      "unit": "Requests",
+      "source": "SNS_CSV",
+      "status": "PUBLIC_REFERENCE_RATE",
+      "sku": "QDX8G2WMY9NPXXPG",
+      "effective_date": "2026-11-01",
+      "dimensions": {
+        "Location": "US East (N. Virginia)",
+        "Group": "SNS-Requests-Tier1",
+        "StartingRange": "1000000",
+        "EndingRange": "Inf"
+      }
+    },
+    "sns_email": {
+      "usd": "0.0000200000",
+      "unit": "Notifications",
+      "source": "SNS_CSV",
+      "status": "PUBLIC_REFERENCE_RATE",
+      "sku": "BZ4UZ2ERDQACBPJ4",
+      "effective_date": "2026-11-01",
+      "dimensions": {
+        "Location": "US East (N. Virginia)",
+        "StartingRange": "1000",
+        "EndingRange": "Inf"
+      }
+    },
+    "ipv4_hour": {
+      "usd": "0.005",
+      "unit": "IP-hour",
+      "source": "IPV4",
+      "status": "PUBLIC_REFERENCE_RATE"
+    },
+    "lambda_compute": {
+      "usd": "0.0000166667",
+      "unit": "GB-second x86 first paid tier",
+      "source": "LAMBDA",
+      "status": "PUBLIC_REFERENCE_RATE"
+    },
+    "lambda_request": {
+      "usd": "0.0000002",
+      "unit": "request",
+      "source": "LAMBDA",
+      "status": "PUBLIC_REFERENCE_RATE"
+    },
+    "logs_ingest_gb": {
+      "usd": "0.50",
+      "unit": "GB ingested Standard",
+      "source": "CW",
+      "status": "PUBLIC_REFERENCE_RATE"
+    },
+    "logs_stored_gb_month": {
+      "usd": "0.03",
+      "unit": "GB-month compressed archived",
+      "source": "CW",
+      "status": "PUBLIC_REFERENCE_RATE"
+    },
+    "alarm_month": {
+      "usd": "0.10",
+      "unit": "standard metric-month",
+      "source": "CW",
+      "status": "PUBLIC_REFERENCE_RATE"
+    },
+    "s3_internet_gb": {
+      "usd": "0.09",
+      "unit": "GB outbound first paid tier",
+      "source": "S3_DTO",
+      "status": "PUBLIC_REFERENCE_RATE"
+    },
+    "cross_az_gb_side": {
+      "usd": "0.01",
+      "unit": "GB charged endpoint-side",
+      "source": "NETWORK",
+      "status": "PUBLIC_REFERENCE_RATE"
+    },
+    "ec2_excess_vcpu_hour": {
+      "usd": "0.05",
+      "unit": "excess vCPU-hour Linux T3",
+      "source": "EC2_CREDITS",
+      "status": "PUBLIC_REFERENCE_RATE"
+    },
+    "rds_excess_vcpu_hour": {
+      "usd": "0.075",
+      "unit": "excess vCPU-hour PostgreSQL T3",
+      "source": "RDS_PRICING",
+      "status": "PUBLIC_REFERENCE_RATE"
+    }
+  },
+  "inventory": {
+    "00-storage.yaml": {
+      "LambdaChecksumRole": {
+        "type": "AWS::IAM::Role",
+        "condition": "CreateRoles",
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "BackendInstanceRole": {
+        "type": "AWS::IAM::Role",
+        "condition": "CreateRoles",
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "BackendInstanceProfile": {
+        "type": "AWS::IAM::InstanceProfile",
+        "condition": "CreateRoles",
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "BackupOperatorRole": {
+        "type": "AWS::IAM::Role",
+        "condition": "CreateRoles",
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "ChecksumLogGroup": {
+        "type": "AWS::Logs::LogGroup",
+        "condition": null,
+        "deletion_policy": "Retain",
+        "update_replace_policy": "Retain"
+      },
+      "ChecksumFunction": {
+        "type": "AWS::Lambda::Function",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "ChecksumInvokePermission": {
+        "type": "AWS::Lambda::Permission",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "UploadBucket": {
+        "type": "AWS::S3::Bucket",
+        "condition": null,
+        "deletion_policy": "Retain",
+        "update_replace_policy": "Retain"
+      },
+      "UploadBucketPolicy": {
+        "type": "AWS::S3::BucketPolicy",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "BackupBucket": {
+        "type": "AWS::S3::Bucket",
+        "condition": null,
+        "deletion_policy": "Retain",
+        "update_replace_policy": "Retain"
+      },
+      "BackupBucketPolicy": {
+        "type": "AWS::S3::BucketPolicy",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "AlarmTopic": {
+        "type": "AWS::SNS::Topic",
+        "condition": "HasAlarmEmail",
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "AlarmTopicPolicy": {
+        "type": "AWS::SNS::TopicPolicy",
+        "condition": "HasAlarmEmail",
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "ChecksumErrorsAlarm": {
+        "type": "AWS::CloudWatch::Alarm",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "ChecksumThrottlesAlarm": {
+        "type": "AWS::CloudWatch::Alarm",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "ChecksumDurationAlarm": {
+        "type": "AWS::CloudWatch::Alarm",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      }
+    },
+    "01-rds-beanstalk-cloudfront.yaml": {
+      "BeanstalkInstanceSecurityGroup": {
+        "type": "AWS::EC2::SecurityGroup",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "DatabaseSecurityGroup": {
+        "type": "AWS::EC2::SecurityGroup",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "DatabaseSubnetGroup": {
+        "type": "AWS::RDS::DBSubnetGroup",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "PortalDatabase": {
+        "type": "AWS::RDS::DBInstance",
+        "condition": null,
+        "deletion_policy": "Snapshot",
+        "update_replace_policy": "Snapshot"
+      },
+      "HandoverEbApplication": {
+        "type": "AWS::ElasticBeanstalk::Application",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "HandoverEbAppVersion": {
+        "type": "AWS::ElasticBeanstalk::ApplicationVersion",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "HandoverEbEnvironment": {
+        "type": "AWS::ElasticBeanstalk::Environment",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "PortalCloudFrontDistribution": {
+        "type": "AWS::CloudFront::Distribution",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "DbLowStorageAlarm": {
+        "type": "AWS::CloudWatch::Alarm",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      },
+      "DbHighConnectionsAlarm": {
+        "type": "AWS::CloudWatch::Alarm",
+        "condition": null,
+        "deletion_policy": null,
+        "update_replace_policy": null
+      }
+    }
+  },
+  "configuration": {
+    "ec2_instance": "t3.small",
+    "eb_environment": "SingleInstance",
+    "associate_public_ipv4": true,
+    "root_ebs_size_pinned": false,
+    "root_ebs_type_pinned": false,
+    "assumed_root_ebs_type": "gp3",
+    "rds_instance": "db.t3.micro",
+    "rds_engine": "postgres",
+    "rds_engine_default": "17.2",
+    "rds_single_az": true,
+    "rds_private": true,
+    "rds_storage_gb": 20,
+    "rds_storage_type": "gp3",
+    "rds_backup_days": 7,
+    "lambda_memory_mb": 512,
+    "lambda_architecture": "x86_64",
+    "lambda_timeout_seconds": 120,
+    "lambda_log_days": 14,
+    "eb_log_days": 14,
+    "eb_delete_logs_on_terminate": false,
+    "rds_log_retention_pinned": false,
+    "cloudfront_price_class": "PriceClass_100",
+    "cloudfront_quote_edge": "Europe",
+    "alarm_count": 5,
+    "sns_enabled_by_default": false,
+    "upload_versions_expire": false,
+    "backup_current_expire_days": 30,
+    "backup_noncurrent_expire_days": 7
+  },
+  "extra_inventory": [
+    "EB EC2/ASG/EIP/root EBS are service-created",
+    "Deploy artifact bucket outside CloudFormation",
+    "EB per-region service-managed S3 bucket and old source bundles",
+    "EB proxy/deployment/application log groups",
+    "RDS postgresql log group with retention not pinned",
+    "Final/manual RDS snapshots and retained automated backups",
+    "Existing VPC/subnets/routes/service roles; NAT/ALB/endpoints only if actually present"
+  ],
+  "scenarios": {
+    "demo_48h": {
+      "status": "ESTIMATED",
+      "inputs": {
+        "ebs_root_gb": "10",
+        "rds_gb": "20",
+        "public_ipv4_count": "1",
+        "lambda_invocations": "10000",
+        "lambda_memory_mb": "512",
+        "lambda_billed_duration_ms": "2000",
+        "s3_current_gb": "2",
+        "s3_noncurrent_gb": "3",
+        "s3_backup_gb": "1",
+        "s3_artifact_and_eb_gb": "1",
+        "s3_delete_markers_gb": "0.000001",
+        "s3_incomplete_multipart_gb": "0",
+        "s3_put_requests": "10000",
+        "s3_get_requests": "40000",
+        "cf_viewer_gb": "10",
+        "cf_https_requests": "100000",
+        "cf_to_origin_gb": "0.1",
+        "s3_direct_download_gb": "2",
+        "cross_az_billable_gb_sides": "20",
+        "logs_ingested_gb": "2",
+        "logs_avg_compressed_gb": "0.2",
+        "standard_alarm_count": "5",
+        "active_backup_avg_gb": "20",
+        "post_demo_snapshot_gb": "20",
+        "post_demo_snapshot_days": "7",
+        "sns_requests": "0",
+        "sns_email_deliveries": "0",
+        "ec2_excess_vcpu_hours": "0",
+        "rds_excess_vcpu_hours": "0",
+        "ec2_running_hours": "48",
+        "ebs_allocated_hours": "48",
+        "ipv4_allocated_hours": "48",
+        "rds_running_hours": "48",
+        "rds_allocated_hours": "48",
+        "s3_retained_hours": "48",
+        "logs_retained_hours": "48",
+        "alarm_hours": "48"
+      },
+      "components_usd": {
+        "ec2": "0.99840000",
+        "ebs": "0.05333333",
+        "ipv4": "0.24000000",
+        "rds_compute": "0.86400000",
+        "rds_storage": "0.15333333",
+        "rds_active_backups": "0.12666667",
+        "post_demo_snapshots": "0.44333333",
+        "s3_storage": "0.01073333",
+        "s3_requests": "0.06600000",
+        "lambda_compute": "0.16666700",
+        "lambda_requests": "0.00200000",
+        "cloudfront": "0.97200000",
+        "s3_direct_transfer": "0.18000000",
+        "cross_az": "0.20000000",
+        "logs_ingestion": "1.00000000",
+        "logs_storage": "0.00040000",
+        "alarms": "0.03333333",
+        "sns": "0E-8",
+        "cpu_credits": "0E-8"
+      },
+      "total_usd": "5.51",
+      "total_unrounded_usd": "5.510200334866666666666666666",
+      "contingency_percent": "25",
+      "with_contingency_usd": "6.89"
+    },
+    "continuous_35_days": {
+      "status": "ESTIMATED",
+      "inputs": {
+        "ebs_root_gb": "10",
+        "rds_gb": "20",
+        "public_ipv4_count": "1",
+        "lambda_invocations": "10000",
+        "lambda_memory_mb": "512",
+        "lambda_billed_duration_ms": "2000",
+        "s3_current_gb": "2",
+        "s3_noncurrent_gb": "3",
+        "s3_backup_gb": "1",
+        "s3_artifact_and_eb_gb": "1",
+        "s3_delete_markers_gb": "0.000001",
+        "s3_incomplete_multipart_gb": "0",
+        "s3_put_requests": "10000",
+        "s3_get_requests": "40000",
+        "cf_viewer_gb": "10",
+        "cf_https_requests": "100000",
+        "cf_to_origin_gb": "0.1",
+        "s3_direct_download_gb": "2",
+        "cross_az_billable_gb_sides": "20",
+        "logs_ingested_gb": "2",
+        "logs_avg_compressed_gb": "0.2",
+        "standard_alarm_count": "5",
+        "active_backup_avg_gb": "20",
+        "post_demo_snapshot_gb": "20",
+        "post_demo_snapshot_days": "7",
+        "sns_requests": "0",
+        "sns_email_deliveries": "0",
+        "ec2_excess_vcpu_hours": "0",
+        "rds_excess_vcpu_hours": "0",
+        "ec2_running_hours": "840",
+        "ebs_allocated_hours": "840",
+        "ipv4_allocated_hours": "840",
+        "rds_running_hours": "840",
+        "rds_allocated_hours": "840",
+        "s3_retained_hours": "840",
+        "logs_retained_hours": "840",
+        "alarm_hours": "840"
+      },
+      "components_usd": {
+        "ec2": "17.47200000",
+        "ebs": "0.93333333",
+        "ipv4": "4.20000000",
+        "rds_compute": "15.12000000",
+        "rds_storage": "2.68333333",
+        "rds_active_backups": "2.21666667",
+        "post_demo_snapshots": "0.44333333",
+        "s3_storage": "0.18783336",
+        "s3_requests": "0.06600000",
+        "lambda_compute": "0.16666700",
+        "lambda_requests": "0.00200000",
+        "cloudfront": "0.97200000",
+        "s3_direct_transfer": "0.18000000",
+        "cross_az": "0.20000000",
+        "logs_ingestion": "1.00000000",
+        "logs_storage": "0.00700000",
+        "alarms": "0.58333333",
+        "sns": "0E-8",
+        "cpu_credits": "0E-8"
+      },
+      "total_usd": "46.43",
+      "total_unrounded_usd": "46.43350036016666666666666666",
+      "contingency_percent": "25",
+      "with_contingency_usd": "58.04"
+    }
+  },
+  "scope_limits": {
+    "ebs_size": "10 GB gp3 is an estimate, NOT enforced by template; replace with actual volume size/type.",
+    "data": "Average total bytes include all versions, markers, multipart, backups and artifact/service buckets; quotas do not cap this total.",
+    "network": "No NAT/ALB/bastion/endpoints created by these templates; existing/shared network or optional resources are extra if used.",
+    "snapshots": "20 GB is assumed billed backup/snapshot data, not measured incremental size; included backup allocation not deducted.",
+    "after_demo": "Assume all other billable objects/logs/EBS/IPv4 removed at window end; retain only example snapshot for 7 further days. Extend retention inputs if not.",
+    "uncapped": "25% contingency is a planning reserve, NOT a spending limit; requests/storage/runtime may exceed assumptions."
+  },
+  "stop_rules": {
+    "rds_auto_restart_after_days": 7,
+    "stopped_rds_instance_hours_billed": false,
+    "stopped_rds_storage_billed": true,
+    "stopped_rds_backup_billed": true,
+    "stopped_ec2_ebs_billed": true,
+    "allocated_idle_eip_billed": true,
+    "eb_manual_stop_is_reliable_schedule": false,
+    "budget_is_hard_cap": false
+  }
+}

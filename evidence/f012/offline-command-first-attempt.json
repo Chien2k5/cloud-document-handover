@@ -1,0 +1,40 @@
+[
+  {
+    "startedAt": "2026-11-12T02:52:30.0150993Z",
+    "durationSeconds": 14.3259759,
+    "exitCode": 1,
+    "id": "U",
+    "command": [
+      "infra/tests.venv/Scripts/python.exe",
+      "-B",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "ops/tests",
+      "-p",
+      "test_tv1_evidence.py",
+      "-v"
+    ],
+    "output": "evidence/f012/unit-console.txt"
+  },
+  {
+    "startedAt": "2026-11-12T02:52:44.4332018Z",
+    "durationSeconds": 0.372962,
+    "exitCode": 0,
+    "id": "I",
+    "command": [
+      "infra/tests.venv/Scripts/python.exe",
+      "-B",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "ops/tests",
+      "-p",
+      "test_verify_isolation.py",
+      "-v"
+    ],
+    "output": "evidence/f012/isolation-console.txt"
+  }
+]

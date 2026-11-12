@@ -1,0 +1,32 @@
+test_TC_F012_01_pass_requires_real_observation (test_tv1_evidence.EvidenceTests.test_TC_F012_01_pass_requires_real_observation) ... ok
+test_TC_F012_02_missing_and_unknown_assertions_rejected (test_tv1_evidence.EvidenceTests.test_TC_F012_02_missing_and_unknown_assertions_rejected) ... ok
+test_TC_F012_03_success_then_failure_updates_current (test_tv1_evidence.EvidenceTests.test_TC_F012_03_success_then_failure_updates_current) ... ok
+test_TC_F012_04_exception_cannot_leave_current_pass (test_tv1_evidence.EvidenceTests.test_TC_F012_04_exception_cannot_leave_current_pass) ... ok
+test_TC_F012_05_index_is_not_asset_or_browser_verification (test_tv1_evidence.EvidenceTests.test_TC_F012_05_index_is_not_asset_or_browser_verification) ... ok
+test_TC_F012_06_python_http_does_not_prove_cors (test_tv1_evidence.EvidenceTests.test_TC_F012_06_python_http_does_not_prove_cors) ... ok
+test_TC_F012_07_k07_is_selection_after_v2_not_temporal_immutability (test_tv1_evidence.EvidenceTests.test_TC_F012_07_k07_is_selection_after_v2_not_temporal_immutability) ... ok
+test_TC_F012_08_restart_is_not_redeployment (test_tv1_evidence.EvidenceTests.test_TC_F012_08_restart_is_not_redeployment) ... ok
+test_TC_F012_09_k12_does_not_invent_security_assertions (test_tv1_evidence.EvidenceTests.test_TC_F012_09_k12_does_not_invent_security_assertions) ... ok
+test_TC_F012_10_source_hashes_and_run_id_are_traceable (test_tv1_evidence.EvidenceTests.test_TC_F012_10_source_hashes_and_run_id_are_traceable) ... ok
+test_TC_F012_11_non_pass_statuses_are_not_counted_as_pass (test_tv1_evidence.EvidenceTests.test_TC_F012_11_non_pass_statuses_are_not_counted_as_pass) ... ok
+test_TC_F012_12_evidence_never_serializes_sensitive_error_or_env (test_tv1_evidence.EvidenceTests.test_TC_F012_12_evidence_never_serializes_sensitive_error_or_env) ... ok
+test_atomic_failure_leaves_running_valid_json (test_tv1_evidence.EvidenceTests.test_atomic_failure_leaves_running_valid_json) ... ok
+test_cleanup_failure_is_published_and_propagated (test_tv1_evidence.EvidenceTests.test_cleanup_failure_is_published_and_propagated) ... ok
+test_concurrent_writer_is_rejected_without_clobbering_current (test_tv1_evidence.EvidenceTests.test_concurrent_writer_is_rejected_without_clobbering_current) ... ok
+test_historical_bytes_are_retained_without_provenance_backfill (test_tv1_evidence.EvidenceTests.test_historical_bytes_are_retained_without_provenance_backfill) ... FAIL
+test_initial_current_write_failure_records_fail_before_setup (test_tv1_evidence.EvidenceTests.test_initial_current_write_failure_records_fail_before_setup) ... ok
+test_previous_remediation_source_is_preserved (test_tv1_evidence.EvidenceTests.test_previous_remediation_source_is_preserved) ... ok
+
+======================================================================
+FAIL: test_historical_bytes_are_retained_without_provenance_backfill (test_tv1_evidence.EvidenceTests.test_historical_bytes_are_retained_without_provenance_backfill)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\cloud-document-handover-chien\ops\tests\test_tv1_evidence.py", line 306, in test_historical_bytes_are_retained_without_provenance_backfill
+    self.assertEqual(original, (base / "historical/pre-f012/00-summary.json").read_bytes())
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'{\n  "verificationSuite": "TV1-A01-to-A06-L[1715 chars]"\n}' != b'{\r\n  "verificationSuite": "TV1-A01-to-A06[1779 chars]r\n}'
+
+----------------------------------------------------------------------
+Ran 18 tests in 13.638s
+
+FAILED (failures=1)

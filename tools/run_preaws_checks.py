@@ -29,11 +29,22 @@ def main():
 
     def run(label, command, cwd=root, timeout=900):
         print('Checking ' + label + '...', flush=True)
-        checked = subprocess.run(command, cwd=cwd, capture_output=True, text=True,
-                                 encoding='utf-8', errors='replace', timeout=timeout)
+        try:
+            checked = subprocess.run(command, cwd=cwd, capture_output=True, text=True,
+                                     encoding='utf-8', errors='replace', timeout=timeout)
+        except subprocess.TimeoutExpired as error:
+            def decoded(value):
+                return value.decode('utf-8', errors='replace') if isinstance(value, bytes) else (value or '')
+            output = decoded(error.stdout) + decoded(error.stderr)
+            (out / (label + '.log')).write_text(output, encoding='utf-8')
+            print(f'{label} timed out after {timeout}s; partial output:', file=sys.stderr, flush=True)
+            print(output, file=sys.stderr, flush=True)
+            raise
         with (out / (label + '.log')).open('x', encoding='utf-8') as log:
             log.write(checked.stdout + checked.stderr)
         if checked.returncode:
+            print(f'{label} failed with exit code {checked.returncode}; output:', file=sys.stderr, flush=True)
+            print(checked.stdout + checked.stderr, file=sys.stderr, flush=True)
             raise RuntimeError(label + ' failed; inspect ' + str(out / (label + '.log')))
         return checked.stdout + checked.stderr
 
