@@ -1,6 +1,6 @@
 # Vận hành, Backup/Restore S3, Chi phí & Kiểm chứng Hạ tầng (TV1 — Hoàng Hải Chiến | A01, A05, A06)
 
-Thư mục `ops/` chứa các công cụ vận hành của **TV1 (Hoàng Hải Chiến)**: sao lưu PostgreSQL lên S3 bucket tách quyền, phục hồi vào database đích tách biệt kèm đối chiếu liên kết S3 Version ID (**K11**), kiểm thử tích hợp toàn luồng hạ tầng tại local, cũng như tài liệu giới hạn quyền AWS Lab, dự toán chi phí và kế hoạch dọn dẹp tài nguyên sau bảo vệ.
+Thư mục `ops/` chứa các công cụ vận hành của **TV1 (Hoàng Hải Chiến)**: sao lưu PostgreSQL lên S3 bucket tách quyền, phục hồi vào database đích tách biệt kèm đối chiếu liên kết S3 Version ID (**K11**), kiểm thử tích hợp toàn luồng hạ tầng tại local, cũng như tài liệu preflight personal account/Lab, dự toán chi phí và cleanup sau demo/đánh giá.
 
 ## 1. Danh mục công cụ và tài liệu trong `ops/`
 
@@ -9,7 +9,7 @@ Thư mục `ops/` chứa các công cụ vận hành của **TV1 (Hoàng Hải C
 | [`backup_db_to_s3.py`](backup_db_to_s3.py) | A05, K11, K12 | Chụp snapshot số dòng + SHA-256 canonical của 11 bảng, chạy `pg_dump --format=custom --no-owner --no-acl`, tải file dump lên bucket backup riêng (`s3://<backup-bucket>/postgres/<run-id>/portal.dump`) với mã hóa `AES256`, kiểm tra `VersionId` của S3 và xuất manifest không chứa secret. File dump nhị phân chỉ lưu ở `backups/` (đã `.gitignore`). |
 | [`restore_db_from_s3.py`](restore_db_from_s3.py) | A05, K11 | Tải đúng `VersionId` của bản backup từ S3, kiểm tra SHA-256 của file dump, thử nghiệm rollback nguyên tử trên DB `_rollback` có bảng xung đột (`--single-transaction --exit-on-error`), khôi phục vào DB đích mới (`_dst`), đối chiếu toàn bộ 11 bảng + 18 khóa ngoại (`convalidated`), và **đối chiếu từng bản ghi `file_versions` (`AVAILABLE`) với S3 thật (`head_object` đúng `VersionId` + JSON `results/`)**. |
 | [`verify_tv1_local_stack.py`](verify_tv1_local_stack.py) | A01–A06, K03–K05, K07, K11–K13 | Kịch bản kiểm thử tự động chạy xuyên suốt trên Docker local (`postgres:17` + `localstack:4.4` + `nginx:stable-alpine` + `app.jar`): kiểm tra Nginx `/portal/` & `/api/v1/health`, upload v1/v2 qua Presigned PUT, Lambda tính SHA-256 (`VERIFIED`/`MISMATCH` + chống lặp sự kiện), phát hành & xác nhận gói bàn giao ghim v1, backup lên S3, restore sang DB tách biệt, và khởi động lại app trên DB đã restore để tải lại file v1. |
-| [`aws-lab-permissions-and-cost.md`](aws-lab-permissions-and-cost.md) | A01, A05, A06 | Checklist quyền và giới hạn của AWS Academy Learner Lab, bảng ước tính chi phí 5 tuần so với ngân sách Lab, và quy trình dọn tài nguyên sau đánh giá. |
+| [`aws-lab-permissions-and-cost.md`](aws-lab-permissions-and-cost.md) | A01, A05, A06 | Inventory CloudFormation, giá us-east-1 kiểm ngày 2026-11-12, demo/5-week estimates, credit/Free Tier UNVERIFIED, phân biệt personal account/Lab và billing/cleanup checklist. |
 
 ## 2. Chạy Backup & Restore với S3 (LocalStack hoặc AWS thật)
 

@@ -43,25 +43,49 @@ frontend/dist/index.html
 frontend/dist/assets/...
 ```
 
-## 3. Cách triển khai lên AWS Academy Learner Lab (hoặc tài khoản AWS thường)
+## 3. Preflight cho demo personal account (không phải xác nhận deploy thành công)
 
-Khi có phiên AWS Academy Learner Lab đang chạy (đã nạp `aws_access_key_id`, `aws_secret_access_key`, `aws_session_token` vào `~/.aws/credentials`):
+Đích hiện tại là **personal AWS account**. Kiểm [inventory/cost/billing/cleanup
+F013](../ops/aws-lab-permissions-and-cost.md) và chọn budget owner chấp nhận trước
+khi triển khai. Credit, Free Tier và quyền account vẫn UNVERIFIED; không dùng
+quota/budget/TTL của Academy Lab như facts của personal account.
+
+Operator phải kiểm đúng account/Region us-east-1, VPC/subnets/routes hiện có,
+EC2/DB platform-version availability và quyền CloudFormation/EC2/RDS/S3/Lambda/
+CloudFront/Logs/SNS/CreateRole/PassRole tương ứng. `UseLabRole=false` yêu cầu
+BackupOperatorPrincipalArn hợp lệ, độc lập backend; script dùng EB service role
+`aws-elasticbeanstalk-service-role` nên phải xác nhận role đã có và dùng được.
+Không mặc định quyền hoặc đường operator tới RDS private đã tồn tại.
+
+Template/script giữ default UseLabRole=true để tương thích; **personal account
+phải truyền false rõ ràng**. Ví dụ dưới đây chỉ để owner chạy trong đợt AWS được
+cho phép riêng, sau khi thay mọi placeholder và kiểm các blocker:
 
 ```powershell
 .\deploy\deploy_aws.ps1 `
     -ProjectName "nhom5-handover" `
     -Region "us-east-1" `
-    -UseLabRole "true" `
-    -VpcId "vpc-xxxxxxxx" `
-    -AppSubnetIdsCsv "subnet-aaaa,subnet-bbbb" `
-    -DbSubnetIdsCsv "subnet-cccc,subnet-dddd"
+    -UseLabRole "false" `
+    -BackupOperatorPrincipalArn "<existing-dedicated-backup-operator-IAM-ARN>" `
+    -VpcId "<existing-vpc>" `
+    -AppSubnetIdsCsv "<existing-app-subnet-a>,<existing-app-subnet-b>" `
+    -DbSubnetIdsCsv "<existing-db-subnet-a>,<existing-db-subnet-b>"
 ```
 
-Để redeploy bản cập nhật mới và kiểm chứng **K13** (giữ nguyên DB và các gói bàn giao):
+AlarmEmail omitted giữ cấu hình notification hiện có (new stacks default manual);
+muốn bật phải truyền địa chỉ owner kiểm soát và confirm subscription/receipt sau.
+Không ghi credentials/password vào tài liệu/log. Redeploy dùng script hiện có và
+cần kiểm version/health/DB preservation thật, không suy ra từ restart local.
 
-```powershell
-.\deploy\redeploy_aws.ps1 -ProjectName "nhom5-handover" -Region "us-east-1"
-```
+Nếu chuyển sang **Academy Lab**, chỉ chọn UseLabRole=true sau khi xác nhận các
+LabRole/LabInstanceProfile, allowed Region/services, TTL và balance theo course
+hiện tại. Không tạo role chỉ để thử quyền Lab; không khẳng định TTL 4h/budget
+$50–$100 hay quyền bị chặn giống nhau giữa mọi Lab.
+
+F005 origin HTTPS và F006 DB credential/provisioning vẫn BLOCKED; F010 delivery
+PENDING_AWS_VERIFICATION; V001 NOT_RUN. F013 chỉ sửa docs/tests, không tạo resources
+hoặc đóng các blocker. Sau demo, follow cleanup app-before-storage và kiểm retained
+snapshots/S3 versions/EIP/EBS/logs/artifacts trong cost guide; stop EC2 không đủ.
 
 ## F011 PostgreSQL server identity verification
 

@@ -1,0 +1,477 @@
+{
+  "finding": "F013",
+  "classification": "DOCUMENTATION ISSUE",
+  "severity": "MEDIUM",
+  "status": "FIXED_LOCAL",
+  "aws_budget_gate": "PENDING_OWNER_VERIFICATION",
+  "collected_at": "2026-11-12T03:57:01.933488+00:00",
+  "workspace": "D:\\cloud-document-handover-chien",
+  "branch": "review/chien-aws",
+  "head_before": "6b761c19f5415dce45c1eecb493d0c55c6453074",
+  "commands": [
+    {
+      "exitCode": 0,
+      "sourceHashesAfter": {
+        "ops/tv1_evidence.py": "d50caaa364a071e4cc9f9a62500d3311b4f14ec931ee424cabd20623fe294b64",
+        "infra/cloudformation/00-storage.yaml": "31a55053f2ede664e0c00cfa3bf9c86f404447cb8426196cc02b055b15740e32",
+        "docs/tv1/TV1-SUMMARY.md": "e113d40065afaae67073300fc21e12b5992f3dc70b0d88501fd4723e48ba289a",
+        "ops/aws-lab-permissions-and-cost.md": "f86ae42df9ab27aac2c682a778ad5d39590be18b3a544f3eeebdf35706f847ba",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml": "7e06658e42d17f2f793bc62ca757fb5adc5fe0b9427c55b7a2ed91b1fe0d537d",
+        "ops/README.md": "3a49d4f48fd84b1c4d96c776b1e03382ae6eb1331aeff2cb3a3a5bcc8beb5ea5",
+        "ops/verify_tv1_local_stack.py": "36b00f18b6183d186ab6f7f1b08cff0d6c61ba34d12163feb91a9aad81f967e1",
+        "deploy/README.md": "dda0b2801beae76e5110db2315cf19e9ea0bc94dbf54761b671264ef4fb3357d",
+        "docs/tv1/F013-cost-model.json": "c7e89b92763f94e698accf316eb024ad3da16b69a42e1ef73ebeeaa261cf6ee0",
+        "ops/tests/test_cost_documentation.py": "aba1cfbcf428b4c6c9e36fc7208052e31cf1c0cc80105890bf9d3943edfcf5f3"
+      },
+      "durationSeconds": 0.62412,
+      "headBefore": "6b761c19f5415dce45c1eecb493d0c55c6453074",
+      "headAfter": "6b761c19f5415dce45c1eecb493d0c55c6453074",
+      "command": [
+        "infra/tests.venv/Scripts/python.exe",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "ops/tests",
+        "-p",
+        "test_cost_documentation.py",
+        "-v"
+      ],
+      "actualOutput": "test_TC_F013_01_inventory_matches_cloudformation (test_cost_documentation.CostDocumentationTests.test_TC_F013_01_inventory_matches_cloudformation) ... ok\r\ntest_TC_F013_02_versions_logs_snapshot_and_transfer_are_counted (test_cost_documentation.CostDocumentationTests.test_TC_F013_02_versions_logs_snapshot_and_transfer_are_counted) ... ok\r\ntest_TC_F013_03_lambda_uses_x86_gb_second_rate (test_cost_documentation.CostDocumentationTests.test_TC_F013_03_lambda_uses_x86_gb_second_rate) ... ok\r\ntest_TC_F013_04_allocation_clocks_are_independent (test_cost_documentation.CostDocumentationTests.test_TC_F013_04_allocation_clocks_are_independent) ... ok\r\ntest_TC_F013_05_scenario_totals_and_units (test_cost_documentation.CostDocumentationTests.test_TC_F013_05_scenario_totals_and_units) ... ok\r\ntest_TC_F013_06_credit_free_tier_and_account_claims (test_cost_documentation.CostDocumentationTests.test_TC_F013_06_credit_free_tier_and_account_claims) ... ok\r\ntest_TC_F013_07_stop_start_and_budget_policies (test_cost_documentation.CostDocumentationTests.test_TC_F013_07_stop_start_and_budget_policies) ... ok\r\ntest_TC_F013_08_sources_are_official_dated_and_dimensioned (test_cost_documentation.CostDocumentationTests.test_TC_F013_08_sources_are_official_dated_and_dimensioned) ... ok\r\ntest_TC_F013_09_cleanup_covers_retained_and_external_resources (test_cost_documentation.CostDocumentationTests.test_TC_F013_09_cleanup_covers_retained_and_external_resources) ... ok\r\ntest_TC_F013_10_only_documentation_and_direct_tests_change (test_cost_documentation.CostDocumentationTests.test_TC_F013_10_only_documentation_and_direct_tests_change) ... ok\r\ntest_TC_F013_11_local_document_links_resolve (test_cost_documentation.CostDocumentationTests.test_TC_F013_11_local_document_links_resolve) ... ok\r\n\r\n----------------------------------------------------------------------\r\nRan 11 tests in 0.423s\r\n\r\nOK\r\n",
+      "startedAt": "2026-11-12T03:54:31.4876681Z",
+      "id": "F013",
+      "sourceHashesBefore": {
+        "ops/tv1_evidence.py": "d50caaa364a071e4cc9f9a62500d3311b4f14ec931ee424cabd20623fe294b64",
+        "infra/cloudformation/00-storage.yaml": "31a55053f2ede664e0c00cfa3bf9c86f404447cb8426196cc02b055b15740e32",
+        "docs/tv1/TV1-SUMMARY.md": "e113d40065afaae67073300fc21e12b5992f3dc70b0d88501fd4723e48ba289a",
+        "ops/aws-lab-permissions-and-cost.md": "f86ae42df9ab27aac2c682a778ad5d39590be18b3a544f3eeebdf35706f847ba",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml": "7e06658e42d17f2f793bc62ca757fb5adc5fe0b9427c55b7a2ed91b1fe0d537d",
+        "ops/README.md": "3a49d4f48fd84b1c4d96c776b1e03382ae6eb1331aeff2cb3a3a5bcc8beb5ea5",
+        "ops/verify_tv1_local_stack.py": "36b00f18b6183d186ab6f7f1b08cff0d6c61ba34d12163feb91a9aad81f967e1",
+        "deploy/README.md": "dda0b2801beae76e5110db2315cf19e9ea0bc94dbf54761b671264ef4fb3357d",
+        "docs/tv1/F013-cost-model.json": "c7e89b92763f94e698accf316eb024ad3da16b69a42e1ef73ebeeaa261cf6ee0",
+        "ops/tests/test_cost_documentation.py": "aba1cfbcf428b4c6c9e36fc7208052e31cf1c0cc80105890bf9d3943edfcf5f3"
+      }
+    },
+    {
+      "exitCode": 0,
+      "sourceHashesAfter": {
+        "ops/tv1_evidence.py": "d50caaa364a071e4cc9f9a62500d3311b4f14ec931ee424cabd20623fe294b64",
+        "infra/cloudformation/00-storage.yaml": "31a55053f2ede664e0c00cfa3bf9c86f404447cb8426196cc02b055b15740e32",
+        "docs/tv1/TV1-SUMMARY.md": "e113d40065afaae67073300fc21e12b5992f3dc70b0d88501fd4723e48ba289a",
+        "ops/aws-lab-permissions-and-cost.md": "f86ae42df9ab27aac2c682a778ad5d39590be18b3a544f3eeebdf35706f847ba",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml": "7e06658e42d17f2f793bc62ca757fb5adc5fe0b9427c55b7a2ed91b1fe0d537d",
+        "ops/README.md": "3a49d4f48fd84b1c4d96c776b1e03382ae6eb1331aeff2cb3a3a5bcc8beb5ea5",
+        "ops/verify_tv1_local_stack.py": "36b00f18b6183d186ab6f7f1b08cff0d6c61ba34d12163feb91a9aad81f967e1",
+        "deploy/README.md": "dda0b2801beae76e5110db2315cf19e9ea0bc94dbf54761b671264ef4fb3357d",
+        "docs/tv1/F013-cost-model.json": "c7e89b92763f94e698accf316eb024ad3da16b69a42e1ef73ebeeaa261cf6ee0",
+        "ops/tests/test_cost_documentation.py": "aba1cfbcf428b4c6c9e36fc7208052e31cf1c0cc80105890bf9d3943edfcf5f3"
+      },
+      "durationSeconds": 14.0918217,
+      "headBefore": "6b761c19f5415dce45c1eecb493d0c55c6453074",
+      "headAfter": "6b761c19f5415dce45c1eecb493d0c55c6453074",
+      "command": [
+        "infra/tests.venv/Scripts/python.exe",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "ops/tests",
+        "-p",
+        "test_tv1_evidence.py",
+        "-v"
+      ],
+      "actualOutput": "test_TC_F012_01_pass_requires_real_observation (test_tv1_evidence.EvidenceTests.test_TC_F012_01_pass_requires_real_observation) ... ok\r\ntest_TC_F012_02_missing_and_unknown_assertions_rejected (test_tv1_evidence.EvidenceTests.test_TC_F012_02_missing_and_unknown_assertions_rejected) ... ok\r\ntest_TC_F012_03_success_then_failure_updates_current (test_tv1_evidence.EvidenceTests.test_TC_F012_03_success_then_failure_updates_current) ... ok\r\ntest_TC_F012_04_exception_cannot_leave_current_pass (test_tv1_evidence.EvidenceTests.test_TC_F012_04_exception_cannot_leave_current_pass) ... ok\r\ntest_TC_F012_05_index_is_not_asset_or_browser_verification (test_tv1_evidence.EvidenceTests.test_TC_F012_05_index_is_not_asset_or_browser_verification) ... ok\r\ntest_TC_F012_06_python_http_does_not_prove_cors (test_tv1_evidence.EvidenceTests.test_TC_F012_06_python_http_does_not_prove_cors) ... ok\r\ntest_TC_F012_07_k07_is_selection_after_v2_not_temporal_immutability (test_tv1_evidence.EvidenceTests.test_TC_F012_07_k07_is_selection_after_v2_not_temporal_immutability) ... ok\r\ntest_TC_F012_08_restart_is_not_redeployment (test_tv1_evidence.EvidenceTests.test_TC_F012_08_restart_is_not_redeployment) ... ok\r\ntest_TC_F012_09_k12_does_not_invent_security_assertions (test_tv1_evidence.EvidenceTests.test_TC_F012_09_k12_does_not_invent_security_assertions) ... ok\r\ntest_TC_F012_10_source_hashes_and_run_id_are_traceable (test_tv1_evidence.EvidenceTests.test_TC_F012_10_source_hashes_and_run_id_are_traceable) ... ok\r\ntest_TC_F012_11_non_pass_statuses_are_not_counted_as_pass (test_tv1_evidence.EvidenceTests.test_TC_F012_11_non_pass_statuses_are_not_counted_as_pass) ... ok\r\ntest_TC_F012_12_evidence_never_serializes_sensitive_error_or_env (test_tv1_evidence.EvidenceTests.test_TC_F012_12_evidence_never_serializes_sensitive_error_or_env) ... ok\r\ntest_atomic_failure_leaves_running_valid_json (test_tv1_evidence.EvidenceTests.test_atomic_failure_leaves_running_valid_json) ... ok\r\ntest_cleanup_failure_is_published_and_propagated (test_tv1_evidence.EvidenceTests.test_cleanup_failure_is_published_and_propagated) ... ok\r\ntest_concurrent_writer_is_rejected_without_clobbering_current (test_tv1_evidence.EvidenceTests.test_concurrent_writer_is_rejected_without_clobbering_current) ... ok\r\ntest_historical_bytes_are_retained_without_provenance_backfill (test_tv1_evidence.EvidenceTests.test_historical_bytes_are_retained_without_provenance_backfill) ... ok\r\ntest_initial_current_write_failure_records_fail_before_setup (test_tv1_evidence.EvidenceTests.test_initial_current_write_failure_records_fail_before_setup) ... ok\r\ntest_previous_remediation_source_is_preserved (test_tv1_evidence.EvidenceTests.test_previous_remediation_source_is_preserved) ... ok\r\n\r\n----------------------------------------------------------------------\r\nRan 18 tests in 13.774s\r\n\r\nOK\r\n",
+      "startedAt": "2026-11-12T03:54:32.1829704Z",
+      "id": "F012_REGRESSION",
+      "sourceHashesBefore": {
+        "ops/tv1_evidence.py": "d50caaa364a071e4cc9f9a62500d3311b4f14ec931ee424cabd20623fe294b64",
+        "infra/cloudformation/00-storage.yaml": "31a55053f2ede664e0c00cfa3bf9c86f404447cb8426196cc02b055b15740e32",
+        "docs/tv1/TV1-SUMMARY.md": "e113d40065afaae67073300fc21e12b5992f3dc70b0d88501fd4723e48ba289a",
+        "ops/aws-lab-permissions-and-cost.md": "f86ae42df9ab27aac2c682a778ad5d39590be18b3a544f3eeebdf35706f847ba",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml": "7e06658e42d17f2f793bc62ca757fb5adc5fe0b9427c55b7a2ed91b1fe0d537d",
+        "ops/README.md": "3a49d4f48fd84b1c4d96c776b1e03382ae6eb1331aeff2cb3a3a5bcc8beb5ea5",
+        "ops/verify_tv1_local_stack.py": "36b00f18b6183d186ab6f7f1b08cff0d6c61ba34d12163feb91a9aad81f967e1",
+        "deploy/README.md": "dda0b2801beae76e5110db2315cf19e9ea0bc94dbf54761b671264ef4fb3357d",
+        "docs/tv1/F013-cost-model.json": "c7e89b92763f94e698accf316eb024ad3da16b69a42e1ef73ebeeaa261cf6ee0",
+        "ops/tests/test_cost_documentation.py": "aba1cfbcf428b4c6c9e36fc7208052e31cf1c0cc80105890bf9d3943edfcf5f3"
+      }
+    },
+    {
+      "exitCode": 0,
+      "sourceHashesAfter": {
+        "ops/tv1_evidence.py": "d50caaa364a071e4cc9f9a62500d3311b4f14ec931ee424cabd20623fe294b64",
+        "infra/cloudformation/00-storage.yaml": "31a55053f2ede664e0c00cfa3bf9c86f404447cb8426196cc02b055b15740e32",
+        "docs/tv1/TV1-SUMMARY.md": "e113d40065afaae67073300fc21e12b5992f3dc70b0d88501fd4723e48ba289a",
+        "ops/aws-lab-permissions-and-cost.md": "f86ae42df9ab27aac2c682a778ad5d39590be18b3a544f3eeebdf35706f847ba",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml": "7e06658e42d17f2f793bc62ca757fb5adc5fe0b9427c55b7a2ed91b1fe0d537d",
+        "ops/README.md": "3a49d4f48fd84b1c4d96c776b1e03382ae6eb1331aeff2cb3a3a5bcc8beb5ea5",
+        "ops/verify_tv1_local_stack.py": "36b00f18b6183d186ab6f7f1b08cff0d6c61ba34d12163feb91a9aad81f967e1",
+        "deploy/README.md": "dda0b2801beae76e5110db2315cf19e9ea0bc94dbf54761b671264ef4fb3357d",
+        "docs/tv1/F013-cost-model.json": "c7e89b92763f94e698accf316eb024ad3da16b69a42e1ef73ebeeaa261cf6ee0",
+        "ops/tests/test_cost_documentation.py": "aba1cfbcf428b4c6c9e36fc7208052e31cf1c0cc80105890bf9d3943edfcf5f3"
+      },
+      "durationSeconds": 1.9520732,
+      "headBefore": "6b761c19f5415dce45c1eecb493d0c55c6453074",
+      "headAfter": "6b761c19f5415dce45c1eecb493d0c55c6453074",
+      "command": [
+        "infra/tests.venv/Scripts/cfn-lint.exe",
+        "infra/cloudformation/00-storage.yaml",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml"
+      ],
+      "actualOutput": "",
+      "startedAt": "2026-11-12T03:54:46.4381001Z",
+      "id": "LINT",
+      "sourceHashesBefore": {
+        "ops/tv1_evidence.py": "d50caaa364a071e4cc9f9a62500d3311b4f14ec931ee424cabd20623fe294b64",
+        "infra/cloudformation/00-storage.yaml": "31a55053f2ede664e0c00cfa3bf9c86f404447cb8426196cc02b055b15740e32",
+        "docs/tv1/TV1-SUMMARY.md": "e113d40065afaae67073300fc21e12b5992f3dc70b0d88501fd4723e48ba289a",
+        "ops/aws-lab-permissions-and-cost.md": "f86ae42df9ab27aac2c682a778ad5d39590be18b3a544f3eeebdf35706f847ba",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml": "7e06658e42d17f2f793bc62ca757fb5adc5fe0b9427c55b7a2ed91b1fe0d537d",
+        "ops/README.md": "3a49d4f48fd84b1c4d96c776b1e03382ae6eb1331aeff2cb3a3a5bcc8beb5ea5",
+        "ops/verify_tv1_local_stack.py": "36b00f18b6183d186ab6f7f1b08cff0d6c61ba34d12163feb91a9aad81f967e1",
+        "deploy/README.md": "dda0b2801beae76e5110db2315cf19e9ea0bc94dbf54761b671264ef4fb3357d",
+        "docs/tv1/F013-cost-model.json": "c7e89b92763f94e698accf316eb024ad3da16b69a42e1ef73ebeeaa261cf6ee0",
+        "ops/tests/test_cost_documentation.py": "aba1cfbcf428b4c6c9e36fc7208052e31cf1c0cc80105890bf9d3943edfcf5f3"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "test_id": "TC-F013-01",
+      "file": "ops/tests/test_cost_documentation.py",
+      "function": "test_cost_documentation.CostDocumentationTests.test_TC_F013_01_inventory_matches_cloudformation",
+      "line": 95,
+      "command_id": "F013",
+      "expected": "Full logical resource inventory/config defaults match actual CloudFormation; missing resource or falsely pinned EBS rejected.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "TC-F013-02",
+      "file": "ops/tests/test_cost_documentation.py",
+      "function": "test_cost_documentation.CostDocumentationTests.test_TC_F013_02_versions_logs_snapshot_and_transfer_are_counted",
+      "line": 107,
+      "command_id": "F013",
+      "expected": "Increasing retained versions/artifacts/logs/snapshot/transfer usage increases the matching cost component.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "TC-F013-03",
+      "file": "ops/tests/test_cost_documentation.py",
+      "function": "test_cost_documentation.CostDocumentationTests.test_TC_F013_03_lambda_uses_x86_gb_second_rate",
+      "line": 117,
+      "command_id": "F013",
+      "expected": "x86 GB-second rate correct; 512MB conversion, request charge, 1ms rounding and 120s stress result correct; old half-rate rejected.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "TC-F013-04",
+      "file": "ops/tests/test_cost_documentation.py",
+      "function": "test_cost_documentation.CostDocumentationTests.test_TC_F013_04_allocation_clocks_are_independent",
+      "line": 133,
+      "command_id": "F013",
+      "expected": "IPv4/EBS/RDS storage clocks remain independent of EC2/RDS compute hours; negative quantity rejected.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "TC-F013-05",
+      "file": "ops/tests/test_cost_documentation.py",
+      "function": "test_cost_documentation.CostDocumentationTests.test_TC_F013_05_scenario_totals_and_units",
+      "line": 144,
+      "command_id": "F013",
+      "expected": "Every cost component, gross total and contingency recompute; missing component/wrong total rejected.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "TC-F013-06",
+      "file": "ops/tests/test_cost_documentation.py",
+      "function": "test_cost_documentation.CostDocumentationTests.test_TC_F013_06_credit_free_tier_and_account_claims",
+      "line": 160,
+      "command_id": "F013",
+      "expected": "Personal and Lab distinct; credit/Free Tier/budget/spend UNVERIFIED; unsupported verification claim rejected.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "TC-F013-07",
+      "file": "ops/tests/test_cost_documentation.py",
+      "function": "test_cost_documentation.CostDocumentationTests.test_TC_F013_07_stop_start_and_budget_policies",
+      "line": 172,
+      "command_id": "F013",
+      "expected": "RDS restart after 7 days, storage/backup residual charges and budget not a hard cap; wrong policy rejected.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "TC-F013-08",
+      "file": "ops/tests/test_cost_documentation.py",
+      "function": "test_cost_documentation.CostDocumentationTests.test_TC_F013_08_sources_are_official_dated_and_dimensioned",
+      "line": 185,
+      "command_id": "F013",
+      "expected": "Official source hosts, checked date, Region/USD, effective dates and quote dimensions present; Linux/shared/Used and EU edge correctly selected.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "TC-F013-09",
+      "file": "ops/tests/test_cost_documentation.py",
+      "function": "test_cost_documentation.CostDocumentationTests.test_TC_F013_09_cleanup_covers_retained_and_external_resources",
+      "line": 202,
+      "command_id": "F013",
+      "expected": "Cleanup covers app-before-storage, Retain buckets/logs, object versions, snapshots, EIP/EBS/artifacts, Billing; SNS/CPU extras cost nonzero when used.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "TC-F013-10",
+      "file": "ops/tests/test_cost_documentation.py",
+      "function": "test_cost_documentation.CostDocumentationTests.test_TC_F013_10_only_documentation_and_direct_tests_change",
+      "line": 214,
+      "command_id": "F013",
+      "expected": "F013 changeset restricted to docs/direct tests; implementation and F001–F012 history retained.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "TC-F013-11",
+      "file": "ops/tests/test_cost_documentation.py",
+      "function": "test_cost_documentation.CostDocumentationTests.test_TC_F013_11_local_document_links_resolve",
+      "line": 226,
+      "command_id": "F013",
+      "expected": "Local Markdown file and explicit directory links resolve.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_TC_F012_01_pass_requires_real_observation",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_01_pass_requires_real_observation",
+      "line": 45,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_TC_F012_02_missing_and_unknown_assertions_rejected",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_02_missing_and_unknown_assertions_rejected",
+      "line": 64,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_TC_F012_03_success_then_failure_updates_current",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_03_success_then_failure_updates_current",
+      "line": 76,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_TC_F012_04_exception_cannot_leave_current_pass",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_04_exception_cannot_leave_current_pass",
+      "line": 93,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_TC_F012_05_index_is_not_asset_or_browser_verification",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_05_index_is_not_asset_or_browser_verification",
+      "line": 111,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_TC_F012_06_python_http_does_not_prove_cors",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_06_python_http_does_not_prove_cors",
+      "line": 125,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_TC_F012_07_k07_is_selection_after_v2_not_temporal_immutability",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_07_k07_is_selection_after_v2_not_temporal_immutability",
+      "line": 138,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_TC_F012_08_restart_is_not_redeployment",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_08_restart_is_not_redeployment",
+      "line": 151,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_TC_F012_09_k12_does_not_invent_security_assertions",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_09_k12_does_not_invent_security_assertions",
+      "line": 163,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_TC_F012_10_source_hashes_and_run_id_are_traceable",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_10_source_hashes_and_run_id_are_traceable",
+      "line": 178,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_TC_F012_11_non_pass_statuses_are_not_counted_as_pass",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_11_non_pass_statuses_are_not_counted_as_pass",
+      "line": 198,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_TC_F012_12_evidence_never_serializes_sensitive_error_or_env",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_12_evidence_never_serializes_sensitive_error_or_env",
+      "line": 217,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_atomic_failure_leaves_running_valid_json",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_atomic_failure_leaves_running_valid_json",
+      "line": 235,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_cleanup_failure_is_published_and_propagated",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_cleanup_failure_is_published_and_propagated",
+      "line": 280,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_concurrent_writer_is_rejected_without_clobbering_current",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_concurrent_writer_is_rejected_without_clobbering_current",
+      "line": 267,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_historical_bytes_are_retained_without_provenance_backfill",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_historical_bytes_are_retained_without_provenance_backfill",
+      "line": 303,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_initial_current_write_failure_records_fail_before_setup",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_initial_current_write_failure_records_fail_before_setup",
+      "line": 250,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    },
+    {
+      "test_id": "test_previous_remediation_source_is_preserved",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "function": "test_tv1_evidence.EvidenceTests.test_previous_remediation_source_is_preserved",
+      "line": 288,
+      "command_id": "F012_REGRESSION",
+      "expected": "Existing F012 regression assertions.",
+      "actual": "unittest ok; assertions executed",
+      "result": "PASS_OFFLINE"
+    }
+  ],
+  "totals": {
+    "PASS_OFFLINE": 29,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "SKIP": 0
+  },
+  "lint_exit_code": 0,
+  "syntax": "AST PASS",
+  "git_diff_check_exit_code": 0,
+  "pricing_checked_date": "2026-11-12",
+  "region": "us-east-1",
+  "account_state": {
+    "target": "AWS_PERSONAL_ACCOUNT",
+    "credit": "UNVERIFIED",
+    "free_tier": "UNVERIFIED",
+    "actual_aws_spend": "UNVERIFIED",
+    "permissions": "ACCOUNT_DEPENDENT",
+    "budget_approved": "UNVERIFIED",
+    "aws_runtime": "NOT_RUN"
+  },
+  "historical_executions": [
+    {
+      "label": "RED: original Lambda rate mismatch",
+      "observed_exit_code": 1,
+      "original_local_log": "ops/tests/F013-lambda-rate-red.log",
+      "actual_output": "test_TC_F013_03_lambda_uses_x86_gb_second_rate (test_cost_documentation.CostDocumentationTests.test_TC_F013_03_lambda_uses_x86_gb_second_rate) ... FAIL\r\n\r\n======================================================================\r\nFAIL: test_TC_F013_03_lambda_uses_x86_gb_second_rate (test_cost_documentation.CostDocumentationTests.test_TC_F013_03_lambda_uses_x86_gb_second_rate)\r\n----------------------------------------------------------------------\r\nTraceback (most recent call last):\r\n  File \"D:\\cloud-document-handover-chien\\ops\\tests\\test_cost_documentation.py\", line 12, in test_TC_F013_03_lambda_uses_x86_gb_second_rate\r\n    self.assertEqual(Decimal(match[1]), Decimal(\"0.0000166667\"))\r\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\nAssertionError: Decimal('0.0000083') != Decimal('0.0000166667')\r\n\r\n----------------------------------------------------------------------\r\nRan 1 test in 0.003s\r\n\r\nFAILED (failures=1)\r\n"
+    },
+    {
+      "label": "Superseded validation: explicit directory link is valid",
+      "observed_exit_code": 1,
+      "original_local_log": "ops/tests/F013-first-validation.log",
+      "actual_output": "test_TC_F013_01_inventory_matches_cloudformation (test_cost_documentation.CostDocumentationTests.test_TC_F013_01_inventory_matches_cloudformation) ... ok\r\ntest_TC_F013_02_versions_logs_snapshot_and_transfer_are_counted (test_cost_documentation.CostDocumentationTests.test_TC_F013_02_versions_logs_snapshot_and_transfer_are_counted) ... ok\r\ntest_TC_F013_03_lambda_uses_x86_gb_second_rate (test_cost_documentation.CostDocumentationTests.test_TC_F013_03_lambda_uses_x86_gb_second_rate) ... ok\r\ntest_TC_F013_04_allocation_clocks_are_independent (test_cost_documentation.CostDocumentationTests.test_TC_F013_04_allocation_clocks_are_independent) ... ok\r\ntest_TC_F013_05_scenario_totals_and_units (test_cost_documentation.CostDocumentationTests.test_TC_F013_05_scenario_totals_and_units) ... ok\r\ntest_TC_F013_06_credit_free_tier_and_account_claims (test_cost_documentation.CostDocumentationTests.test_TC_F013_06_credit_free_tier_and_account_claims) ... ok\r\ntest_TC_F013_07_stop_start_and_budget_policies (test_cost_documentation.CostDocumentationTests.test_TC_F013_07_stop_start_and_budget_policies) ... ok\r\ntest_TC_F013_08_sources_are_official_dated_and_dimensioned (test_cost_documentation.CostDocumentationTests.test_TC_F013_08_sources_are_official_dated_and_dimensioned) ... ok\r\ntest_TC_F013_09_cleanup_covers_retained_and_external_resources (test_cost_documentation.CostDocumentationTests.test_TC_F013_09_cleanup_covers_retained_and_external_resources) ... ok\r\ntest_TC_F013_10_only_documentation_and_direct_tests_change (test_cost_documentation.CostDocumentationTests.test_TC_F013_10_only_documentation_and_direct_tests_change) ... ok\r\ntest_TC_F013_11_local_document_links_resolve (test_cost_documentation.CostDocumentationTests.test_TC_F013_11_local_document_links_resolve) ... FAIL\r\n\r\n======================================================================\r\nFAIL: test_TC_F013_11_local_document_links_resolve (test_cost_documentation.CostDocumentationTests.test_TC_F013_11_local_document_links_resolve)\r\n----------------------------------------------------------------------\r\nTraceback (most recent call last):\r\n  File \"D:\\cloud-document-handover-chien\\ops\\tests\\test_cost_documentation.py\", line 229, in test_TC_F013_11_local_document_links_resolve\r\n    self.assertTrue(destination.is_file(), (name, target))\r\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\nAssertionError: False is not true : ('docs/tv1/TV1-SUMMARY.md', '../../evidence/tv1-local-stack/')\r\n\r\n----------------------------------------------------------------------\r\nRan 11 tests in 0.505s\r\n\r\nFAILED (failures=1)\r\n"
+    },
+    {
+      "label": "Superseded harness error: Git history decoding needs UTF-8",
+      "observed_exit_code": 1,
+      "original_local_log": "ops/tests/F013-final-unit.log",
+      "actual_output": "test_TC_F013_01_inventory_matches_cloudformation (test_cost_documentation.CostDocumentationTests.test_TC_F013_01_inventory_matches_cloudformation) ... ok\r\ntest_TC_F013_02_versions_logs_snapshot_and_transfer_are_counted (test_cost_documentation.CostDocumentationTests.test_TC_F013_02_versions_logs_snapshot_and_transfer_are_counted) ... ok\r\ntest_TC_F013_03_lambda_uses_x86_gb_second_rate (test_cost_documentation.CostDocumentationTests.test_TC_F013_03_lambda_uses_x86_gb_second_rate) ... ok\r\ntest_TC_F013_04_allocation_clocks_are_independent (test_cost_documentation.CostDocumentationTests.test_TC_F013_04_allocation_clocks_are_independent) ... ok\r\ntest_TC_F013_05_scenario_totals_and_units (test_cost_documentation.CostDocumentationTests.test_TC_F013_05_scenario_totals_and_units) ... ok\r\ntest_TC_F013_06_credit_free_tier_and_account_claims (test_cost_documentation.CostDocumentationTests.test_TC_F013_06_credit_free_tier_and_account_claims) ... ok\r\ntest_TC_F013_07_stop_start_and_budget_policies (test_cost_documentation.CostDocumentationTests.test_TC_F013_07_stop_start_and_budget_policies) ... ok\r\ntest_TC_F013_08_sources_are_official_dated_and_dimensioned (test_cost_documentation.CostDocumentationTests.test_TC_F013_08_sources_are_official_dated_and_dimensioned) ... ok\r\ntest_TC_F013_09_cleanup_covers_retained_and_external_resources (test_cost_documentation.CostDocumentationTests.test_TC_F013_09_cleanup_covers_retained_and_external_resources) ... ok\r\ntest_TC_F013_10_only_documentation_and_direct_tests_change (test_cost_documentation.CostDocumentationTests.test_TC_F013_10_only_documentation_and_direct_tests_change) ... ERROR\r\ntest_TC_F013_11_local_document_links_resolve (test_cost_documentation.CostDocumentationTests.test_TC_F013_11_local_document_links_resolve) ... ok\r\n\r\n======================================================================\r\nERROR: test_TC_F013_10_only_documentation_and_direct_tests_change (test_cost_documentation.CostDocumentationTests.test_TC_F013_10_only_documentation_and_direct_tests_change)\r\n----------------------------------------------------------------------\r\nTraceback (most recent call last):\r\n  File \"D:\\cloud-document-handover-chien\\ops\\tests\\test_cost_documentation.py\", line 216, in test_TC_F013_10_only_documentation_and_direct_tests_change\r\n    history = subprocess.check_output([\"git\", \"log\", \"--format=%H %s\"], cwd=ROOT, text=True).splitlines()\r\n              ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\Users\\nguye\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\subprocess.py\", line 472, in check_output\r\n    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,\r\n           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n               **kwargs).stdout\r\n               ^^^^^^^^^\r\n  File \"C:\\Users\\nguye\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\subprocess.py\", line 556, in run\r\n    stdout, stderr = process.communicate(input, timeout=timeout)\r\n                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\Users\\nguye\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\subprocess.py\", line 1209, in communicate\r\n    stdout = self.stdout.read()\r\n  File \"C:\\Users\\nguye\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\encodings\\cp1258.py\", line 23, in decode\r\n    return codecs.charmap_decode(input,self.errors,decoding_table)[0]\r\n           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\nUnicodeDecodeError: 'charmap' codec can't decode byte 0x9d in position 8079: character maps to <undefined>\r\n\r\n----------------------------------------------------------------------\r\nRan 11 tests in 0.252s\r\n\r\nFAILED (errors=1)\r\n"
+    }
+  ],
+  "aws_resources_created": 0,
+  "aws_account_api_calls": "NOT_RUN; only unauthenticated public documentation/price-list files read",
+  "aws_e2e": "NOT_RUN",
+  "post_commit_evidence": "ops/tests/F013-post-commit-verification.log (ignored local attestation, not part of commit)"
+}
