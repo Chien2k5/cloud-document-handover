@@ -96,9 +96,10 @@ function ProjectDetail({ projectId, user, navigation, onHandoverCreated }) {
   const invalidMember = memberId.length > 0 && !isUuid(normalizedMember);
   useEffect(() => () => memberMutation.current?.abort(), []);
   const base = `/projects/${segment(projectId)}`;
+  const navigationView = navigation?.view, navigationSection = navigation?.section;
   useEffect(() => {
-    if (project && !busy && navigation?.view === 'project') focusWorkspaceSection(`project-${navigation.section}`);
-  }, [project, busy, navigation]);
+    if (project && !busy && navigationView === 'project') focusWorkspaceSection(`project-${navigationSection}`);
+  }, [project, busy, navigationView, navigationSection]);
   useEffect(() => {
     const controller = new AbortController(); setBusy(true); setError(null); setProject(null);
     Promise.all([api.request(base, { signal: controller.signal }), api.request(base + '/members', { signal: controller.signal })])
