@@ -8,6 +8,7 @@ function NavIcon({ kind }) {
     handovers: 'M4 5h16v15H4z M8 3v4 M16 3v4 M8 12h8 M8 16h5',
     overview: 'M3 10l9-7 9 7 M5 9v12h14V9 M9 21v-7h6v7',
     files: 'M6 3h8l4 4v14H6z M14 3v5h5 M9 12h6 M9 16h6',
+    draft: 'M4 5h16v15H4z M8 3v4 M16 3v4 M8 13h8 M12 9v8',
     members: 'M15 21v-3a4 4 0 0 0-8 0v3 M19 21v-3a4 4 0 0 0-3-4 M11 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6 M17 5a3 3 0 0 1 0 6',
   };
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[kind]} /></svg>;
@@ -73,6 +74,7 @@ export default function AppShell({ user, busy, onLogout, route, selectedProjectI
             {link('overview', 'Tổng quan', projectHash(selectedProjectId), route.view === 'project' && route.section === 'overview')}
             {link('files', 'Tài liệu', projectHash(selectedProjectId, 'files'), route.view === 'project' && route.section === 'files')}
             {link('members', 'Thành viên', projectHash(selectedProjectId, 'members'), route.view === 'project' && route.section === 'members')}
+            {link('draft', 'Tạo gói DRAFT', projectHash(selectedProjectId, 'draft'), route.view === 'project' && route.section === 'draft')}
           </div>}
         </nav>
         <div className="sidebar-note">Tài liệu theo dự án.<br />Bàn giao đúng phiên bản.</div>

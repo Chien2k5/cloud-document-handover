@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readWorkspaceHash, projectHash, handoverHash } from '../src/navigation.js';
 const id = '10000000-0000-0000-0000-000000000001';
 test('C09.02: hash navigation validates project identity and known section names', () => {
-  for (const section of ['overview', 'files', 'members']) assert.deepEqual(readWorkspaceHash(projectHash(id, section)), { view: 'project', projectId: id, section });
+  for (const section of ['overview', 'files', 'members', 'draft']) assert.deepEqual(readWorkspaceHash(projectHash(id, section)), { view: 'project', projectId: id, section });
   for (const hash of ['#/projects/bad/files', '#/projects/'+id+'/admin', '#/projects/%2f/files']) assert.equal(readWorkspaceHash(hash).invalid, true);
   assert.equal(projectHash('bad'), '#/projects');
 });
