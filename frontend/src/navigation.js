@@ -15,5 +15,12 @@ export const handoverHash = id => isUuid(id) ? `#/handovers/${id}` : '#/handover
 
 export function focusWorkspaceSection(id) {
   const target = document.getElementById(id);
-  if (target) { target.scrollIntoView({ block: 'start' }); target.focus({ preventScroll: true }); }
+  if (target) {
+    if (id === 'project-draft') {
+      // Header wrapping varies with fonts, viewport width and account content.
+      const header = document.querySelector('.app-header');
+      target.style.scrollMarginTop = `${Math.ceil(header?.getBoundingClientRect().height || 0) + 16}px`;
+    }
+    target.scrollIntoView({ block: 'start' }); target.focus({ preventScroll: true });
+  }
 }

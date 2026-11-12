@@ -76,3 +76,21 @@ test('all-failed page keeps pagination usable', async ({ page }) => {
   const next = page.locator('.files-section').getByRole('button', { name: 'Trang sau', exact: true });
   await expect(next).toBeEnabled(); await next.click(); await expect(card(page, usable)).toBeVisible(); await expect(next).toBeDisabled();
 });
+
+for (const width of [375, 768, 1440]) test('draft shortcut adapts to header height changes at ' + width + 'px', async ({ page }) => {
+  await page.setViewportSize({ width, height: 900 });
+  const item = file(1); await setup(page, [item]);
+  await card(page, item).getByRole('checkbox').check();
+  for (const padding of [70, 12]) {
+    await workspaceView(page, 'Thành viên');
+    await page.addStyleTag({ content: '.app-header { padding-top: ' + padding + 'px; padding-bottom: ' + padding + 'px; }' });
+    await workspaceView(page, 'Tạo gói DRAFT');
+    const panel = page.locator('#project-draft'); await expect(panel).toBeFocused();
+    await expect.poll(async () => {
+      const heading = await panel.getByRole('heading', { name: 'Tạo gói DRAFT', exact: true }).boundingBox();
+      const header = await page.locator('.app-header').boundingBox();
+      return heading.y - header.y - header.height;
+    }).toBeGreaterThanOrEqual(0);
+    await expect(card(page, item).getByRole('checkbox')).toBeChecked();
+  }
+});
