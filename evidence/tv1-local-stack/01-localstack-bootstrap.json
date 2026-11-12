@@ -1,0 +1,67 @@
+{
+  "endpoint": "http://localhost:4566",
+  "uploadBucket": "handover-uploads-local",
+  "backupBucket": "handover-backups-local",
+  "versioning": {
+    "handover-uploads-local": "Enabled",
+    "handover-backups-local": "Enabled"
+  },
+  "encryption": {
+    "SSEAlgorithm": "AES256"
+  },
+  "publicAccessBlock": {
+    "BlockPublicAcls": true,
+    "IgnorePublicAcls": true,
+    "BlockPublicPolicy": true,
+    "RestrictPublicBuckets": true
+  },
+  "cors": [
+    {
+      "AllowedHeaders": [
+        "content-type",
+        "if-none-match"
+      ],
+      "AllowedMethods": [
+        "PUT",
+        "GET",
+        "HEAD"
+      ],
+      "AllowedOrigins": [
+        "http://localhost:8088"
+      ],
+      "ExposeHeaders": [
+        "x-amz-version-id",
+        "etag"
+      ],
+      "MaxAgeSeconds": 300
+    }
+  ],
+  "notification": [
+    {
+      "Id": "checksum-uploads-only",
+      "LambdaFunctionArn": "arn:aws:lambda:us-east-1:000000000000:function:handover-checksum-local",
+      "Events": [
+        "s3:ObjectCreated:Put"
+      ],
+      "Filter": {
+        "Key": {
+          "FilterRules": [
+            {
+              "Name": "Prefix",
+              "Value": "uploads/"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "lambda": {
+    "FunctionName": "handover-checksum-local",
+    "Runtime": "python3.12",
+    "Handler": "lambda_function.lambda_handler",
+    "Timeout": 120,
+    "MemorySize": 512,
+    "State": "Active"
+  },
+  "createdAt": "2026-11-11T02:35:18+0700"
+}

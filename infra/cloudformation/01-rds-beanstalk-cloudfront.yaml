@@ -1,0 +1,369 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Nhom 5 - Document handover - TV1 (A03/A04/A05): Independent RDS PostgreSQL 17
+  (private, not tied to EB lifecycle), Elastic Beanstalk Corretto 21 on AL2023,
+  CloudFront HTTPS distribution (free *.cloudfront.net TLS serving /portal/ and
+  /api/v1 on the same origin), and CloudWatch alarms/logs.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: nhom5-handover
+    AllowedPattern: "[a-z0-9-]{3,30}"
+  StorageStackName:
+    Type: String
+    Default: nhom5-handover-storage
+    Description: Name of the 00-storage.yaml stack (imports UploadBucket and InstanceProfile).
+  EnableRdsAlarmNotifications:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: >-
+      true imports the existing storage stack AlarmTopic export; that stack must
+      have nonempty AlarmEmail. Email delivery requires subscription confirmation
+      and AWS verification. false keeps manual Console monitoring without SNS actions.
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC ID where RDS and Elastic Beanstalk will run.
+  AppSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: At least two subnets across two AZs for Elastic Beanstalk EC2/ALB.
+  DbSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: At least two subnets across two AZs for the independent RDS PostgreSQL instance.
+  EbSolutionStackName:
+    Type: String
+    Default: "64bit Amazon Linux 2023 v4.3.2 running Corretto 21"
+    Description: >-
+      Verify available solution stacks in your region with:
+      aws elasticbeanstalk list-available-solution-stacks --query "SolutionStacks[?contains(@, 'Corretto 21')]"
+  AppVersionBucket:
+    Type: String
+    Description: S3 bucket containing the EB application bundle ZIP (eb-release.zip).
+  AppVersionKey:
+    Type: String
+    Description: S3 key of eb-release.zip built by deploy/build_eb_bundle.py.
+  EbServiceRoleName:
+    Type: String
+    Default: LabRole
+    Description: >-
+      In AWS Academy Learner Lab use LabRole; in a normal AWS account use
+      aws-elasticbeanstalk-service-role.
+  Ec2InstanceType:
+    Type: String
+    Default: t3.small
+    AllowedValues: [t3.micro, t3.small, t3.medium]
+  DbInstanceClass:
+    Type: String
+    Default: db.t3.micro
+    AllowedValues: [db.t3.micro, db.t4g.micro, db.t3.small]
+  DbEngineVersion:
+    Type: String
+    Default: "17.2"
+    Description: PostgreSQL engine version supported by RDS in the target region.
+  DbCaCertificateIdentifier:
+    Type: String
+    Default: rds-ca-rsa2048-g1
+    AllowedValues: [rds-ca-rsa2048-g1, rds-ca-rsa4096-g1, rds-ca-ecc384-g1]
+    Description: Confirm support for the target engine/region before deployment; public trust roots ship in the EB bundle.
+  DbAllocatedStorageGb:
+    Type: Number
+    Default: 20
+    MinValue: 20
+    MaxValue: 100
+  DbName:
+    Type: String
+    Default: handover
+    AllowedPattern: "[a-z][a-z0-9_]{1,30}"
+  DbMasterUsername:
+    Type: String
+    Default: handover
+    AllowedPattern: "[a-z][a-z0-9_]{1,30}"
+  DbMasterPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 16
+    MaxLength: 64
+    Description: Master password for RDS (injected at deploy time, never stored in Git).
+  ProjectQuotaBytes:
+    Type: String
+    Default: "1073741824"
+  UploadTtlSeconds:
+    Type: String
+    Default: "300"
+
+Conditions:
+  NotifyRdsAlarms: !Equals [!Ref EnableRdsAlarmNotifications, "true"]
+
+Resources:
+  # ---------------------------------------------------------------- Security Groups (K12: DB not public, only EB SG -> 5432)
+  BeanstalkInstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Elastic Beanstalk EC2 instances for Document Handover portal
+      VpcId: !Ref VpcId
+      Tags:
+        - { Key: Project, Value: !Ref ProjectName }
+        - { Key: Owner, Value: TV1-Chien }
+
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Independent RDS PostgreSQL - only accepts TCP 5432 from Beanstalk SG
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - Description: PostgreSQL from Elastic Beanstalk EC2 instances only
+          IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !GetAtt BeanstalkInstanceSecurityGroup.GroupId
+      Tags:
+        - { Key: Project, Value: !Ref ProjectName }
+        - { Key: Owner, Value: TV1-Chien }
+
+  # ---------------------------------------------------------------- Independent RDS PostgreSQL 17 (A01/A03/K12/K13)
+  DatabaseSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnets for independent Document Handover PostgreSQL
+      SubnetIds: !Ref DbSubnetIds
+      Tags:
+        - { Key: Project, Value: !Ref ProjectName }
+
+  PortalDatabase:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - W1011
+          ignore_reasons:
+            W1011: Learner Lab restricts Secrets Manager/KMS in some sandboxes; NoEcho parameter is injected at deploy time outside Git.
+    Properties:
+      DBInstanceIdentifier: !Sub "${ProjectName}-postgres"
+      Engine: postgres
+      EngineVersion: !Ref DbEngineVersion
+      CACertificateIdentifier: !Ref DbCaCertificateIdentifier
+      DBInstanceClass: !Ref DbInstanceClass
+      AllocatedStorage: !Ref DbAllocatedStorageGb
+      StorageType: gp3
+      StorageEncrypted: true
+      PubliclyAccessible: false
+      MultiAZ: false
+      DBName: !Ref DbName
+      MasterUsername: !Ref DbMasterUsername
+      MasterUserPassword: !Ref DbMasterPassword
+      DBSubnetGroupName: !Ref DatabaseSubnetGroup
+      VPCSecurityGroups:
+        - !GetAtt DatabaseSecurityGroup.GroupId
+      BackupRetentionPeriod: 7
+      CopyTagsToSnapshot: true
+      DeletionProtection: false
+      EnableCloudwatchLogsExports:
+        - postgresql
+      Tags:
+        - { Key: Project, Value: !Ref ProjectName }
+        - { Key: Owner, Value: TV1-Chien }
+
+  # ---------------------------------------------------------------- Elastic Beanstalk Application & Environment (A01/A04)
+  HandoverEbApplication:
+    Type: AWS::ElasticBeanstalk::Application
+    Properties:
+      ApplicationName: !Sub "${ProjectName}-app"
+      Description: Cloud Document Handover - Spring Boot 3.5 (Java 21) + React (/portal/)
+
+  HandoverEbAppVersion:
+    Type: AWS::ElasticBeanstalk::ApplicationVersion
+    Properties:
+      ApplicationName: !Ref HandoverEbApplication
+      Description: Initial application bundle built by deploy/build_eb_bundle.py
+      SourceBundle:
+        S3Bucket: !Ref AppVersionBucket
+        S3Key: !Ref AppVersionKey
+
+  HandoverEbEnvironment:
+    Type: AWS::ElasticBeanstalk::Environment
+    Properties:
+      ApplicationName: !Ref HandoverEbApplication
+      EnvironmentName: !Sub "${ProjectName}-env"
+      Description: Single-instance Corretto 21 on AL2023 (session in memory per architecture spec)
+      SolutionStackName: !Ref EbSolutionStackName
+      VersionLabel: !Ref HandoverEbAppVersion
+      OptionSettings:
+        # Network & Single Instance (avoids sticky session loss across multiple targets in MVP)
+        - Namespace: aws:ec2:vpc
+          OptionName: VPCId
+          Value: !Ref VpcId
+        - Namespace: aws:ec2:vpc
+          OptionName: Subnets
+          Value: !Join [",", !Ref AppSubnetIds]
+        - Namespace: aws:ec2:vpc
+          OptionName: AssociatePublicIpAddress
+          Value: "true"
+        - Namespace: aws:elasticbeanstalk:environment
+          OptionName: EnvironmentType
+          Value: SingleInstance
+        - Namespace: aws:elasticbeanstalk:environment
+          OptionName: ServiceRole
+          Value: !Ref EbServiceRoleName
+        # Instance profile & SG
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: IamInstanceProfile
+          Value:
+            Fn::ImportValue: !Sub "${StorageStackName}-InstanceProfile"
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: InstanceType
+          Value: !Ref Ec2InstanceType
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: SecurityGroups
+          Value: !GetAtt BeanstalkInstanceSecurityGroup.GroupId
+        # Health monitoring & CloudWatch log streaming
+        - Namespace: aws:elasticbeanstalk:healthreporting:system
+          OptionName: SystemType
+          Value: enhanced
+        - Namespace: aws:elasticbeanstalk:application
+          OptionName: Application Healthcheck URL
+          Value: /api/v1/health
+        - Namespace: aws:elasticbeanstalk:cloudwatch:logs
+          OptionName: StreamLogs
+          Value: "true"
+        - Namespace: aws:elasticbeanstalk:cloudwatch:logs
+          OptionName: DeleteOnTerminate
+          Value: "false"
+        - Namespace: aws:elasticbeanstalk:cloudwatch:logs
+          OptionName: RetentionInDays
+          Value: "14"
+        # Application environment variables (A04 - matches docs/integration/aws-deployment-handover.md)
+        - Namespace: aws:elasticbeanstalk:application:environment
+          OptionName: PORT
+          Value: "5000"
+        - Namespace: aws:elasticbeanstalk:application:environment
+          OptionName: SERVER_PORT
+          Value: "5000"
+        - Namespace: aws:elasticbeanstalk:application:environment
+          OptionName: DB_URL
+          Value: !Sub "jdbc:postgresql://${PortalDatabase.Endpoint.Address}:${PortalDatabase.Endpoint.Port}/${DbName}?sslmode=verify-full&sslrootcert=/var/app/current/certs/rds-global-bundle.pem"
+        - Namespace: aws:elasticbeanstalk:application:environment
+          OptionName: DB_USERNAME
+          Value: !Ref DbMasterUsername
+        - Namespace: aws:elasticbeanstalk:application:environment
+          OptionName: DB_PASSWORD
+          Value: !Ref DbMasterPassword
+        - Namespace: aws:elasticbeanstalk:application:environment
+          OptionName: SESSION_COOKIE_SECURE
+          Value: "true"
+        - Namespace: aws:elasticbeanstalk:application:environment
+          OptionName: UPLOAD_S3_ENABLED
+          Value: "true"
+        - Namespace: aws:elasticbeanstalk:application:environment
+          OptionName: UPLOAD_BUCKET
+          Value:
+            Fn::ImportValue: !Sub "${StorageStackName}-UploadBucket"
+        - Namespace: aws:elasticbeanstalk:application:environment
+          OptionName: AWS_REGION
+          Value: !Ref AWS::Region
+        - Namespace: aws:elasticbeanstalk:application:environment
+          OptionName: UPLOAD_TTL_SECONDS
+          Value: !Ref UploadTtlSeconds
+        - Namespace: aws:elasticbeanstalk:application:environment
+          OptionName: PROJECT_QUOTA_BYTES
+          Value: !Ref ProjectQuotaBytes
+
+  # ---------------------------------------------------------------- CloudFront HTTPS (same origin for /portal/ & /api/v1)
+  PortalCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub "${ProjectName} HTTPS portal (/portal/ + /api/v1 on same *.cloudfront.net origin)"
+        DefaultRootObject: ""
+        HttpVersion: http2
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+        Origins:
+          - Id: BeanstalkOrigin
+            DomainName: !GetAtt HandoverEbEnvironment.EndpointURL
+            CustomOriginConfig:
+              HTTPPort: 80
+              OriginProtocolPolicy: http-only
+              OriginReadTimeout: 30
+              OriginKeepaliveTimeout: 5
+        DefaultCacheBehavior:
+          TargetOriginId: BeanstalkOrigin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          # CachingDisabled + AllViewerExceptHostHeader preserves session cookies & CSRF headers on /api/v1
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+          OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac
+        CacheBehaviors:
+          - PathPattern: "/portal/assets/*"
+            TargetOriginId: BeanstalkOrigin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD, OPTIONS]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            # CachingOptimized for fingerprinted Vite assets
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+
+  # ---------------------------------------------------------------- Alarms (A05: RDS storage & connections)
+  DbLowStorageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: RDS free storage space below 2 GiB
+      Namespace: AWS/RDS
+      MetricName: FreeStorageSpace
+      Dimensions: [{ Name: DBInstanceIdentifier, Value: !Ref PortalDatabase }]
+      Statistic: Minimum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 2147483648
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: notBreaching
+      ActionsEnabled: !If [NotifyRdsAlarms, true, false]
+      AlarmActions: !If
+        - NotifyRdsAlarms
+        - - Fn::ImportValue: !Sub "${StorageStackName}-AlarmTopic"
+        - !Ref AWS::NoValue
+
+  DbHighConnectionsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: RDS database connections above 50
+      Namespace: AWS/RDS
+      MetricName: DatabaseConnections
+      Dimensions: [{ Name: DBInstanceIdentifier, Value: !Ref PortalDatabase }]
+      Statistic: Maximum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 50
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      ActionsEnabled: !If [NotifyRdsAlarms, true, false]
+      AlarmActions: !If
+        - NotifyRdsAlarms
+        - - Fn::ImportValue: !Sub "${StorageStackName}-AlarmTopic"
+        - !Ref AWS::NoValue
+
+Outputs:
+  RdsAlarmNotificationMode:
+    Description: Configuration mode only; subscription confirmation and delivery are not verified by this output.
+    Value: !If [NotifyRdsAlarms, "SNS_CONFIGURED_CONFIRM_SUBSCRIPTION_AND_TEST_DELIVERY", "MANUAL_NO_SNS_ACTIONS"]
+  PortalHttpsUrl:
+    Description: HTTPS URL for users (CloudFront default certificate, same origin for /portal/ and /api/v1).
+    Value: !Sub "https://${PortalCloudFrontDistribution.DomainName}/portal/"
+  PortalOriginForCors:
+    Description: Pass this value as PortalOrigin when updating 00-storage.yaml so S3 CORS matches CloudFront.
+    Value: !Sub "https://${PortalCloudFrontDistribution.DomainName}"
+  BeanstalkEndpointUrl:
+    Description: Raw Elastic Beanstalk endpoint (HTTP origin behind CloudFront).
+    Value: !GetAtt HandoverEbEnvironment.EndpointURL
+  RdsEndpointAddress:
+    Description: Independent PostgreSQL endpoint (private within VPC).
+    Value: !GetAtt PortalDatabase.Endpoint.Address
+  RdsEndpointPort:
+    Value: !GetAtt PortalDatabase.Endpoint.Port

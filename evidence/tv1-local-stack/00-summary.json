@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 2,
+  "runId": null,
+  "status": "NOT_RUN",
+  "startedAt": null,
+  "environment": "localstack-emulation",
+  "awsCloudStatus": "NOT_RUN",
+  "provenance": null,
+  "exitCode": null,
+  "reason": "No corrected LocalStack E2E run executed. Selected existing venv lacks boto3; backend JAR and frontend dist/index.html are absent.",
+  "historicalIndex": "historical-index.json",
+  "checks": {
+    "nginxRootRedirectToPortal": {
+      "wording": "HTTP root redirects to /portal/",
+      "status": "NOT_RUN",
+      "requiredAssertions": [
+        "status",
+        "location"
+      ],
+      "assertions": []
+    },
+    "nginxPortalIndexAndNoStore": {
+      "wording": "Python GET index: asset reference and no-store header only",
+      "status": "NOT_RUN",
+      "requiredAssertions": [
+        "status",
+        "asset_reference",
+        "no_store"
+      ],
+      "assertions": []
+    },
+    "nginxApiReverseProxyHealthUp": {
+      "wording": "HTTP health endpoint reports UP",
+      "status": "NOT_RUN",
+      "requiredAssertions": [
+        "status",
+        "up"
+      ],
+      "assertions": []
+    },
+    "K03_pythonUploadAndComplete": {
+      "wording": "Python PUT observes Version ID; complete returns identifiers; no browser CORS claim",
+      "status": "NOT_RUN",
+      "requiredAssertions": [
+        "three_uploads",
+        "version_ids"
+      ],
+      "assertions": []
+    },
+    "K04_verifiedAndMismatchStates": {
+      "wording": "Observed v1/v2 VERIFIED with matching hash; tampered upload MISMATCH",
+      "status": "NOT_RUN",
+      "requiredAssertions": [
+        "v1",
+        "v2",
+        "mismatch"
+      ],
+      "assertions": []
+    },
+    "K05_duplicateEventSkip": {
+      "wording": "One explicitly replayed event returns created=0, skipped=1; not absence of notification loops",
+      "status": "NOT_RUN",
+      "requiredAssertions": [
+        "duplicate_result"
+      ],
+      "assertions": []
+    },
+    "K07_selectOlderVersionAfterV2": {
+      "wording": "Package CREATED AFTER v2 selects/downloads v1; not immutability of an already-published package",
+      "status": "NOT_RUN",
+      "requiredAssertions": [
+        "distinct_versions",
+        "versioned_url",
+        "download_status",
+        "v1_bytes",
+        "confirmed"
+      ],
+      "assertions": []
+    },
+    "K11_restoreAndReferencePreservation": {
+      "wording": "Child restore report plus 11 tables, 18 FK, rollback and reference preservation; not every file VERIFIED",
+      "status": "NOT_RUN",
+      "requiredAssertions": [
+        "restore_status",
+        "tables",
+        "foreign_keys",
+        "rollback",
+        "references"
+      ],
+      "assertions": []
+    },
+    "K13_sameArtifactRestartOnRestoredDb": {
+      "wording": "Same JAR restarted on restored DB; login, confirmed package and v1 download; not deployment/version update",
+      "status": "NOT_RUN",
+      "requiredAssertions": [
+        "same_jar",
+        "login",
+        "confirmed",
+        "download_status",
+        "v1_bytes"
+      ],
+      "assertions": []
+    },
+    "frontendJsCssFetch": {
+      "wording": "JS/CSS resources not fetched by this runner",
+      "status": "NOT_RUN",
+      "requiredAssertions": [],
+      "assertions": []
+    },
+    "browserRendering": {
+      "wording": "No browser rendering test",
+      "status": "NOT_RUN",
+      "requiredAssertions": [],
+      "assertions": []
+    },
+    "browserCors": {
+      "wording": "Python HTTP does not enforce browser CORS",
+      "status": "NOT_RUN",
+      "requiredAssertions": [],
+      "assertions": []
+    },
+    "K07_publishedPackageSurvivesLaterUpload": {
+      "wording": "No package-before-v2 temporal test",
+      "status": "NOT_RUN",
+      "requiredAssertions": [],
+      "assertions": []
+    },
+    "K12_iam": {
+      "wording": "No effective IAM assertions in this runner",
+      "status": "NOT_RUN",
+      "requiredAssertions": [],
+      "assertions": []
+    },
+    "K12_bucketPolicy": {
+      "wording": "No bucket policy enforcement assertion in this runner",
+      "status": "NOT_RUN",
+      "requiredAssertions": [],
+      "assertions": []
+    },
+    "K12_secretScan": {
+      "wording": "No repository/log secret scan performed by this runner",
+      "status": "NOT_RUN",
+      "requiredAssertions": [],
+      "assertions": []
+    },
+    "K13_deploymentVersionUpdate": {
+      "wording": "No deploy/redeploy script or application-version update",
+      "status": "NOT_RUN",
+      "requiredAssertions": [],
+      "assertions": []
+    }
+  }
+}

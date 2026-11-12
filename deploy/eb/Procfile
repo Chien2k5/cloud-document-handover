@@ -1,0 +1,1 @@
+web: java -Duser.timezone=UTC -XX:MaxRAMPercentage=70 -jar app.jar

@@ -1,0 +1,8 @@
+{
+  "source": "https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem",
+  "sha256": "90a6f1a7978a1b1b096dca6c57511ca48d3b8cf052f8e704baf358f34ea2f21b",
+  "sizeBytes": 174560,
+  "certificateCount": 114,
+  "downloadedAt": "2026-11-11T22:43:05+0700",
+  "credentialAccess": "NONE; public HTTPS trust bundle only"
+}

@@ -1,0 +1,39 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadExactUploadedVersion",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObjectVersion"
+      ],
+      "Resource": "arn:aws:s3:::REPLACE_UPLOAD_BUCKET/uploads/*"
+    },
+    {
+      "Sid": "WriteAndVerifyIdempotentChecksumResult",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject"
+      ],
+      "Resource": "arn:aws:s3:::REPLACE_UPLOAD_BUCKET/results/*"
+    },
+    {
+      "Sid": "DistinguishNoSuchVersionFromAccessDenied",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::REPLACE_UPLOAD_BUCKET"
+    },
+    {
+      "Sid": "WriteCloudWatchLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:REPLACE_REGION:REPLACE_ACCOUNT_ID:log-group:/aws/lambda/nhom5-handover-checksum:*"
+    }
+  ]
+}
