@@ -1,0 +1,13 @@
+test_TC_F010_01_identify_two_rds_alarms (test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_01_identify_two_rds_alarms) ... ok
+test_TC_F010_02_enabled_reuses_exported_sns (test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_02_enabled_reuses_exported_sns) ... ok
+test_TC_F010_03_references_and_missing_export (test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_03_references_and_missing_export) ... ok
+test_TC_F010_04_existing_alarm_actions_and_metrics_preserved (test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_04_existing_alarm_actions_and_metrics_preserved) ... ok
+test_TC_F010_05_only_expected_resources (test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_05_only_expected_resources) ... ok
+test_TC_F010_06_optional_branches_and_invalid_configuration (test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_06_optional_branches_and_invalid_configuration) ... ok
+test_TC_F010_07_duration_alarm_unchanged (test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_07_duration_alarm_unchanged) ... ok
+test_TC_F010_08_bounded_publish_policy_and_no_hardcoded_recipient (test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_08_bounded_publish_policy_and_no_hardcoded_recipient) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.738s
+
+OK

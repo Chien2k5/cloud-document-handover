@@ -1,0 +1,630 @@
+{
+  "collectionId": "0859eefd49844947ab68cae236193e00",
+  "collectedAt": "2026-11-12T03:02:00.670158+00:00",
+  "finding": "F012",
+  "classification": "DOCUMENTATION ISSUE",
+  "severity": "MEDIUM",
+  "status": "FIXED_LOCAL",
+  "environment": "OFFLINE_UNIT_AND_PROCESS_BOUNDARY_MOCKS; not LocalStack E2E or AWS",
+  "workspace": "D:\\cloud-document-handover-chien",
+  "branch": "review/chien-aws",
+  "authoringHead": "c42844424044bdb416d8cf88ae9bd2d11248242c",
+  "toolVersions": {
+    "python": "3.13.13",
+    "boto3": "NOT_AVAILABLE",
+    "botocore": "NOT_AVAILABLE",
+    "git": "2.45.1.windows.1",
+    "dockerClient": "29.4.3",
+    "java": "25"
+  },
+  "commands": [
+    {
+      "output": "evidence/f012/unit-console.txt",
+      "command": [
+        "infra/tests.venv/Scripts/python.exe",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "ops/tests",
+        "-p",
+        "test_tv1_evidence.py",
+        "-v"
+      ],
+      "durationSeconds": 9.856558,
+      "exitCode": 0,
+      "headAfter": "c42844424044bdb416d8cf88ae9bd2d11248242c",
+      "headBefore": "c42844424044bdb416d8cf88ae9bd2d11248242c",
+      "startedAt": "2026-11-12T02:58:46.9123633Z",
+      "id": "U",
+      "sourceHashesAfter": {
+        "deploy/deploy_aws.ps1": "190b19e8f9dafa38b209373c2ffb4581a89c4dd26470246d29d3a8af5d467d1c",
+        "ops/backup_db_to_s3.py": "9fac1a5a042709bd192374daf69ee5a637d3228f8154965ced69078fc5c7aabc",
+        "ops/tests/test_tv1_evidence.py": "78509e9ca4fa57641cd32a2823fb4ba68a598b6096787e8730140bf2cbb2657d",
+        "infra/cloudformation/00-storage.yaml": "31a55053f2ede664e0c00cfa3bf9c86f404447cb8426196cc02b055b15740e32",
+        "ops/tv1_evidence.py": "d50caaa364a071e4cc9f9a62500d3311b4f14ec931ee424cabd20623fe294b64",
+        "infra/tests/test_rds_alarm_notifications.py": "b1581f014637455e061b0588bad9202f46aebac0e3d4171f557e1513ff4d0f42",
+        "ops/tests/test_verify_isolation.py": "8db15b0f96c894f499af27ed3c76bf2a64d19b2710eb81e5ed4922b24f5d5422",
+        "ops/restore_db_from_s3.py": "3ec29a971015337b90cf4e9712d94134eee8d22824e953cdb4de27f334fd418b",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml": "7e06658e42d17f2f793bc62ca757fb5adc5fe0b9427c55b7a2ed91b1fe0d537d",
+        "ops/verify_tv1_local_stack.py": "36b00f18b6183d186ab6f7f1b08cff0d6c61ba34d12163feb91a9aad81f967e1"
+      },
+      "gitStatusBefore": " M docs/tv1/TV1-SUMMARY.md\r\n M evidence/tv1-local-stack/00-summary.json\r\n M infra/README.md\r\n M ops/README.md\r\n M ops/verify_tv1_local_stack.py\r\n?? docs/tv1/F012-claim-map.md\r\n?? evidence/f012/\r\n?? evidence/tv1-local-stack/.gitattributes\r\n?? evidence/tv1-local-stack/.gitignore\r\n?? evidence/tv1-local-stack/README.md\r\n?? evidence/tv1-local-stack/historical-index.json\r\n?? evidence/tv1-local-stack/historical/\r\n?? ops/tests/test_tv1_evidence.py\r\n?? ops/tv1_evidence.py\r\n",
+      "sourceHashesBefore": {
+        "deploy/deploy_aws.ps1": "190b19e8f9dafa38b209373c2ffb4581a89c4dd26470246d29d3a8af5d467d1c",
+        "ops/backup_db_to_s3.py": "9fac1a5a042709bd192374daf69ee5a637d3228f8154965ced69078fc5c7aabc",
+        "ops/tests/test_tv1_evidence.py": "78509e9ca4fa57641cd32a2823fb4ba68a598b6096787e8730140bf2cbb2657d",
+        "infra/cloudformation/00-storage.yaml": "31a55053f2ede664e0c00cfa3bf9c86f404447cb8426196cc02b055b15740e32",
+        "ops/tv1_evidence.py": "d50caaa364a071e4cc9f9a62500d3311b4f14ec931ee424cabd20623fe294b64",
+        "infra/tests/test_rds_alarm_notifications.py": "b1581f014637455e061b0588bad9202f46aebac0e3d4171f557e1513ff4d0f42",
+        "ops/tests/test_verify_isolation.py": "8db15b0f96c894f499af27ed3c76bf2a64d19b2710eb81e5ed4922b24f5d5422",
+        "ops/restore_db_from_s3.py": "3ec29a971015337b90cf4e9712d94134eee8d22824e953cdb4de27f334fd418b",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml": "7e06658e42d17f2f793bc62ca757fb5adc5fe0b9427c55b7a2ed91b1fe0d537d",
+        "ops/verify_tv1_local_stack.py": "36b00f18b6183d186ab6f7f1b08cff0d6c61ba34d12163feb91a9aad81f967e1"
+      }
+    },
+    {
+      "output": "evidence/f012/isolation-console.txt",
+      "command": [
+        "infra/tests.venv/Scripts/python.exe",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "ops/tests",
+        "-p",
+        "test_verify_isolation.py",
+        "-v"
+      ],
+      "durationSeconds": 0.2870076,
+      "exitCode": 0,
+      "headAfter": "c42844424044bdb416d8cf88ae9bd2d11248242c",
+      "headBefore": "c42844424044bdb416d8cf88ae9bd2d11248242c",
+      "startedAt": "2026-11-12T02:58:57.050823Z",
+      "id": "I",
+      "sourceHashesAfter": {
+        "deploy/deploy_aws.ps1": "190b19e8f9dafa38b209373c2ffb4581a89c4dd26470246d29d3a8af5d467d1c",
+        "ops/backup_db_to_s3.py": "9fac1a5a042709bd192374daf69ee5a637d3228f8154965ced69078fc5c7aabc",
+        "ops/tests/test_tv1_evidence.py": "78509e9ca4fa57641cd32a2823fb4ba68a598b6096787e8730140bf2cbb2657d",
+        "infra/cloudformation/00-storage.yaml": "31a55053f2ede664e0c00cfa3bf9c86f404447cb8426196cc02b055b15740e32",
+        "ops/tv1_evidence.py": "d50caaa364a071e4cc9f9a62500d3311b4f14ec931ee424cabd20623fe294b64",
+        "infra/tests/test_rds_alarm_notifications.py": "b1581f014637455e061b0588bad9202f46aebac0e3d4171f557e1513ff4d0f42",
+        "ops/tests/test_verify_isolation.py": "8db15b0f96c894f499af27ed3c76bf2a64d19b2710eb81e5ed4922b24f5d5422",
+        "ops/restore_db_from_s3.py": "3ec29a971015337b90cf4e9712d94134eee8d22824e953cdb4de27f334fd418b",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml": "7e06658e42d17f2f793bc62ca757fb5adc5fe0b9427c55b7a2ed91b1fe0d537d",
+        "ops/verify_tv1_local_stack.py": "36b00f18b6183d186ab6f7f1b08cff0d6c61ba34d12163feb91a9aad81f967e1"
+      },
+      "gitStatusBefore": " M docs/tv1/TV1-SUMMARY.md\r\n M evidence/tv1-local-stack/00-summary.json\r\n M infra/README.md\r\n M ops/README.md\r\n M ops/verify_tv1_local_stack.py\r\n?? docs/tv1/F012-claim-map.md\r\n?? evidence/f012/\r\n?? evidence/tv1-local-stack/.gitattributes\r\n?? evidence/tv1-local-stack/.gitignore\r\n?? evidence/tv1-local-stack/README.md\r\n?? evidence/tv1-local-stack/historical-index.json\r\n?? evidence/tv1-local-stack/historical/\r\n?? ops/tests/test_tv1_evidence.py\r\n?? ops/tv1_evidence.py\r\n",
+      "sourceHashesBefore": {
+        "deploy/deploy_aws.ps1": "190b19e8f9dafa38b209373c2ffb4581a89c4dd26470246d29d3a8af5d467d1c",
+        "ops/backup_db_to_s3.py": "9fac1a5a042709bd192374daf69ee5a637d3228f8154965ced69078fc5c7aabc",
+        "ops/tests/test_tv1_evidence.py": "78509e9ca4fa57641cd32a2823fb4ba68a598b6096787e8730140bf2cbb2657d",
+        "infra/cloudformation/00-storage.yaml": "31a55053f2ede664e0c00cfa3bf9c86f404447cb8426196cc02b055b15740e32",
+        "ops/tv1_evidence.py": "d50caaa364a071e4cc9f9a62500d3311b4f14ec931ee424cabd20623fe294b64",
+        "infra/tests/test_rds_alarm_notifications.py": "b1581f014637455e061b0588bad9202f46aebac0e3d4171f557e1513ff4d0f42",
+        "ops/tests/test_verify_isolation.py": "8db15b0f96c894f499af27ed3c76bf2a64d19b2710eb81e5ed4922b24f5d5422",
+        "ops/restore_db_from_s3.py": "3ec29a971015337b90cf4e9712d94134eee8d22824e953cdb4de27f334fd418b",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml": "7e06658e42d17f2f793bc62ca757fb5adc5fe0b9427c55b7a2ed91b1fe0d537d",
+        "ops/verify_tv1_local_stack.py": "36b00f18b6183d186ab6f7f1b08cff0d6c61ba34d12163feb91a9aad81f967e1"
+      }
+    },
+    {
+      "id": "R",
+      "exitCode": 0,
+      "headAfter": "c42844424044bdb416d8cf88ae9bd2d11248242c",
+      "sourceHashesBefore": {
+        "infra/tests/test_rds_alarm_notifications.py": "b1581f014637455e061b0588bad9202f46aebac0e3d4171f557e1513ff4d0f42",
+        "ops/restore_db_from_s3.py": "3ec29a971015337b90cf4e9712d94134eee8d22824e953cdb4de27f334fd418b",
+        "ops/tests/test_tv1_evidence.py": "78509e9ca4fa57641cd32a2823fb4ba68a598b6096787e8730140bf2cbb2657d",
+        "deploy/deploy_aws.ps1": "190b19e8f9dafa38b209373c2ffb4581a89c4dd26470246d29d3a8af5d467d1c",
+        "ops/tests/test_verify_isolation.py": "8db15b0f96c894f499af27ed3c76bf2a64d19b2710eb81e5ed4922b24f5d5422",
+        "infra/cloudformation/00-storage.yaml": "31a55053f2ede664e0c00cfa3bf9c86f404447cb8426196cc02b055b15740e32",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml": "7e06658e42d17f2f793bc62ca757fb5adc5fe0b9427c55b7a2ed91b1fe0d537d",
+        "ops/backup_db_to_s3.py": "9fac1a5a042709bd192374daf69ee5a637d3228f8154965ced69078fc5c7aabc",
+        "ops/verify_tv1_local_stack.py": "36b00f18b6183d186ab6f7f1b08cff0d6c61ba34d12163feb91a9aad81f967e1",
+        "ops/tv1_evidence.py": "d50caaa364a071e4cc9f9a62500d3311b4f14ec931ee424cabd20623fe294b64"
+      },
+      "durationSeconds": 0.9430446,
+      "headBefore": "c42844424044bdb416d8cf88ae9bd2d11248242c",
+      "command": [
+        "infra/tests.venv/Scripts/python.exe",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "infra/tests",
+        "-p",
+        "test_rds_alarm_notifications.py",
+        "-v"
+      ],
+      "startedAt": "2026-11-12T02:59:54.7668231Z",
+      "sourceHashesAfter": {
+        "infra/tests/test_rds_alarm_notifications.py": "b1581f014637455e061b0588bad9202f46aebac0e3d4171f557e1513ff4d0f42",
+        "ops/restore_db_from_s3.py": "3ec29a971015337b90cf4e9712d94134eee8d22824e953cdb4de27f334fd418b",
+        "ops/tests/test_tv1_evidence.py": "78509e9ca4fa57641cd32a2823fb4ba68a598b6096787e8730140bf2cbb2657d",
+        "deploy/deploy_aws.ps1": "190b19e8f9dafa38b209373c2ffb4581a89c4dd26470246d29d3a8af5d467d1c",
+        "ops/tests/test_verify_isolation.py": "8db15b0f96c894f499af27ed3c76bf2a64d19b2710eb81e5ed4922b24f5d5422",
+        "infra/cloudformation/00-storage.yaml": "31a55053f2ede664e0c00cfa3bf9c86f404447cb8426196cc02b055b15740e32",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml": "7e06658e42d17f2f793bc62ca757fb5adc5fe0b9427c55b7a2ed91b1fe0d537d",
+        "ops/backup_db_to_s3.py": "9fac1a5a042709bd192374daf69ee5a637d3228f8154965ced69078fc5c7aabc",
+        "ops/verify_tv1_local_stack.py": "36b00f18b6183d186ab6f7f1b08cff0d6c61ba34d12163feb91a9aad81f967e1",
+        "ops/tv1_evidence.py": "d50caaa364a071e4cc9f9a62500d3311b4f14ec931ee424cabd20623fe294b64"
+      },
+      "gitStatusBefore": " M docs/tv1/TV1-SUMMARY.md\r\n M evidence/tv1-local-stack/00-summary.json\r\n M infra/README.md\r\n M ops/README.md\r\n M ops/verify_tv1_local_stack.py\r\n?? docs/tv1/F012-claim-map.md\r\n?? evidence/f012/\r\n?? evidence/tv1-local-stack/.gitattributes\r\n?? evidence/tv1-local-stack/.gitignore\r\n?? evidence/tv1-local-stack/README.md\r\n?? evidence/tv1-local-stack/historical-index.json\r\n?? evidence/tv1-local-stack/historical/\r\n?? ops/tests/test_tv1_evidence.py\r\n?? ops/tv1_evidence.py\r\n",
+      "output": "evidence/f012/F010-regression-console.txt"
+    },
+    {
+      "id": "L",
+      "exitCode": 0,
+      "headAfter": "c42844424044bdb416d8cf88ae9bd2d11248242c",
+      "sourceHashesBefore": {
+        "infra/tests/test_rds_alarm_notifications.py": "b1581f014637455e061b0588bad9202f46aebac0e3d4171f557e1513ff4d0f42",
+        "ops/restore_db_from_s3.py": "3ec29a971015337b90cf4e9712d94134eee8d22824e953cdb4de27f334fd418b",
+        "ops/tests/test_tv1_evidence.py": "78509e9ca4fa57641cd32a2823fb4ba68a598b6096787e8730140bf2cbb2657d",
+        "deploy/deploy_aws.ps1": "190b19e8f9dafa38b209373c2ffb4581a89c4dd26470246d29d3a8af5d467d1c",
+        "ops/tests/test_verify_isolation.py": "8db15b0f96c894f499af27ed3c76bf2a64d19b2710eb81e5ed4922b24f5d5422",
+        "infra/cloudformation/00-storage.yaml": "31a55053f2ede664e0c00cfa3bf9c86f404447cb8426196cc02b055b15740e32",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml": "7e06658e42d17f2f793bc62ca757fb5adc5fe0b9427c55b7a2ed91b1fe0d537d",
+        "ops/backup_db_to_s3.py": "9fac1a5a042709bd192374daf69ee5a637d3228f8154965ced69078fc5c7aabc",
+        "ops/verify_tv1_local_stack.py": "36b00f18b6183d186ab6f7f1b08cff0d6c61ba34d12163feb91a9aad81f967e1",
+        "ops/tv1_evidence.py": "d50caaa364a071e4cc9f9a62500d3311b4f14ec931ee424cabd20623fe294b64"
+      },
+      "durationSeconds": 1.9329219,
+      "headBefore": "c42844424044bdb416d8cf88ae9bd2d11248242c",
+      "command": [
+        "infra/tests.venv/Scripts/cfn-lint.exe",
+        "infra/cloudformation/00-storage.yaml",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml"
+      ],
+      "startedAt": "2026-11-12T02:59:55.8213381Z",
+      "sourceHashesAfter": {
+        "infra/tests/test_rds_alarm_notifications.py": "b1581f014637455e061b0588bad9202f46aebac0e3d4171f557e1513ff4d0f42",
+        "ops/restore_db_from_s3.py": "3ec29a971015337b90cf4e9712d94134eee8d22824e953cdb4de27f334fd418b",
+        "ops/tests/test_tv1_evidence.py": "78509e9ca4fa57641cd32a2823fb4ba68a598b6096787e8730140bf2cbb2657d",
+        "deploy/deploy_aws.ps1": "190b19e8f9dafa38b209373c2ffb4581a89c4dd26470246d29d3a8af5d467d1c",
+        "ops/tests/test_verify_isolation.py": "8db15b0f96c894f499af27ed3c76bf2a64d19b2710eb81e5ed4922b24f5d5422",
+        "infra/cloudformation/00-storage.yaml": "31a55053f2ede664e0c00cfa3bf9c86f404447cb8426196cc02b055b15740e32",
+        "infra/cloudformation/01-rds-beanstalk-cloudfront.yaml": "7e06658e42d17f2f793bc62ca757fb5adc5fe0b9427c55b7a2ed91b1fe0d537d",
+        "ops/backup_db_to_s3.py": "9fac1a5a042709bd192374daf69ee5a637d3228f8154965ced69078fc5c7aabc",
+        "ops/verify_tv1_local_stack.py": "36b00f18b6183d186ab6f7f1b08cff0d6c61ba34d12163feb91a9aad81f967e1",
+        "ops/tv1_evidence.py": "d50caaa364a071e4cc9f9a62500d3311b4f14ec931ee424cabd20623fe294b64"
+      },
+      "gitStatusBefore": " M docs/tv1/TV1-SUMMARY.md\r\n M evidence/tv1-local-stack/00-summary.json\r\n M infra/README.md\r\n M ops/README.md\r\n M ops/verify_tv1_local_stack.py\r\n?? docs/tv1/F012-claim-map.md\r\n?? evidence/f012/\r\n?? evidence/tv1-local-stack/.gitattributes\r\n?? evidence/tv1-local-stack/.gitignore\r\n?? evidence/tv1-local-stack/README.md\r\n?? evidence/tv1-local-stack/historical-index.json\r\n?? evidence/tv1-local-stack/historical/\r\n?? ops/tests/test_tv1_evidence.py\r\n?? ops/tv1_evidence.py\r\n",
+      "output": "evidence/f012/lint-console.txt"
+    }
+  ],
+  "cases": [
+    {
+      "testId": "TC-F012-01",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_01_pass_requires_real_observation",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 45,
+      "expected": "File observation true -> PASS; observation false/failure latch -> FAIL, cannot re-complete a failed run.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "TC-F012-02",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_02_missing_and_unknown_assertions_rejected",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 64,
+      "expected": "Missing/unknown/invalid assertions cannot establish PASS.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "TC-F012-03",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_03_success_then_failure_updates_current",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 76,
+      "expected": "Success then failure uses distinct UUID, replaces current state and retains successful historical bytes.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "TC-F012-04",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_04_exception_cannot_leave_current_pass",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 93,
+      "expected": "RUNNING before preflight; RuntimeError/SystemExit(7)/SystemExit(0)/KeyboardInterrupt record FAIL and propagate.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "TC-F012-05",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_05_index_is_not_asset_or_browser_verification",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 111,
+      "expected": "Only three HTTP requests; index PASS is bounded; JS/CSS and browser rendering NOT_RUN; invalid index fails.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "TC-F012-06",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_06_python_http_does_not_prove_cors",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 125,
+      "expected": "Python HTTP/header observation cannot register browser CORS PASS.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "TC-F012-07",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_07_k07_is_selection_after_v2_not_temporal_immutability",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 138,
+      "expected": "v1 bytes selected after v2; wrong v2 bytes fail; package-before-v2 temporal claim NOT_RUN.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "TC-F012-08",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_08_restart_is_not_redeployment",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 151,
+      "expected": "Same artifact restart claim bounded; changed JAR fails; redeployment NOT_RUN.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "TC-F012-09",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_09_k12_does_not_invent_security_assertions",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 163,
+      "expected": "IAM/bucket-policy/secret-scan unsupported claims NOT_RUN; forged PASS without assertions rejected.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "TC-F012-10",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_10_source_hashes_and_run_id_are_traceable",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 178,
+      "expected": "Run UUID, actual HEAD/dirty state, script/infra hashes, artifact hash and tool versions traceable; drift rejected.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "TC-F012-11",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_11_non_pass_statuses_are_not_counted_as_pass",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 198,
+      "expected": "NOT_RUN/BLOCKED/PARTIAL counted separately, empty result cannot PASS, AWS NOT_RUN.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "TC-F012-12",
+      "function": "test_tv1_evidence.EvidenceTests.test_TC_F012_12_evidence_never_serializes_sensitive_error_or_env",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 217,
+      "expected": "Sensitive env/exception/argv/raw tool output markers absent from generated JSON; dependency exit code retained.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "test_atomic_failure_leaves_running_valid_json",
+      "function": "test_tv1_evidence.EvidenceTests.test_atomic_failure_leaves_running_valid_json",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 235,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "test_cleanup_failure_is_published_and_propagated",
+      "function": "test_tv1_evidence.EvidenceTests.test_cleanup_failure_is_published_and_propagated",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 280,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "test_concurrent_writer_is_rejected_without_clobbering_current",
+      "function": "test_tv1_evidence.EvidenceTests.test_concurrent_writer_is_rejected_without_clobbering_current",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 267,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "test_historical_bytes_are_retained_without_provenance_backfill",
+      "function": "test_tv1_evidence.EvidenceTests.test_historical_bytes_are_retained_without_provenance_backfill",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 303,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "test_initial_current_write_failure_records_fail_before_setup",
+      "function": "test_tv1_evidence.EvidenceTests.test_initial_current_write_failure_records_fail_before_setup",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 250,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "test_previous_remediation_source_is_preserved",
+      "function": "test_tv1_evidence.EvidenceTests.test_previous_remediation_source_is_preserved",
+      "file": "ops/tests/test_tv1_evidence.py",
+      "line": 288,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "U",
+      "evidence": "evidence/f012/unit-console.txt"
+    },
+    {
+      "testId": "test_T008_01_foreign_resource_is_rejected",
+      "function": "test_verify_isolation.IsolationTests.test_T008_01_foreign_resource_is_rejected",
+      "file": "ops/tests/test_verify_isolation.py",
+      "line": 47,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "I",
+      "evidence": "evidence/f012/isolation-console.txt"
+    },
+    {
+      "testId": "test_T008_02_external_sentinel_is_unchanged",
+      "function": "test_verify_isolation.IsolationTests.test_T008_02_external_sentinel_is_unchanged",
+      "file": "ops/tests/test_verify_isolation.py",
+      "line": 52,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "I",
+      "evidence": "evidence/f012/isolation-console.txt"
+    },
+    {
+      "testId": "test_T008_03_uses_its_own_disposable_postgres",
+      "function": "test_verify_isolation.IsolationTests.test_T008_03_uses_its_own_disposable_postgres",
+      "file": "ops/tests/test_verify_isolation.py",
+      "line": 56,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "I",
+      "evidence": "evidence/f012/isolation-console.txt"
+    },
+    {
+      "testId": "test_T008_04_failure_preserves_external_database",
+      "function": "test_verify_isolation.IsolationTests.test_T008_04_failure_preserves_external_database",
+      "file": "ops/tests/test_verify_isolation.py",
+      "line": 64,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "I",
+      "evidence": "evidence/f012/isolation-console.txt"
+    },
+    {
+      "testId": "test_T008_05_runs_have_distinct_resources",
+      "function": "test_verify_isolation.IsolationTests.test_T008_05_runs_have_distinct_resources",
+      "file": "ops/tests/test_verify_isolation.py",
+      "line": 71,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "I",
+      "evidence": "evidence/f012/isolation-console.txt"
+    },
+    {
+      "testId": "test_T008_06_cleanup_rechecks_ownership",
+      "function": "test_verify_isolation.IsolationTests.test_T008_06_cleanup_rechecks_ownership",
+      "file": "ops/tests/test_verify_isolation.py",
+      "line": 77,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "I",
+      "evidence": "evidence/f012/isolation-console.txt"
+    },
+    {
+      "testId": "test_T008_07_missing_safety_configuration_fails_closed",
+      "function": "test_verify_isolation.IsolationTests.test_T008_07_missing_safety_configuration_fails_closed",
+      "file": "ops/tests/test_verify_isolation.py",
+      "line": 84,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "I",
+      "evidence": "evidence/f012/isolation-console.txt"
+    },
+    {
+      "testId": "test_T008_08_no_shared_drop_or_container_fallback",
+      "function": "test_verify_isolation.IsolationTests.test_T008_08_no_shared_drop_or_container_fallback",
+      "file": "ops/tests/test_verify_isolation.py",
+      "line": 89,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "I",
+      "evidence": "evidence/f012/isolation-console.txt"
+    },
+    {
+      "testId": "test_local_credentials_do_not_inherit_a_session",
+      "function": "test_verify_isolation.IsolationTests.test_local_credentials_do_not_inherit_a_session",
+      "file": "ops/tests/test_verify_isolation.py",
+      "line": 97,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "I",
+      "evidence": "evidence/f012/isolation-console.txt"
+    },
+    {
+      "testId": "test_remote_docker_is_rejected_before_mutation",
+      "function": "test_verify_isolation.IsolationTests.test_remote_docker_is_rejected_before_mutation",
+      "file": "ops/tests/test_verify_isolation.py",
+      "line": 104,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "I",
+      "evidence": "evidence/f012/isolation-console.txt"
+    },
+    {
+      "testId": "test_TC_F010_01_identify_two_rds_alarms",
+      "function": "test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_01_identify_two_rds_alarms",
+      "file": "infra/tests/test_rds_alarm_notifications.py",
+      "line": 72,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "R",
+      "evidence": "evidence/f012/F010-regression-console.txt"
+    },
+    {
+      "testId": "test_TC_F010_02_enabled_reuses_exported_sns",
+      "function": "test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_02_enabled_reuses_exported_sns",
+      "file": "infra/tests/test_rds_alarm_notifications.py",
+      "line": 77,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "R",
+      "evidence": "evidence/f012/F010-regression-console.txt"
+    },
+    {
+      "testId": "test_TC_F010_03_references_and_missing_export",
+      "function": "test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_03_references_and_missing_export",
+      "file": "infra/tests/test_rds_alarm_notifications.py",
+      "line": 82,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "R",
+      "evidence": "evidence/f012/F010-regression-console.txt"
+    },
+    {
+      "testId": "test_TC_F010_04_existing_alarm_actions_and_metrics_preserved",
+      "function": "test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_04_existing_alarm_actions_and_metrics_preserved",
+      "file": "infra/tests/test_rds_alarm_notifications.py",
+      "line": 86,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "R",
+      "evidence": "evidence/f012/F010-regression-console.txt"
+    },
+    {
+      "testId": "test_TC_F010_05_only_expected_resources",
+      "function": "test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_05_only_expected_resources",
+      "file": "infra/tests/test_rds_alarm_notifications.py",
+      "line": 95,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "R",
+      "evidence": "evidence/f012/F010-regression-console.txt"
+    },
+    {
+      "testId": "test_TC_F010_06_optional_branches_and_invalid_configuration",
+      "function": "test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_06_optional_branches_and_invalid_configuration",
+      "file": "infra/tests/test_rds_alarm_notifications.py",
+      "line": 103,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "R",
+      "evidence": "evidence/f012/F010-regression-console.txt"
+    },
+    {
+      "testId": "test_TC_F010_07_duration_alarm_unchanged",
+      "function": "test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_07_duration_alarm_unchanged",
+      "file": "infra/tests/test_rds_alarm_notifications.py",
+      "line": 118,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "R",
+      "evidence": "evidence/f012/F010-regression-console.txt"
+    },
+    {
+      "testId": "test_TC_F010_08_bounded_publish_policy_and_no_hardcoded_recipient",
+      "function": "test_rds_alarm_notifications.RdsNotificationTests.test_TC_F010_08_bounded_publish_policy_and_no_hardcoded_recipient",
+      "file": "infra/tests/test_rds_alarm_notifications.py",
+      "line": 123,
+      "expected": "Regression/extra check assertions shown in test source.",
+      "actual": "unittest: ok; assertions executed",
+      "status": "PASS_OFFLINE",
+      "commandId": "R",
+      "evidence": "evidence/f012/F010-regression-console.txt"
+    }
+  ],
+  "totals": {
+    "PASS_OFFLINE": 36,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "SKIP": 0
+  },
+  "static": {
+    "pythonAstFiles": 3,
+    "registeredAssertions": 28,
+    "unregisteredOrMissingAssertions": 0,
+    "gitDiffCheckExitCode": 0
+  },
+  "localstackE2E": "NOT_RUN",
+  "missingLocalE2EDependencies": [
+    "boto3 in selected existing venv",
+    "backend JAR",
+    "frontend dist/index.html"
+  ],
+  "awsE2E": "NOT_RUN",
+  "historicalFailureRetention": [
+    "red-stale-pass.txt",
+    "unit-retention-first-attempt.txt",
+    "offline-command-first-attempt.json"
+  ],
+  "notes": [
+    "Historical source hashes are not reconstructed as fact.",
+    "This is precommit evidence on actual dirty source; final HEAD verification is recorded separately after atomic commit.",
+    "Raw source hashes identify observed Windows worktree bytes, not normalized Git blob bytes."
+  ],
+  "consolePresentation": {
+    "readable": "LF previews; PASS/FAIL text unchanged",
+    "originalBytes": "console-original-bytes.json"
+  }
+}

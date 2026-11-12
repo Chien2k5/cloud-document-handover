@@ -1,6 +1,6 @@
 """TV1 (A01-A06 / K05, K07, K11, K12, K13) - End-to-end verification of TV1's
 infrastructure, Nginx EB routing, S3 + Lambda checksum trigger, S3 backup/restore,
-and redeploy against the local Docker emulation (PostgreSQL 17 + LocalStack 4.4 + Nginx).
+and same-artifact restart against the local Docker emulation (PostgreSQL 17 + LocalStack 4.4 + Nginx).
 
 IMPORTANT: This script records真实 (real) execution results from the local emulation stack
 and labels environment="localstack-emulation" with awsCloudStatus="NOT_RUN". It never
@@ -22,6 +22,10 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
+
+# Also support the existing spec-based F008 test loader.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from tv1_evidence import EvidenceRun, file_hash
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -346,7 +350,35 @@ def local_environment():
     return env
 
 
-def run_checks(database):
+def check_routing(evidence):
+    st, headers, _ = raw_http("GET", f"{NGINX_BASE}/", follow_redirects=False)
+    evidence.check("nginxRootRedirectToPortal", "status", st, 302)
+    evidence.check("nginxRootRedirectToPortal", "location", headers.get("location", "").endswith("/portal/"), True)
+    st, headers, body = raw_http("GET", f"{NGINX_BASE}/portal/")
+    evidence.check("nginxPortalIndexAndNoStore", "status", st, 200)
+    evidence.check("nginxPortalIndexAndNoStore", "asset_reference", b"/portal/assets/" in body, True)
+    evidence.check("nginxPortalIndexAndNoStore", "no_store", "no-store" in headers.get("cache-control", ""), True)
+    st, _, body = raw_http("GET", f"{NGINX_BASE}/api/v1/health")
+    evidence.check("nginxApiReverseProxyHealthUp", "status", st, 200)
+    evidence.check("nginxApiReverseProxyHealthUp", "up", json.loads(body)["status"] == "UP", True)
+
+
+def check_pinned_download(evidence, url, status, content, expected_sha):
+    # The package is created AFTER v2; this does not test a later upload changing a published package.
+    evidence.check("K07_selectOlderVersionAfterV2", "versioned_url", "versionId=" in url, True)
+    evidence.check("K07_selectOlderVersionAfterV2", "download_status", status, 200)
+    evidence.check("K07_selectOlderVersionAfterV2", "v1_bytes", hashlib.sha256(content).hexdigest() == expected_sha, True)
+
+
+def check_restored_restart(evidence, login, handover, status, content, expected_sha, jar_before, jar_after):
+    evidence.check("K13_sameArtifactRestartOnRestoredDb", "same_jar", bool(jar_before) and jar_before == jar_after, True)
+    evidence.check("K13_sameArtifactRestartOnRestoredDb", "login", bool(login.get("id")), True)
+    evidence.check("K13_sameArtifactRestartOnRestoredDb", "confirmed", handover.get("status") == "CONFIRMED", True)
+    evidence.check("K13_sameArtifactRestartOnRestoredDb", "download_status", status, 200)
+    evidence.check("K13_sameArtifactRestartOnRestoredDb", "v1_bytes", hashlib.sha256(content).hexdigest() == expected_sha, True)
+
+
+def run_checks(database, evidence):
     import boto3
     EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
     # Re-bootstrap LocalStack buckets & Lambda cleanly
@@ -354,19 +386,13 @@ def run_checks(database):
     boot_env["LOCALSTACK_ENDPOINT"] = LOCALSTACK_ENDPOINT
     boot_out = subprocess.check_output([sys.executable, str(ROOT / "infra" / "local" / "bootstrap_localstack.py")], text=True, env=boot_env)
     (EVIDENCE_DIR / "01-localstack-bootstrap.json").write_text(boot_out, encoding="utf-8")
+    evidence.artifact("bootstrap", EVIDENCE_DIR / "01-localstack-bootstrap.json")
 
     backend_proc = start_backend(database, seed_demo=True, log_file=EVIDENCE_DIR / "backend-primary.log", port=BACKEND_PORT)
     try:
-        # 1. Verify Nginx EB configuration (A04)
-        st_root, hdr_root, _ = raw_http("GET", f"{NGINX_BASE}/", follow_redirects=False)
-        assert st_root == 302 and hdr_root.get("location", "").endswith("/portal/"), f"Expected 302 /portal/, got {st_root} {hdr_root}"
-
-        st_portal, hdr_portal, body_portal = raw_http("GET", f"{NGINX_BASE}/portal/")
-        assert st_portal == 200 and b"/portal/assets/" in body_portal, "Nginx /portal/ did not serve built index.html"
-        assert "no-store" in hdr_portal.get("cache-control", ""), f"Expected Cache-Control: no-store on index.html, got {hdr_portal}"
-
-        st_health, _, body_health = raw_http("GET", f"{NGINX_BASE}/api/v1/health")
-        assert st_health == 200 and json.loads(body_health.decode())["status"] == "UP"
+        # Python HTTP checks only; no JS/CSS fetch, browser rendering or CORS assertion.
+        check_routing(evidence)
+        jar_before = file_hash(JAR_PATH)
 
         # 2. Login as Owner (dung@example.test) and create project + members
         owner = PortalClient(NGINX_BASE)
@@ -395,6 +421,7 @@ def run_checks(database):
         fv1_state = wait_for_integrity(owner, project_id, up1_id)
         assert fv1_state["integrityStatus"] == "VERIFIED", f"Expected v1 VERIFIED, got {fv1_state}"
         assert fv1_state["actualSha256"] == v1_sha
+        evidence.check("K04_verifiedAndMismatchStates", "v1", fv1_state["integrityStatus"] == "VERIFIED" and fv1_state["actualSha256"] == v1_sha, True)
 
         # 4. Upload v2 of architecture-spec.pdf -> VERIFIED with distinct S3 VersionId (K07 setup)
         v2_bytes = b"%PDF-1.4\nNhom 5 Architecture Spec v2 - Updated Newer Version\n%%EOF\n"
@@ -403,6 +430,8 @@ def run_checks(database):
         assert s3_v2_id != s3_v1_id, "S3 Versioning must assign distinct VersionId to v2"
         fv2_state = wait_for_integrity(owner, project_id, up2_id)
         assert fv2_state["integrityStatus"] == "VERIFIED" and fv2_state["actualSha256"] == v2_sha
+        evidence.check("K04_verifiedAndMismatchStates", "v2", fv2_state["integrityStatus"] == "VERIFIED" and fv2_state["actualSha256"] == v2_sha, True)
+        evidence.check("K07_selectOlderVersionAfterV2", "distinct_versions", s3_v1_id != s3_v2_id and fv1_id != fv2_id, True)
 
         # 5. Upload tampered file with wrong expectedSha256 -> MISMATCH (K04)
         bad_bytes = b"%PDF-1.4\nCorrupted payload bytes\n%%EOF\n"
@@ -410,8 +439,11 @@ def run_checks(database):
         bad_up_id, bad_file_id, bad_fv_id, bad_s3_ver = upload_and_complete(owner, project_id, "tampered.pdf", bad_bytes, wrong_expected)
         bad_state = wait_for_integrity(owner, project_id, bad_up_id)
         assert bad_state["integrityStatus"] == "MISMATCH", f"Expected MISMATCH, got {bad_state}"
+        evidence.check("K04_verifiedAndMismatchStates", "mismatch", bad_state["integrityStatus"] == "MISMATCH", True)
+        evidence.check("K03_pythonUploadAndComplete", "three_uploads", len({up1_id, up2_id, bad_up_id}), 3)
+        evidence.check("K03_pythonUploadAndComplete", "version_ids", all(bool(v) and v != "null" for v in (s3_v1_id, s3_v2_id, bad_s3_ver)), True)
 
-        # 6. Test K05 idempotency: re-invoke Lambda with duplicate S3 event for v1 -> skipped=1, no loop
+        # 6. Replay one duplicate event; this does not establish absence of notification loops.
         lam = boto3.client("lambda", endpoint_url=LOCALSTACK_ENDPOINT, region_name="us-east-1",
                            aws_access_key_id="test", aws_secret_access_key="test")
         # Find exact object key of v1 from DB
@@ -432,7 +464,7 @@ def run_checks(database):
         }
         inv = lam.invoke(FunctionName="handover-checksum-local", Payload=json.dumps(dup_event).encode("utf-8"))
         dup_payload = json.loads(inv["Payload"].read().decode("utf-8"))
-        assert dup_payload == {"created": 0, "skipped": 1}, f"Expected idempotent skip, got {dup_payload}"
+        evidence.check("K05_duplicateEventSkip", "duplicate_result", dup_payload == {"created": 0, "skipped": 1}, True)
 
         # 7. Create Handover package pinning v1 (even though v2 is newer - K07), publish (READY), recipient confirms (CONFIRMED)
         expires_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + 7200))
@@ -454,12 +486,11 @@ def run_checks(database):
         )
         assert st == 200, f"Recipient download failed: {st} {dl_body}"
         dl_url = json.loads(dl_body)["url"]
-        assert "versionId=" in dl_url
         dl_st, _, dl_bytes = raw_http("GET", dl_url)
-        assert dl_st == 200 and hashlib.sha256(dl_bytes).hexdigest() == v1_sha, "Downloaded bytes did not match pinned v1!"
+        check_pinned_download(evidence, dl_url, dl_st, dl_bytes, v1_sha)
 
         st, _, conf_body = viewer.request("POST", f"/api/v1/handovers/{handover_id}/confirm")
-        assert st == 200 and json.loads(conf_body)["status"] == "CONFIRMED", f"Confirm failed: {st} {conf_body}"
+        evidence.check("K07_selectOlderVersionAfterV2", "confirmed", st == 200 and json.loads(conf_body)["status"] == "CONFIRMED", True)
 
         # 8. Backup PostgreSQL DB to dedicated S3 backup bucket (A05 / Week 2-5 backup)
         backup_manifest_path = EVIDENCE_DIR / "02-s3-backup-manifest.json"
@@ -471,6 +502,7 @@ def run_checks(database):
             "--evidence-out", str(backup_manifest_path),
         ], env=local_environment())
         backup_manifest = json.loads(backup_manifest_path.read_text(encoding="utf-8"))
+        evidence.artifact("backupManifest", backup_manifest_path)
 
         # 9. Restore from S3 backup bucket into a brand-new isolated DB and verify 11 tables + 18 FKs + S3 objects (K11)
         restore_evidence_dir = EVIDENCE_DIR / "03-s3-restore"
@@ -483,15 +515,21 @@ def run_checks(database):
             "--evidence-dir", str(restore_evidence_dir),
         ], env=local_environment())
         restore_result = json.loads((restore_evidence_dir / "restore-result.json").read_text(encoding="utf-8"))
+        evidence.artifact("restoreResult", restore_evidence_dir / "restore-result.json")
+        evidence.check("K11_restoreAndReferencePreservation", "restore_status", restore_result["status"] == "PASS", True)
+        evidence.check("K11_restoreAndReferencePreservation", "tables", restore_result["all11TablesMatched"], True)
+        evidence.check("K11_restoreAndReferencePreservation", "foreign_keys", restore_result["validatedForeignKeyCount"], 18)
+        evidence.check("K11_restoreAndReferencePreservation", "rollback", restore_result["atomicRollbackCheck"]["passed"], True)
+        evidence.check("K11_restoreAndReferencePreservation", "references", restore_result["s3VersionCrossCheck"]["allMatched"], True)
         restored_db_name = restore_result["restoredDatabase"]
     finally:
         stop_backend(backend_proc)
 
-    # 10. Redeploy / restart backend pointing at the RESTORED isolated database with LOCAL_DEMO_PASSWORD="" (K11 + K13)
+    # 10. Same-artifact restart (not deployment/version update) of backend pointing at the RESTORED isolated database with LOCAL_DEMO_PASSWORD="" (K11 + K13)
     restored_proc = start_backend(restored_db_name, seed_demo=False, log_file=EVIDENCE_DIR / "backend-restored.log", port=BACKEND_PORT)
     try:
         viewer_after = PortalClient(NGINX_BASE)
-        viewer_after.login("viewer@example.test", DEMO_PASS)
+        login_after = viewer_after.login("viewer@example.test", DEMO_PASS)
         st, _, ho_after_body = viewer_after.request("GET", f"/api/v1/handovers/{handover_id}")
         assert st == 200, f"Failed to read handover after restore: {st} {ho_after_body}"
         ho_after = json.loads(ho_after_body)
@@ -503,56 +541,47 @@ def run_checks(database):
         assert st == 200, f"Download link on restored DB failed: {st} {dl_after_body}"
         dl_after_url = json.loads(dl_after_body)["url"]
         dl_st2, _, dl_bytes2 = raw_http("GET", dl_after_url)
-        assert dl_st2 == 200 and hashlib.sha256(dl_bytes2).hexdigest() == v1_sha
+        check_restored_restart(evidence, login_after, ho_after, dl_st2, dl_bytes2, v1_sha, jar_before, file_hash(JAR_PATH))
     finally:
         stop_backend(restored_proc)
 
-    summary = {
-        "verificationSuite": "TV1-A01-to-A06-Local-AWS-Emulation",
-        "environment": "localstack-4.4 + postgres-17 + nginx-stable-alpine + jdk-25",
-        "awsCloudStatus": "NOT_RUN (no live AWS Lab account attached; IaC & runbooks verified and ready)",
-        "checks": {
-            "nginxRootRedirectToPortal": "PASS",
-            "nginxPortalStaticAssetsAndNoStoreIndex": "PASS",
-            "nginxApiReverseProxyHealthUp": "PASS",
-            "K03_presignedPutAndCompleteExactVersion": "PASS",
-            "K04_lambdaSha256VerifiedAndMismatch": "PASS",
-            "K05_uploadsPrefixOnlyAndDuplicateEventIdempotentSkip": "PASS",
-            "K07_handoverPinsV1AfterV2Upload": "PASS",
-            "K11_s3BackupAndIsolatedDbRestoreWithS3CrossCheck": "PASS",
-            "K12_privateBucketsEncryptionAndNoSecretsInRepo": "PASS",
-            "K13_redeployAgainstExistingDbPreservesHandoverAndUsers": "PASS",
-        },
-        "artifacts": {
-            "projectId": project_id,
-            "fileId": file_id,
-            "v1FileVersionId": fv1_id,
-            "v1S3VersionId": s3_v1_id,
-            "v1Sha256": v1_sha,
-            "v2FileVersionId": fv2_id,
-            "v2S3VersionId": s3_v2_id,
-            "v2Sha256": v2_sha,
-            "mismatchFileVersionId": bad_fv_id,
-            "handoverId": handover_id,
-            "s3BackupKey": backup_manifest["backupKey"],
-            "s3BackupVersionId": backup_manifest["backupS3VersionId"],
-            "restoredDatabase": restored_db_name,
-        },
-        "completedAt": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-    }
-    (EVIDENCE_DIR / "00-summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
-    print(json.dumps(summary, indent=2))
 
 
 def main():
     global EVIDENCE_DIR
-    token = uuid.uuid4().hex
-    EVIDENCE_DIR = EVIDENCE_DIR / token
-    # Every mutable service is owned by this invocation. Existing compose services are untouched.
-    with tempfile.TemporaryDirectory(prefix="tv1-nginx-") as config_dir:
-        with OwnedStack(token) as stack:
-            database = prepare_stack(stack, Path(config_dir))
-            run_checks(database)
+    evidence_root = EVIDENCE_DIR
+    evidence = EvidenceRun(ROOT, evidence_root)
+    try:
+        evidence.begin()
+        EVIDENCE_DIR = evidence.directory
+        evidence.capture()
+        if not __debug__:
+            raise RuntimeError("Assertions must be enabled; do not use Python -O")
+        # Every mutable service remains owned by this invocation (F008).
+        # Final status is published AFTER backend/container cleanup succeeds.
+        with tempfile.TemporaryDirectory(prefix="tv1-nginx-") as config_dir:
+            with OwnedStack(evidence.run_id) as stack:
+                database = prepare_stack(stack, Path(config_dir))
+                version_output = subprocess.check_output(["docker", "exec", PG_CONTAINER, "psql", "--version"], text=True)
+                version_match = re.search(r"psql [(]PostgreSQL[)] ([0-9.]+)", version_output)
+                evidence.document["toolVersions"]["postgresqlClient"] = version_match[1] if version_match else "NOT_AVAILABLE"
+                run_checks(database, evidence)
+        evidence.complete()
+        print(json.dumps({"runId": evidence.run_id, "status": evidence.document["status"], "exitCode": 0}))
+        return 0
+    except BaseException as error:
+        evidence.fail(error)
+        if isinstance(error, SystemExit) and error.code in (None, 0):
+            raise SystemExit(1) from None
+        raise
+    finally:
+        try:
+            evidence.close()
+        except BaseException as error:
+            evidence.fail(error)
+            raise
+        finally:
+            EVIDENCE_DIR = evidence_root
 
 
 if __name__ == "__main__":

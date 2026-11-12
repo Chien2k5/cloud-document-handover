@@ -129,3 +129,15 @@ and exact Spring Boot BOM/AWS SDK versions already in the local Maven cache. It
 runs the existing Lambda-to-Java parser/result-key cases without booting Spring,
 connecting to a DB, or creating AWS clients. It is not Java service/AWS E2E.
 `ops/tests/*.log`, `.venv/` and `target/` are ignored evidence/build artifacts.
+
+
+## TV1 verification evidence boundaries (F012)
+
+`verify_tv1_local_stack.py` publishes current RUNNING/FAIL/PARTIAL state in
+`evidence/tv1-local-stack/00-summary.json` and retains per-run artifacts. See
+[`docs/tv1/F012-claim-map.md`](../docs/tv1/F012-claim-map.md) for claim/assertion
+mapping. Python index/Version ID observations do not verify browser assets/CORS;
+selecting v1 after v2 does not test published-package immutability; same-JAR restart
+is not redeployment. IAM, bucket policy and secret scan are NOT_RUN in this runner.
+F003 and other separate suites cannot silently turn those runner checks into PASS.
+Historical results are retained and do not establish current HEAD coverage.

@@ -30,7 +30,7 @@ docker compose -f infra/local/compose.yml up -d
 python infra/local/bootstrap_localstack.py
 ```
 
-Sau khi khởi tạo, có thể chạy toàn bộ kịch bản kiểm thử tích hợp của TV1 (Nginx + Spring Boot + S3 Presigned PUT/GET + Lambda SHA-256 + Backup S3 + Restore DB tách biệt + Redeploy):
+Runner TV1 kiểm tra HTTP index/API, Python S3 PUT/GET, Lambda, backup/restore và restart cùng JAR trên stack disposable riêng. Phạm vi này không chứng minh browser CORS, tải JS/CSS hay redeployment. Xem [claim mapping F012](../docs/tv1/F012-claim-map.md); current status nằm trong `evidence/tv1-local-stack/00-summary.json`.
 
 ```powershell
 python ops/verify_tv1_local_stack.py

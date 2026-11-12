@@ -1,0 +1,52 @@
+{
+  "status": "HISTORICAL_UNVERIFIED_EXECUTED_SOURCE",
+  "recordedAt": "2026-11-12T02:32:07.653479+00:00",
+  "observationHead": "c42844424044bdb416d8cf88ae9bd2d11248242c",
+  "hashMeaning": "Bytes observed during F012 correction, NOT hashes of source proven to have executed in the historical run.",
+  "legacyReportedGitCommit": "d7b23139e0cb945a414caa42c9a7eb29676edd7e",
+  "legacyExecutedSourceHashes": null,
+  "files": [
+    {
+      "originalPath": "evidence/tv1-local-stack/00-summary.json",
+      "retainedPath": "evidence/tv1-local-stack/historical/pre-f012/00-summary.json",
+      "sha256ObservedAtCorrection": "1256782d173f125fd71c310df0808995b19e95a6daf87b34d154ddc388ef1121",
+      "canonicalGitBlobSha256": "dd4707a90cbf4e84794a0da73b82d2717ae16391dd8ebb7b7f766059f5c9ad50",
+      "retentionPolicy": "Exact original worktree bytes pinned with -text"
+    },
+    {
+      "originalPath": "evidence/tv1-local-stack/01-localstack-bootstrap.json",
+      "retainedPath": "evidence/tv1-local-stack/01-localstack-bootstrap.json",
+      "sha256ObservedAtCorrection": "07919a9f2a6f025023c5a19f9619b75b437a9ce6fb704297ae6e61bd2931af5e",
+      "canonicalGitBlobSha256": "007f4b7ed2d5c60c1d684b6e61571535f352e48e4a533d3006f1897271ba8611",
+      "retentionPolicy": "Original tracked content retained; checkout EOL may differ from observed raw bytes"
+    },
+    {
+      "originalPath": "evidence/tv1-local-stack/02-s3-backup-manifest.json",
+      "retainedPath": "evidence/tv1-local-stack/02-s3-backup-manifest.json",
+      "sha256ObservedAtCorrection": "1ede008969f53e06b21673146b5ba8b24cc7905412fb82c37130533f9a84b5e4",
+      "canonicalGitBlobSha256": "b987a33063cd7cf087b02d71fb816deab3c102b9ef55758cb519e70af93105d7",
+      "retentionPolicy": "Original tracked content retained; checkout EOL may differ from observed raw bytes"
+    },
+    {
+      "originalPath": "evidence/tv1-local-stack/03-s3-restore/restore-report.md",
+      "retainedPath": "evidence/tv1-local-stack/03-s3-restore/restore-report.md",
+      "sha256ObservedAtCorrection": "bb1f7fa30aca1d09bd025e373d3e7afc332d3631d62ff7396e94c67f144c27b2",
+      "canonicalGitBlobSha256": "75d82a5eebff03b291c7f189bd8e858e227817eaf467e14c45001bff1e3489fe",
+      "retentionPolicy": "Original tracked content retained; checkout EOL may differ from observed raw bytes"
+    },
+    {
+      "originalPath": "evidence/tv1-local-stack/03-s3-restore/restore-result.json",
+      "retainedPath": "evidence/tv1-local-stack/03-s3-restore/restore-result.json",
+      "sha256ObservedAtCorrection": "a9120e1258806502db3e5689ef19ff17f40af3add66247d58b1170a96a53830c",
+      "canonicalGitBlobSha256": "aecfc140c82f629935f85a4d8ee0cb3290a428c0765575c3f61a4b306f11d477",
+      "retentionPolicy": "Original tracked content retained; checkout EOL may differ from observed raw bytes"
+    },
+    {
+      "originalPath": "evidence/tv1-local-stack/04-backend-startup-log.txt",
+      "retainedPath": "evidence/tv1-local-stack/04-backend-startup-log.txt",
+      "sha256ObservedAtCorrection": "feca7888f03c71ebb76bb26744de6a47100bd408cfb913daa248544c16da1c0b",
+      "canonicalGitBlobSha256": "50cbe8685fbb6a59a0ce8cd028e69ed35f626ab7ca34e47e4c3a5bd471337ab2",
+      "retentionPolicy": "Original tracked content retained; checkout EOL may differ from observed raw bytes"
+    }
+  ]
+}

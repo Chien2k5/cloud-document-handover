@@ -1,0 +1,33 @@
+{
+  "verificationSuite": "TV1-A01-to-A06-Local-AWS-Emulation",
+  "environment": "localstack-4.4 + postgres-17 + nginx-stable-alpine + jdk-25",
+  "awsCloudStatus": "NOT_RUN (no live AWS Lab account attached; IaC & runbooks verified and ready)",
+  "checks": {
+    "nginxRootRedirectToPortal": "PASS",
+    "nginxPortalStaticAssetsAndNoStoreIndex": "PASS",
+    "nginxApiReverseProxyHealthUp": "PASS",
+    "K03_presignedPutAndCompleteExactVersion": "PASS",
+    "K04_lambdaSha256VerifiedAndMismatch": "PASS",
+    "K05_uploadsPrefixOnlyAndDuplicateEventIdempotentSkip": "PASS",
+    "K07_handoverPinsV1AfterV2Upload": "PASS",
+    "K11_s3BackupAndIsolatedDbRestoreWithS3CrossCheck": "PASS",
+    "K12_privateBucketsEncryptionAndNoSecretsInRepo": "PASS",
+    "K13_redeployAgainstExistingDbPreservesHandoverAndUsers": "PASS"
+  },
+  "artifacts": {
+    "projectId": "758b576c-8bee-43f2-b1ab-c29272094218",
+    "fileId": "596db618-7de0-4ffb-8301-836a8216ce1d",
+    "v1FileVersionId": "43adfafe-398c-4a50-9c81-badeddd8f050",
+    "v1S3VersionId": "AaHG9aL0xkR2fFNHnTjxAkajBCUN9TC7",
+    "v1Sha256": "f75d30cdb790f05fc9295af6d54708cf3d81e03e77464b9409f9489e7437bde8",
+    "v2FileVersionId": "dd661a9f-00ff-4686-b9b0-74ba2b169f20",
+    "v2S3VersionId": "AaHG9aL2iSRPoOMOMgMfPp2MSe7FWx0i",
+    "v2Sha256": "447ae91e6796e601d59bb63db373ede75d4f6aa83a2289c8588b6a44866e0ed1",
+    "mismatchFileVersionId": "11ccee4b-5dc8-413d-aa3d-29b3ce76f2d8",
+    "handoverId": "57bb240f-0170-4fe2-9f5e-49a280e27930",
+    "s3BackupKey": "postgres/20261110T193617Z-e2e-verified/portal.dump",
+    "s3BackupVersionId": "AaHG9aL7Q5Yd8x8smGmJUVetFb2hb3QG",
+    "restoredDatabase": "handover_s3restore_20261110_193624_dst"
+  },
+  "completedAt": "2026-11-11T02:36:44+0700"
+}
