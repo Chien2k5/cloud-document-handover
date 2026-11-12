@@ -71,6 +71,8 @@ Parameters:
   AlarmEmail:
     Type: String
     Default: ""
+    AllowedPattern: '^$|^[^@\s,;]+@[^@\s,;]+[.][^@\s,;]+$'
+    ConstraintDescription: Use one email address without whitespace/lists, or leave empty for manual monitoring.
     Description: Optional e-mail for alarm notifications (leave empty to create alarms without actions).
 
 Rules:
@@ -349,6 +351,25 @@ Resources:
     Properties:
       Subscription:
         - { Protocol: email, Endpoint: !Ref AlarmEmail }
+
+  AlarmTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Condition: HasAlarmEmail
+    Properties:
+      Topics: [!Ref AlarmTopic]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowSameAccountRegionCloudWatchAlarms
+            Effect: Allow
+            Principal: { Service: cloudwatch.amazonaws.com }
+            Action: sns:Publish
+            Resource: !Ref AlarmTopic
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+              ArnLike:
+                aws:SourceArn: !Sub "arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:*"
 
   ChecksumErrorsAlarm:
     Type: AWS::CloudWatch::Alarm

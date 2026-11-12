@@ -66,3 +66,55 @@ CloudFormation/IAM subset, not AWS effective permissions.
 & infra/tests.venv/Scripts/python.exe -B infra/tests/test_backup_iam.py F003
 & infra/tests.venv/Scripts/cfn-lint.exe infra/cloudformation/00-storage.yaml infra/cloudformation/01-rds-beanstalk-cloudfront.yaml
 ```
+
+## F010 RDS alarm notifications (offline-configured; AWS delivery pending)
+
+Both RDS alarms reuse the storage stack's existing `AlarmTopic` export. There is
+one SNS topic, only when storage `AlarmEmail` is nonempty, with an email subscription
+and a CloudWatch publish policy bounded to the same account/Region and that topic.
+RDS `AlarmActions` imports the topic only when `EnableRdsAlarmNotifications=true`;
+manual mode sets `ActionsEnabled=false` and omits actions without importing an empty
+ARN. Only ALARM actions are added; recovery/insufficient-data actions are unchanged.
+
+New stacks default to manual monitoring. The deployment script accepts optional
+`-AlarmEmail`: a supplied nonempty address is forwarded to both storage updates
+(including CORS) and enables RDS notifications on the app stack. A supplied empty
+string is rejected before native calls: cross-stack imports must be removed first.
+Omitting this parameter sends no notification overrides, preserving
+existing stack parameters; on a new stack the template defaults apply. No personal
+recipient or account ID is hardcoded. Existing Lambda alarm definitions are retained.
+
+For separate template usage: create/update storage with a valid nonempty AlarmEmail
+first, then enable RDS notification on the app stack using that StorageStackName.
+Do not enable it against an absent/empty topic export. Keeping RDS notifications
+false while Lambda notifications use the topic is supported. The application output
+`RdsAlarmNotificationMode` describes configuration, not successful delivery.
+
+To disable an existing configuration, update the app stack first with
+`EnableRdsAlarmNotifications=false` and wait for that update to finish. Verify that
+no other stacks import the storage `AlarmTopic` export. Only then clear storage
+`AlarmEmail` if the topic is no longer needed (this also disables Lambda email
+notifications). CloudFormation cannot change/delete an export while it is imported.
+The combined storage-first deployment script deliberately refuses explicit empty
+`-AlarmEmail`; omit it to preserve configuration, or use these ordered stack updates.
+These are future operator steps, not AWS operations executed by the offline tests.
+
+An email subscription declaration is not confirmation. The owner must later confirm
+the recipient subscription, verify topic policy/permissions in the target personal AWS account,
+and test a controlled alarm notification and receipt before claiming delivery PASS.
+No AWS deployment or delivery test was run for this change. No Learner Lab restriction
+is assumed for the personal account. Manual mode is an explicit opt-out/backward-
+compatible default, not a claim that SNS is unavailable. If SNS is not configured,
+keep manual mode and assign an operator to check both RDS alarms in CloudWatch during
+operation and record follow-up; this mode does not send email automatically.
+
+Offline tests (existing venv only; no AWS calls):
+
+```powershell
+& infra/tests.venv/Scripts/python.exe -B -m unittest discover -s infra/tests -p test_rds_alarm_notifications.py -v
+& infra/tests.venv/Scripts/cfn-lint.exe infra/cloudformation/00-storage.yaml infra/cloudformation/01-rds-beanstalk-cloudfront.yaml
+```
+
+Status: `FIXED_LOCAL_PENDING_AWS_VERIFICATION` only after local gates pass.
+`SNS_SUBSCRIPTION_CONFIRMED: PENDING_AWS_VERIFICATION`;
+`NOTIFICATION_DELIVERY: PENDING_AWS_VERIFICATION`.

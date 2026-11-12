@@ -14,6 +14,14 @@ Parameters:
     Type: String
     Default: nhom5-handover-storage
     Description: Name of the 00-storage.yaml stack (imports UploadBucket and InstanceProfile).
+  EnableRdsAlarmNotifications:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: >-
+      true imports the existing storage stack AlarmTopic export; that stack must
+      have nonempty AlarmEmail. Email delivery requires subscription confirmation
+      and AWS verification. false keeps manual Console monitoring without SNS actions.
   VpcId:
     Type: AWS::EC2::VPC::Id
     Description: VPC ID where RDS and Elastic Beanstalk will run.
@@ -83,6 +91,9 @@ Parameters:
   UploadTtlSeconds:
     Type: String
     Default: "300"
+
+Conditions:
+  NotifyRdsAlarms: !Equals [!Ref EnableRdsAlarmNotifications, "true"]
 
 Resources:
   # ---------------------------------------------------------------- Security Groups (K12: DB not public, only EB SG -> 5432)
@@ -313,6 +324,11 @@ Resources:
       Threshold: 2147483648
       ComparisonOperator: LessThanThreshold
       TreatMissingData: notBreaching
+      ActionsEnabled: !If [NotifyRdsAlarms, true, false]
+      AlarmActions: !If
+        - NotifyRdsAlarms
+        - - Fn::ImportValue: !Sub "${StorageStackName}-AlarmTopic"
+        - !Ref AWS::NoValue
 
   DbHighConnectionsAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -327,8 +343,16 @@ Resources:
       Threshold: 50
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
+      ActionsEnabled: !If [NotifyRdsAlarms, true, false]
+      AlarmActions: !If
+        - NotifyRdsAlarms
+        - - Fn::ImportValue: !Sub "${StorageStackName}-AlarmTopic"
+        - !Ref AWS::NoValue
 
 Outputs:
+  RdsAlarmNotificationMode:
+    Description: Configuration mode only; subscription confirmation and delivery are not verified by this output.
+    Value: !If [NotifyRdsAlarms, "SNS_CONFIGURED_CONFIRM_SUBSCRIPTION_AND_TEST_DELIVERY", "MANUAL_NO_SNS_ACTIONS"]
   PortalHttpsUrl:
     Description: HTTPS URL for users (CloudFront default certificate, same origin for /portal/ and /api/v1).
     Value: !Sub "https://${PortalCloudFrontDistribution.DomainName}/portal/"

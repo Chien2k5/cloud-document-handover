@@ -18,6 +18,7 @@ try {
         $extra=@{}
         if ($env:WAVE3_USE_LAB_ROLE) { $extra.UseLabRole=$env:WAVE3_USE_LAB_ROLE }
         if ($env:WAVE3_OPERATOR_ARN) { $extra.BackupOperatorPrincipalArn=$env:WAVE3_OPERATOR_ARN }
+        if ($env:WAVE4_ALARM_EMAIL_SET -eq '1') { $extra.AlarmEmail=[string]$env:WAVE4_ALARM_EMAIL }
         & $ScriptPath -VpcId vpc-fixture -AppSubnetIdsCsv 'subnet-a,subnet-b' -DbSubnetIdsCsv 'subnet-c,subnet-d' @extra
     }
 } catch { $success=$false; $message=$_.Exception.Message }

@@ -26,6 +26,7 @@ param(
     [string]$DbSubnetIdsCsv,
     [string]$EbSolutionStackName = "",
     [string]$BackupOperatorPrincipalArn = "",
+    [string]$AlarmEmail = "",
     [switch]$SkipBuild
 )
 
@@ -81,6 +82,19 @@ try {
     }
     if ($BackupOperatorPrincipalArn -and $BackupOperatorPrincipalArn -notmatch '^arn:aws:iam::[0-9]{12}:(role|user)/([A-Za-z0-9+=,.@_-]+/)*[A-Za-z0-9+=,.@_-]+$') {
         throw 'BackupOperatorPrincipalArn must be a concrete IAM user/role ARN.'
+    }
+    # Omission preserves existing CloudFormation parameter values; disabling requires removing imports first.
+    $StorageNotificationParameters = @()
+    $AppNotificationParameters = @()
+    if ($PSBoundParameters.ContainsKey('AlarmEmail')) {
+        if (-not $AlarmEmail) {
+            throw 'Automatic notification disable is unsafe while app imports exist. Remove app notification imports first, then clear storage AlarmEmail as documented. Omit -AlarmEmail to preserve settings.'
+        }
+        if ($AlarmEmail -cnotmatch '\A[^@\s,;]+@[^@\s,;]+[.][^@\s,;]+\z') {
+            throw 'AlarmEmail must be one email address without whitespace or lists.'
+        }
+        $StorageNotificationParameters = @("AlarmEmail=$AlarmEmail")
+        $AppNotificationParameters = @('EnableRdsAlarmNotifications=true')
     }
     $identityResponse = Invoke-Native 'AWS caller identity' 'aws' @('sts','get-caller-identity','--region',$Region,'--output','json')
     $Identity = Read-Json $identityResponse.Output 'AWS caller identity'
@@ -149,7 +163,7 @@ Write-Host "      EB Solution Stack: $EbSolutionStackName"
     Invoke-Native 'EB artifact upload' 'aws' @('s3','cp',$EbBundle,"s3://$ArtifactBucket/$EbKey",'--region',$Region) | Out-Null
     Invoke-Native 'Lambda artifact upload' 'aws' @('s3','cp',$LambdaBundle,"s3://$ArtifactBucket/$LambdaKey",'--region',$Region) | Out-Null
     $StorageStack = "$ProjectName-storage"
-    Invoke-Native 'Storage CloudFormation deploy' 'aws' @('cloudformation','deploy','--region',$Region,'--stack-name',$StorageStack,'--template-file','infra/cloudformation/00-storage.yaml','--capabilities','CAPABILITY_NAMED_IAM','--no-fail-on-empty-changeset','--parameter-overrides',"ProjectName=$ProjectName","UseLabRole=$UseLabRole","BackupOperatorPrincipalArn=$BackupOperatorPrincipalArn","LambdaCodeBucket=$ArtifactBucket","LambdaCodeKey=$LambdaKey") | Out-Null
+    Invoke-Native 'Storage CloudFormation deploy' 'aws' (@('cloudformation','deploy','--region',$Region,'--stack-name',$StorageStack,'--template-file','infra/cloudformation/00-storage.yaml','--capabilities','CAPABILITY_NAMED_IAM','--no-fail-on-empty-changeset','--parameter-overrides',"ProjectName=$ProjectName","UseLabRole=$UseLabRole","BackupOperatorPrincipalArn=$BackupOperatorPrincipalArn","LambdaCodeBucket=$ArtifactBucket","LambdaCodeKey=$LambdaKey") + $StorageNotificationParameters) | Out-Null
     if ($env:DB_MASTER_PASSWORD) { $DbPasswordPlain = $env:DB_MASTER_PASSWORD }
     else {
         $SecurePwd = Read-Host 'Enter RDS Master Password (16-64 chars, not echoed)' -AsSecureString
@@ -157,12 +171,12 @@ Write-Host "      EB Solution Stack: $EbSolutionStackName"
     }
     $AppStack = "$ProjectName-app"
     $EbServiceRole = if ($UseLabRole -eq 'true') { 'LabRole' } else { 'aws-elasticbeanstalk-service-role' }
-    Invoke-Native 'Application CloudFormation deploy' 'aws' @('cloudformation','deploy','--region',$Region,'--stack-name',$AppStack,'--template-file','infra/cloudformation/01-rds-beanstalk-cloudfront.yaml','--no-fail-on-empty-changeset','--parameter-overrides',"ProjectName=$ProjectName","StorageStackName=$StorageStack","VpcId=$VpcId","AppSubnetIds=$AppSubnetIdsCsv","DbSubnetIds=$DbSubnetIdsCsv","EbSolutionStackName=$EbSolutionStackName","EbServiceRoleName=$EbServiceRole","AppVersionBucket=$ArtifactBucket","AppVersionKey=$EbKey","DbMasterPassword=$DbPasswordPlain") | Out-Null
+    Invoke-Native 'Application CloudFormation deploy' 'aws' (@('cloudformation','deploy','--region',$Region,'--stack-name',$AppStack,'--template-file','infra/cloudformation/01-rds-beanstalk-cloudfront.yaml','--no-fail-on-empty-changeset','--parameter-overrides',"ProjectName=$ProjectName","StorageStackName=$StorageStack","VpcId=$VpcId","AppSubnetIds=$AppSubnetIdsCsv","DbSubnetIds=$DbSubnetIdsCsv","EbSolutionStackName=$EbSolutionStackName","EbServiceRoleName=$EbServiceRole","AppVersionBucket=$ArtifactBucket","AppVersionKey=$EbKey","DbMasterPassword=$DbPasswordPlain") + $AppNotificationParameters) | Out-Null
     $DbPasswordPlain = $null
     $PortalOrigin = (Invoke-Native 'Portal origin lookup' 'aws' @('cloudformation','describe-stacks','--region',$Region,'--stack-name',$AppStack,'--query',"Stacks[0].Outputs[?OutputKey=='PortalOriginForCors'].OutputValue",'--output','text')).Output.Trim()
     $PortalUrl = (Invoke-Native 'Portal URL lookup' 'aws' @('cloudformation','describe-stacks','--region',$Region,'--stack-name',$AppStack,'--query',"Stacks[0].Outputs[?OutputKey=='PortalHttpsUrl'].OutputValue",'--output','text')).Output.Trim()
     if ($PortalOrigin -notmatch '^https://[^/\s]+$' -or $PortalUrl -notmatch '^https://[^\s]+/portal/$') { throw 'CloudFormation portal outputs are invalid.' }
-    Invoke-Native 'Storage CORS update' 'aws' @('cloudformation','deploy','--region',$Region,'--stack-name',$StorageStack,'--template-file','infra/cloudformation/00-storage.yaml','--capabilities','CAPABILITY_NAMED_IAM','--no-fail-on-empty-changeset','--parameter-overrides',"ProjectName=$ProjectName","UseLabRole=$UseLabRole","BackupOperatorPrincipalArn=$BackupOperatorPrincipalArn","PortalOrigin=$PortalOrigin","LambdaCodeBucket=$ArtifactBucket","LambdaCodeKey=$LambdaKey") | Out-Null
+    Invoke-Native 'Storage CORS update' 'aws' (@('cloudformation','deploy','--region',$Region,'--stack-name',$StorageStack,'--template-file','infra/cloudformation/00-storage.yaml','--capabilities','CAPABILITY_NAMED_IAM','--no-fail-on-empty-changeset','--parameter-overrides',"ProjectName=$ProjectName","UseLabRole=$UseLabRole","BackupOperatorPrincipalArn=$BackupOperatorPrincipalArn","PortalOrigin=$PortalOrigin","LambdaCodeBucket=$ArtifactBucket","LambdaCodeKey=$LambdaKey") + $StorageNotificationParameters) | Out-Null
     $ExpectedVersion = (Invoke-Native 'CloudFormation application version lookup' 'aws' @('cloudformation','describe-stack-resource','--region',$Region,'--stack-name',$AppStack,'--logical-resource-id','HandoverEbAppVersion','--query','StackResourceDetail.PhysicalResourceId','--output','text')).Output.Trim()
     Assert-EbRelease "$ProjectName-env" $ExpectedVersion $Region
     Write-Host "Deployment finished. Portal HTTPS URL: $PortalUrl"
