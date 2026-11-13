@@ -41,7 +41,7 @@ export function CreateHandover({ project, members, files, onCreated, onAccessLos
       <label htmlFor="handover-deadline">Hạn bàn giao (giờ trên máy bạn)</label><input id="handover-deadline" type="datetime-local" required value={expiresAt} aria-describedby="handover-deadline-help" onChange={event => setExpiresAt(event.target.value)} />
       <p className="field-help" id="handover-deadline-help">Chọn thời điểm trong tương lai. Hạn được chuyển sang UTC khi gửi backend.</p>
       <div className="actions"><Button type="submit" disabled={!files.length}>Tạo DRAFT</Button></div>
-      <p className="field-help">Tạo DRAFT chưa phát hành gói cho người nhận.</p>
+      <p className="field-help">Sau khi tạo DRAFT, mở gói và bấm “Phát hành gói” để chuyển sang READY. Người nhận chỉ mở và xác nhận được gói đã phát hành, còn hạn.</p>
     </fieldset></form></div>
     {busy && <p role="status">Đang tạo gói DRAFT… Không gửi lại yêu cầu trong lúc chờ.</p>}
     {created && <div className="draft-created" role="status"><p>Đã tạo gói DRAFT <code>{created}</code>.</p><Button variant="secondary" onClick={() => onCreated(created)}>Mở gói vừa tạo</Button></div>}
@@ -53,6 +53,7 @@ export default function Handovers({ user, activeId, onSelect }) {
   useEffect(() => setEntry(activeId || ''), [activeId]);
   return <section className="card workspace-section handovers-page" id="workspace-handovers" tabIndex={-1}><h2>Gói bàn giao</h2>
     <p>Mở gói bằng UUID được Owner cung cấp. Người nhận ngoài dự án cũng dùng mục này.</p>
+    <p className="handover-policy">Owner tạo DRAFT → Phát hành gói (READY) → Người nhận mở gói và xác nhận. Người nhận phải đăng nhập đúng tài khoản được chỉ định và mở gói trước khi hết hạn.</p>
     <form className="handover-entry" onSubmit={event => { event.preventDefault(); if (isUuid(entry.trim())) { onSelect(entry.trim()); setReload(value => value + 1); } }}>
       <div><label htmlFor="handover-entry">UUID gói bàn giao</label><input id="handover-entry" required value={entry} aria-invalid={Boolean(entry && !isUuid(entry.trim()))} aria-describedby="handover-entry-help" onChange={event => setEntry(event.target.value)} /><span className="field-help" id="handover-entry-help">Dùng UUID đầy đủ của gói được cấp quyền. Quyền truy cập do backend xác minh.</span></div>
       <Button type="submit" disabled={!isUuid(entry.trim())}>Mở gói bàn giao</Button>
@@ -103,6 +104,9 @@ function HandoverView({ id, user }) {
     {error && ['REQUEST_TIMEOUT', 'NETWORK_ERROR', 'SESSION_CHANGED'].includes(error.code) && <p className="handover-policy">Kết quả thay đổi có thể đã được máy chủ ghi nhận. Tải lại gói để kiểm tra; không tự gửi lại thao tác.</p>}
     {handover && <><h3 className="handover-title">{handover.title}</h3>
       <div className="handover-states"><div><span>Workflow</span><strong data-state={handover.status}>{handover.status}</strong></div><div><span>Access</span><strong data-state={handover.accessStatus}>{handover.accessStatus}</strong></div><div><span>Thời hạn</span><strong>{permissions.expired ? 'Expired — đã hết hạn' : 'Chưa hết hạn'}</strong><span>{new Date(handover.expiresAt).toLocaleString('vi-VN')}</span></div></div>
+      {handover.accessStatus === 'ACTIVE' && (permissions.expired
+        ? <p className="handover-policy">Gói đã hết hạn nên không thể phát hành, tải hoặc xác nhận. Owner cần tạo gói mới với hạn trong tương lai rồi phát hành.</p>
+        : handover.status === 'DRAFT' && <p className="handover-policy">Gói đang là bản nháp. Owner cần bấm “Phát hành gói” bên dưới để người nhận có thể mở và xác nhận bàn giao.</p>)}
       <TechnicalDetails title="Thông tin kỹ thuật gói bàn giao"><p>Handover ID: <code>{handover.id}</code></p><p>Project ID: <code>{handover.projectId}</code></p></TechnicalDetails>
       <div className="actions handover-actions" role="group" aria-label="Thao tác gói bàn giao">{permissions.publish && <Button disabled={busy} onClick={() => action('publish')}>Phát hành gói</Button>}
         {permissions.confirm && <Button disabled={busy} onClick={() => action('confirm')}>Xác nhận nhận bàn giao</Button>}

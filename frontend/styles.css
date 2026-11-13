@@ -74,8 +74,9 @@ body {
 .account-area__identity { display: grid; text-align: right; min-width: 0; font-size: 1rem; }
 .account-area__identity span { color: var(--muted); font-size: .875rem; overflow-wrap: anywhere; }
 .app-header > *, .account-area__identity > * { min-width: 0; overflow-wrap: anywhere; }
-.account-area--profile { flex-wrap: wrap; max-width: min(100%, 44rem); }
-.account-area--profile .account-area__identity { flex: 1 1 10rem; }
+.account-area--profile { flex: 0 1 44rem; flex-wrap: nowrap; max-width: min(100%, 44rem); }
+.account-area--profile .account-area__identity { flex: 1 1 0; }
+.account-area--profile > .account-profile, .account-area--profile > button { flex: 0 0 auto; }
 .account-profile { min-width: 0; }
 .account-profile__panel { position: absolute; z-index: 25; top: calc(100% + 8px); right: 16px; width: min(24rem, calc(100vw - 32px)); max-height: calc(100svh - 120px); overflow-y: auto; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: 0 12px 32px rgb(18 35 61 / 15%); font-size: 1rem; }
 .account-profile__panel h2 { margin: 0 0 16px; font-size: 1.25rem; }
@@ -86,6 +87,11 @@ body {
 .account-profile__panel textarea { display: block; width: 100%; padding: 8px; resize: none; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--background); color: var(--text); font: .9375rem/1.6 Consolas, monospace; overflow-wrap: anywhere; }
 .account-profile__notice { margin: 12px 0 0; }
 @media (max-width: 900px) { .account-profile__panel { max-height: calc(100svh - 280px); } }
+@media (max-width: 650px) {
+    .account-area--profile { flex: 1 1 100%; flex-wrap: wrap; }
+    .account-area--profile .account-area__identity { flex: 1 1 100%; }
+    .account-area--profile > .account-profile { flex: 1 1 0; }
+}
 .app-layout { display: grid; grid-template-columns: 248px minmax(0, 1fr); }
 .app-sidebar { position: sticky; top: 88px; height: calc(100svh - 88px); padding: var(--space-5) var(--space-4); display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-6); background: var(--navy); color: #cbd5e1; min-width: 0; }
 .app-sidebar nav { margin: 0; }
