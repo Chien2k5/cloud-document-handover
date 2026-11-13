@@ -1,4 +1,4 @@
-# Đóng gói & Triển khai AWS Elastic Beanstalk / Lambda (TV1 — Hoàng Hải Chiến | A02, A04, A06)
+# Đóng gói & Triển khai AWS Elastic Beanstalk / Lambda 
 
 Thư mục `deploy/` chứa toàn bộ cấu hình nền tảng Elastic Beanstalk (Amazon Linux 2023 Corretto 21), script đóng gói tạo manifest SHA-256 và script triển khai/redeploy tự động theo đúng runbook bàn giao [`docs/integration/aws-deployment-handover.md`](../docs/integration/aws-deployment-handover.md).
 
