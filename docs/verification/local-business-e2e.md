@@ -1,0 +1,9 @@
+# A13 — Real local business integration
+
+2026-11-10: `python frontend/tools/run_live_check.py --business --offline --maven <cached Maven>` passed 63 backend tests with no failures/errors/skips, followed by 2 business browser tests. The backend total includes 49 PostgreSQL integration cases and 14 unit/contract/storage cases; it is not 63 AWS tests.
+
+Classification: **LOCAL_REAL_BACKEND_WITH_TEST_STORAGE**. Chrome runs React/Vite against actual Spring Security, controllers/services, Flyway and disposable PostgreSQL 17. No browser API routes are mocked. The test-classpath HTTPS fixture checks MIME/conditional PUT, rejects cookies/CSRF, returns opaque Version IDs, stores exact bytes, exposes required CORS headers and creates checksum JSON from actual byte hashes after an initial missing result. It does not emulate AWS IAM/signature validation or execute Lambda.
+
+Verified: distinct v1/v2 with one File ID, preserved v1 manifest/download bytes after v2, reload, DRAFT/READY, two separate recipients with aggregate READY then CONFIRMED, revoke retaining confirmation history, MISMATCH exclusion and expired-link issuance rejection. Production JAR excludes the fixture. There are no new production routes, migrations or security exceptions. Test TLS exceptions exist only in the business browser configuration.
+
+The first harness attempt failed because Playwright APIRequestContext sent localhost cookies to the fixture. The test was corrected to perform storage requests in the browser with `credentials: omit`, matching the existing production PUT protocol. Production validation was not weakened. That failed run remains at `runtime-data/frontend-live-36745ca551/`; the passing run is `runtime-data/frontend-live-4ea8e071c6/`. Both disposed of their own PostgreSQL containers and backend processes; temporary private keys were removed. Evidence directories are ignored and contain no claimed AWS evidence.

@@ -1,0 +1,119 @@
+{
+  "status": "PASS",
+  "scope": "LOCAL_POSTGRESQL_ONLY",
+  "aws": "NOT RUN",
+  "sourceDatabase": "handover_restore_20261028_183817_a0e8ca79_src",
+  "targetDatabase": "handover_restore_20261028_183817_a0e8ca79_dst",
+  "targetDemoSeedEnabled": false,
+  "startedAt": "2026-10-28T18:38:17.456698+00:00",
+  "completedAt": "2026-10-28T18:38:35.331734+00:00",
+  "sourceSnapshot": {
+    "app_users": {
+      "rows": 4,
+      "sha256": "f91ca4aaff779ba5c83d10152d6053e2c9ef149ce8c5efd8344ad5bd294e9e8c"
+    },
+    "projects": {
+      "rows": 2,
+      "sha256": "eb897033d0bf7068817f35891ccae9b95160f5cf068790d8a51d656ee305cf21"
+    },
+    "memberships": {
+      "rows": 3,
+      "sha256": "184b1ed0bf71a65b3ce62e23e2a3f08563b683a62adc4381713cacf1e499bbc3"
+    },
+    "file_metadata": {
+      "rows": 1,
+      "sha256": "d34c360b20e1a2a1dd03a779d9fd06e85d9c006d0f6d7877b2f8c7d047126c7c"
+    },
+    "file_versions": {
+      "rows": 3,
+      "sha256": "9724ff4c1b5005034cf7b1e41527f5115ce90944b4e5bf99975bd7fdf7ac3bbc"
+    },
+    "upload_sessions": {
+      "rows": 3,
+      "sha256": "3f872dc968063586465ba5f908321bd471b954307064ac14e3efd8203bc35549"
+    },
+    "handovers": {
+      "rows": 4,
+      "sha256": "85a274370d3b4c7046aca9410a29e1f71ae3fc3f22aa932753538eaa9a3df563"
+    },
+    "handover_items": {
+      "rows": 4,
+      "sha256": "e3e3485c5d9f750563dd7e1163d5955732e09563e822b1c44e6cd17f14c902c0"
+    },
+    "handover_recipients": {
+      "rows": 5,
+      "sha256": "d6a07a74095b34a4ad43dac906793fbcee5fbfd7fab547cc8c1f168c0d240ee5"
+    },
+    "audit_events": {
+      "rows": 7,
+      "sha256": "b31e0cf65f7deb9b13ab6940cd7993465f951fe85f7210ff22e0b5427989a675"
+    },
+    "flyway_schema_history": {
+      "rows": 1,
+      "sha256": "22f4800b7ca167877cdd92bea1b0e9a61afa82cfdf52a0a770641cea4f7fa7e7"
+    }
+  },
+  "restoredSnapshot": {
+    "app_users": {
+      "rows": 4,
+      "sha256": "f91ca4aaff779ba5c83d10152d6053e2c9ef149ce8c5efd8344ad5bd294e9e8c"
+    },
+    "projects": {
+      "rows": 2,
+      "sha256": "eb897033d0bf7068817f35891ccae9b95160f5cf068790d8a51d656ee305cf21"
+    },
+    "memberships": {
+      "rows": 3,
+      "sha256": "184b1ed0bf71a65b3ce62e23e2a3f08563b683a62adc4381713cacf1e499bbc3"
+    },
+    "file_metadata": {
+      "rows": 1,
+      "sha256": "d34c360b20e1a2a1dd03a779d9fd06e85d9c006d0f6d7877b2f8c7d047126c7c"
+    },
+    "file_versions": {
+      "rows": 3,
+      "sha256": "9724ff4c1b5005034cf7b1e41527f5115ce90944b4e5bf99975bd7fdf7ac3bbc"
+    },
+    "upload_sessions": {
+      "rows": 3,
+      "sha256": "3f872dc968063586465ba5f908321bd471b954307064ac14e3efd8203bc35549"
+    },
+    "handovers": {
+      "rows": 4,
+      "sha256": "85a274370d3b4c7046aca9410a29e1f71ae3fc3f22aa932753538eaa9a3df563"
+    },
+    "handover_items": {
+      "rows": 4,
+      "sha256": "e3e3485c5d9f750563dd7e1163d5955732e09563e822b1c44e6cd17f14c902c0"
+    },
+    "handover_recipients": {
+      "rows": 5,
+      "sha256": "d6a07a74095b34a4ad43dac906793fbcee5fbfd7fab547cc8c1f168c0d240ee5"
+    },
+    "audit_events": {
+      "rows": 7,
+      "sha256": "b31e0cf65f7deb9b13ab6940cd7993465f951fe85f7210ff22e0b5427989a675"
+    },
+    "flyway_schema_history": {
+      "rows": 1,
+      "sha256": "22f4800b7ca167877cdd92bea1b0e9a61afa82cfdf52a0a770641cea4f7fa7e7"
+    }
+  },
+  "invariants": {
+    "foreignKeys": 18,
+    "unvalidated": 0,
+    "invalidQuotaProjects": 0,
+    "invalidHandoverLinks": 0
+  },
+  "httpRequestChecks": 51,
+  "dumpSeconds": 0.515,
+  "restoreSeconds": 0.219,
+  "targetBootSeconds": 4.922,
+  "archiveSha256": "5c812cccc80ab3f090727a94d759f42b8d76ba80c61f042d5e2094ec18c03505",
+  "jarSha256": "1979ac0599bc4a0c6184186fbb77e19889be4207ee9a0ad7a676d8f07418a406",
+  "pinnedVersionPreserved": true,
+  "confirmationTimesPreserved": true,
+  "noUnexpectedDataChanges": true,
+  "archiveCommitted": false,
+  "fixtureDescription": "Local-profile seeded users; API-created projects/membership; SQL synthetic file/version/handover fixtures; no S3 bytes or Lambda execution"
+}

@@ -1,0 +1,222 @@
+{
+  "base": "eb6f7c7cb8d05c9187b59d39986796fcaec2fe59",
+  "codeHead": "c0520a318e32d58e302cf264d6ff07ac069dc423",
+  "generatedAt": "2026-11-10T04:06:15.530778+00:00",
+  "stageB": "BLOCKED_WAITING_FOR_CHIEN",
+  "checkpoints": [
+    {
+      "checkpoint": "A01",
+      "status": "DONE",
+      "testedAtCommit": "657b2dc7f1ce3d66b75448211825ab8996bb8581",
+      "commit": "657b2dc7f1ce3d66b75448211825ab8996bb8581",
+      "files": [
+        "docs/verification/pre-aws-baseline.md"
+      ],
+      "tests": "baseline: frontend unit 17, browser mock 17, backend PostgreSQL 62, live browser API 3, Python offline 25, Java/Python contract 12; lint/build/audit PASS",
+      "push": "PASS",
+      "note": "PR4 merged eb6f7c7 after explicit approval; runtime unchanged from tested d0d8141. AWS BLOCKED_WAITING_FOR_CHIEN. Local log collision recorded transparently."
+    },
+    {
+      "checkpoint": "A02",
+      "status": "DONE",
+      "testedAtCommit": "7b514966a32e57e16d04015b95cf7b2c8c20a87f",
+      "commit": "7b514966a32e57e16d04015b95cf7b2c8c20a87f",
+      "files": [
+        "docs/verification/api-traceability.md",
+        "frontend/package-lock.json",
+        "frontend/package.json",
+        "frontend/tests/contract.test.js",
+        "frontend/tests/endpoint-trace.json"
+      ],
+      "tests": "22-operation matrix and 20 frontend unit tests PASS; lint/build/npm audit PASS",
+      "push": "PASS",
+      "note": "Added one dev-only YAML parser; no endpoint, schema or migration changed."
+    },
+    {
+      "checkpoint": "A03",
+      "status": "DONE",
+      "testedAtCommit": "b5765c5a71508c58afe4137d26837edd154076c8",
+      "commit": "b5765c5a71508c58afe4137d26837edd154076c8",
+      "files": [
+        "docs/verification/auth-hardening.md",
+        "frontend/src/api.js",
+        "frontend/tests/api.test.js"
+      ],
+      "tests": "UNIT_MOCK 22; BROWSER_MOCK 17; lint/build PASS; LOCAL_REAL_BACKEND HTTP 70",
+      "push": "PASS",
+      "note": "Two regressions failed before implementation; no API or migration change."
+    },
+    {
+      "checkpoint": "A04",
+      "status": "DONE",
+      "testedAtCommit": "b79d7c7275a920b8d273996bc0fcd7a0a4b33239",
+      "commit": "b79d7c7275a920b8d273996bc0fcd7a0a4b33239",
+      "files": [
+        "backend/src/test/java/vn/edu/uet/handover/BackendIntegrationTest.java",
+        "docs/verification/project-upload-hardening.md"
+      ],
+      "tests": "LOCAL_REAL_BACKEND BackendIntegrationTest 11/11 no skips",
+      "push": "PASS",
+      "note": "Coverage added; production project code unchanged."
+    },
+    {
+      "checkpoint": "A05",
+      "status": "DONE",
+      "testedAtCommit": "0f63f1c9137cc596792b6a5e3d218d2cb435ec22",
+      "commit": "0f63f1c9137cc596792b6a5e3d218d2cb435ec22",
+      "files": [
+        "frontend/tests/upload.test.js"
+      ],
+      "tests": "UNIT_MOCK 23/23; lint PASS",
+      "push": "PASS",
+      "note": "Exact binary bytes and cancellation/timeout tests; implementation unchanged."
+    },
+    {
+      "checkpoint": "A06",
+      "status": "DONE",
+      "testedAtCommit": "2d8d46b7dc44448829068ef108bdb67312c4d25a",
+      "commit": "2d8d46b7dc44448829068ef108bdb67312c4d25a",
+      "files": [
+        "docs/verification/storage-lambda-hardening.md",
+        "frontend/src/upload.js",
+        "frontend/tests/upload.test.js"
+      ],
+      "tests": "UNIT_MOCK 24; lint PASS; LOCAL_REAL_BACKEND upload plus storage 22 no skips",
+      "push": "PASS",
+      "note": "Header regression RED before fix; AWS NOT_RUN."
+    },
+    {
+      "checkpoint": "A07",
+      "status": "DONE",
+      "testedAtCommit": "f791d32eca941e0e225f0cd2a429ede679485c44",
+      "commit": "f791d32eca941e0e225f0cd2a429ede679485c44",
+      "files": [
+        "aws/lambda/lambda_function.py",
+        "aws/tests/test_checksum_lambda.py",
+        "docs/verification/storage-lambda-hardening.md"
+      ],
+      "tests": "PYTHON_OFFLINE 27/27",
+      "push": "PASS",
+      "note": "Timestamp compatibility regression failed before fix; malformed events coverage added."
+    },
+    {
+      "checkpoint": "A08",
+      "status": "DONE",
+      "testedAtCommit": "8eb2a4725df9e42adf9c22ce296f4c711b70bb6b",
+      "commit": "8eb2a4725df9e42adf9c22ce296f4c711b70bb6b",
+      "files": [
+        "aws/tests/check_java_contract.py",
+        "docs/verification/storage-lambda-hardening.md"
+      ],
+      "tests": "JAVA_PYTHON_CONTRACT 29/29",
+      "push": "PASS",
+      "note": "Production Java parser and result key from packaged JAR; no DB/AWS."
+    },
+    {
+      "checkpoint": "A09",
+      "status": "DONE",
+      "testedAtCommit": "826134e8662ce443381987db36095b043efeef2c",
+      "commit": "826134e8662ce443381987db36095b043efeef2c",
+      "files": [
+        "docs/verification/version-handover-security.md",
+        "frontend/e2e/files.spec.js",
+        "frontend/src/files.js",
+        "frontend/tests/files.test.js"
+      ],
+      "tests": "UNIT_MOCK 25; BROWSER_MOCK 18; lint/build PASS",
+      "push": "PASS",
+      "note": "Polling regression RED before fix; browser delayed-response test added."
+    },
+    {
+      "checkpoint": "A10",
+      "status": "PASS_NO_CHANGE",
+      "testedAtCommit": "826134e8662ce443381987db36095b043efeef2c",
+      "commit": null,
+      "files": [],
+      "tests": "LOCAL_REAL_BACKEND HandoverIntegrationTest 22 no skips; BROWSER_MOCK handover cases PASS",
+      "push": "NO_NEW_COMMIT",
+      "note": "DRAFT/publish existing invariants sufficient; no change justified."
+    },
+    {
+      "checkpoint": "A11",
+      "status": "PASS_NO_CHANGE",
+      "testedAtCommit": "826134e8662ce443381987db36095b043efeef2c",
+      "commit": null,
+      "files": [],
+      "tests": "LOCAL_REAL_BACKEND HandoverIntegrationTest 22 no skips; BROWSER_MOCK recipient/revoke/expiry PASS",
+      "push": "NO_NEW_COMMIT",
+      "note": "Confirmation, audit and revocation invariants already covered."
+    },
+    {
+      "checkpoint": "A12",
+      "status": "PASS_NO_CHANGE",
+      "testedAtCommit": "826134e8662ce443381987db36095b043efeef2c",
+      "commit": null,
+      "files": [],
+      "tests": "A03 HTTP 70; A04 project 11; A06 upload/storage 22; A10 handover 22 separate real-PG/offline runs",
+      "push": "NO_NEW_COMMIT",
+      "note": "Global access/concurrency/error review; final full suite follows."
+    },
+    {
+      "checkpoint": "A13",
+      "status": "DONE",
+      "testedAtCommit": "e2051667de85f44809b5959f346f1a2ad02e7798",
+      "commit": "e2051667de85f44809b5959f346f1a2ad02e7798",
+      "files": [
+        "backend/src/test/java/local/fixture/LocalStorageHarness.java",
+        "docs/verification/local-business-e2e.md",
+        "frontend/README.md",
+        "frontend/e2e/storage.business.spec.js",
+        "frontend/package.json",
+        "frontend/playwright.business.config.js",
+        "frontend/playwright.config.js",
+        "frontend/tools/run_live_check.py"
+      ],
+      "tests": "Backend 63 (49 PG plus 14 unit/contract/storage) no skips; LOCAL_REAL_BACKEND_WITH_TEST_STORAGE 2 browser cases; lint PASS",
+      "push": "PASS",
+      "note": "Production JAR excludes fixture; no mock API routes and no AWS/Lambda execution."
+    },
+    {
+      "checkpoint": "A14",
+      "status": "DONE",
+      "testedAtCommit": "470bb6201465231b671908e2bd7d4022e00a1728",
+      "commit": "470bb6201465231b671908e2bd7d4022e00a1728",
+      "files": [
+        "backend/tools/run_local_restore_check.py",
+        "docs/verification/pre-aws-local-recovery.md",
+        "docs/week-04/local-restore-runbook.md",
+        "evidence/pre-aws-restore-684e5724b7/restore-report.md",
+        "evidence/pre-aws-restore-684e5724b7/restore-result.json",
+        "evidence/pre-aws-restore-684e5724b7/run-status.json",
+        "evidence/pre-aws-restore-84275d3a6b/restore-report.md",
+        "evidence/pre-aws-restore-84275d3a6b/restore-result.json",
+        "evidence/pre-aws-restore-84275d3a6b/run-status.json"
+      ],
+      "tests": "LOCAL_REAL_BACKEND restore twice: 11 tables, 18 FK, 51 HTTP checks each; negative pg_restore rollback PASS",
+      "push": "PASS",
+      "note": "Owned disposable container removed; AWS restore NOT_RUN."
+    },
+    {
+      "checkpoint": "A15",
+      "status": "DONE",
+      "testedAtCommit": "c0520a318e32d58e302cf264d6ff07ac069dc423",
+      "commit": "c0520a318e32d58e302cf264d6ff07ac069dc423",
+      "files": [
+        ".github/workflows/pre-aws.yml",
+        "frontend/README.md",
+        "frontend/tools/run_live_check.py",
+        "tools/run_preaws_checks.py"
+      ],
+      "tests": "PASS_PRE_AWS_CHECKS: FE unit25/mock18; PG backend63 no skips; live3/business2; Python27/contract29; npm audit0; byte-reproducible FE and JAR",
+      "push": "PASS",
+      "note": "Local pipeline PASS; GitHub CI observed separately after push."
+    }
+  ],
+  "githubCi": {
+    "head": "c0520a318e32d58e302cf264d6ff07ac069dc423",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/Chien2k5/cloud-document-handover/actions/runs/42753302305",
+    "observedAt": "2026-11-10 04:05:58 UTC"
+  }
+}

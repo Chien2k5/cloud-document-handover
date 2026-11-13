@@ -1,0 +1,38 @@
+{
+  "recordedAt": "2026-10-29T08:21:16.948772+07:00",
+  "mode": "OFFLINE_WITH_STUB_BOTO3_NO_AWS_CALLS_NO_ORIGINAL_TEST_EXECUTION",
+  "sourceHashes": {
+    "s3_adapter.py": "ff3fd4c19a1d0406a2cb7bbe43bd27ab687c5c59670702fb7e6d00775dbe3438",
+    "test_adapter.py": "76bae24a27e5db054c26f007478da85fefc03508b57b737842ece15327bed57f",
+    "README_S3_ADAPTER.md": "4c0f2954cc54e809a0ed531e3ae9b3482506fcb507b3a664c81421b9db5f0944"
+  },
+  "findings": {
+    "pythonSourcesParse": true,
+    "putReturnsOnlyUrlString": true,
+    "putSignsContentType": false,
+    "putSignsIfNoneMatch": false,
+    "downloadPinsRequestedVersion": true,
+    "headPinsRequestedVersion": false,
+    "latestCanDifferFromOriginalUpload": true,
+    "checksumKeyMatchesProposedBackendKey": false,
+    "rawOpaqueVersionUsedInResultPath": true,
+    "readmeChecksumMissingRequiredFields": [
+      "actualSha256",
+      "errorCode",
+      "schemaVersion",
+      "size"
+    ],
+    "readmeChecksumUnknownFields": [
+      "sha256"
+    ],
+    "readmeChecksumStatusSupported": false,
+    "checksumReadAcceptsDocumentLargerThan64KiB": true,
+    "checksumBodyClosedAfterRead": false,
+    "literalNullVersionAccepted": true,
+    "expires3600Accepted": true,
+    "explicitNetworkTimeoutConfigured": false,
+    "assertStatementsInProvidedTest": 0
+  },
+  "interpretation": "Compatibility gaps observed; no real AWS, IAM, CORS, Versioning, signing or Lambda acceptance result is inferred.",
+  "reviewStatus": "COMPATIBILITY_GAPS_FOUND"
+}

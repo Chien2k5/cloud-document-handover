@@ -10,6 +10,7 @@
 /runtime-data/
 /backups/
 /logs/
+/output/
 
 # Python
 .venv/
@@ -33,3 +34,7 @@ Thumbs.db
 *.tfstate
 *.tfstate.*
 *.tfvars
+
+# Maven output
+target/
+*.log

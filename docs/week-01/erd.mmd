@@ -1,0 +1,102 @@
+erDiagram
+    APP_USERS ||--o{ MEMBERSHIPS : joins
+    PROJECTS ||--|{ MEMBERSHIPS : has
+    APP_USERS ||--o{ PROJECTS : creates
+    PROJECTS ||--o{ FILE_METADATA : owns
+    FILE_METADATA ||--o{ FILE_VERSIONS : versions
+    FILE_VERSIONS ||--o| UPLOAD_SESSIONS : upload
+    PROJECTS ||--o{ HANDOVERS : owns
+    HANDOVERS ||--o{ HANDOVER_ITEMS : pins
+    FILE_VERSIONS ||--o{ HANDOVER_ITEMS : referenced_by
+    HANDOVERS ||--o{ HANDOVER_RECIPIENTS : grants
+    APP_USERS ||--o{ HANDOVER_RECIPIENTS : receives
+    PROJECTS ||--o{ AUDIT_EVENTS : records
+    APP_USERS ||--o{ AUDIT_EVENTS : acts
+    APP_USERS {
+        uuid id PK
+        varchar email UK
+        varchar display_name
+        varchar password_hash
+        boolean enabled
+        timestamptz created_at
+    }
+    PROJECTS {
+        uuid id PK
+        varchar name
+        text description
+        uuid created_by FK
+        bigint quota_bytes
+        bigint used_bytes
+        bigint reserved_bytes
+        timestamptz created_at
+    }
+    MEMBERSHIPS {
+        uuid project_id PK,FK
+        uuid user_id PK,FK
+        varchar role
+        timestamptz created_at
+    }
+    FILE_METADATA {
+        uuid id PK
+        uuid project_id FK
+        varchar filename
+        uuid created_by FK
+        timestamptz created_at
+    }
+    FILE_VERSIONS {
+        uuid id PK
+        uuid file_id FK
+        uuid project_id FK
+        varchar bucket
+        text object_key
+        text s3_version_id
+        varchar content_type
+        bigint size_bytes
+        varchar expected_sha256
+        varchar actual_sha256
+        varchar upload_status
+        varchar integrity_status
+        uuid created_by FK
+        timestamptz created_at
+    }
+    UPLOAD_SESSIONS {
+        uuid id PK
+        uuid project_id FK
+        uuid file_version_id FK,UK
+        uuid initiated_by FK
+        bigint reserved_bytes
+        timestamptz expires_at
+        timestamptz completed_at
+        timestamptz created_at
+    }
+    HANDOVERS {
+        uuid id PK
+        uuid project_id FK
+        varchar title
+        varchar status
+        varchar access_status
+        uuid created_by FK
+        timestamptz expires_at
+        timestamptz published_at
+        timestamptz created_at
+    }
+    HANDOVER_ITEMS {
+        uuid handover_id PK,FK
+        uuid project_id FK
+        uuid file_version_id PK,FK
+    }
+    HANDOVER_RECIPIENTS {
+        uuid handover_id PK,FK
+        uuid user_id PK,FK
+        varchar access_status
+        timestamptz confirmed_at
+    }
+    AUDIT_EVENTS {
+        uuid id PK
+        uuid project_id FK
+        uuid actor_id FK
+        varchar action
+        uuid target_id
+        varchar request_id
+        timestamptz created_at
+    }

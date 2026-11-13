@@ -1,0 +1,59 @@
+Maven verify 2026-10-29; Java 25 target 21; PostgreSQL 17.9; RUN_DB_TESTS=true
+vn.edu.uet.handover.ActiveAccountFilterTest: tests=3, failures=0, errors=0, skipped=0
+  PASS databaseOutageFailsClosedWithoutDestroyingSession
+  PASS anonymousRequestDoesNotLookupAnAccount
+  PASS publicEndpointsAndLogoutBypassLookupEvenWithAnExistingPrincipal
+vn.edu.uet.handover.BackendIntegrationTest: tests=10, failures=0, errors=0, skipped=0
+  PASS membershipMutationRequiresOwnerAndCannotRemoveOwner
+  PASS migrationHealthAndAuthentication
+  PASS projectJsonStringsAndNullsMatchContract
+  PASS databaseConstraintsProtectVersionAndCrossProjectReferences
+  PASS disabledSessionCanGetPublicCsrfAndLogoutNormally
+  PASS projectsAreIsolatedAndOwnerIsAssignedByServer
+  PASS validationCsrfAndUnimplementedRoutes
+  PASS unsupportedMediaTypeIsAClientError
+  PASS disabledAccountLosesExistingReadAndWriteSessions
+  PASS strictProjectDeserializerDoesNotChangeOtherStringsOrFormLogin
+vn.edu.uet.handover.ContractTest: tests=4, failures=0, errors=0, skipped=0
+  PASS phaseOneSchemasRejectInvalidTypesNullsAndVersions
+  PASS checksumSchemaAcceptsResultsAndRejectsMissingIdentityAndFalseSuccess
+  PASS openApiResolvesWithoutErrorsAndMarksScope
+  PASS examplesMatchOpenApiSchemas
+vn.edu.uet.handover.HandoverIntegrationTest: tests=21, failures=0, errors=0, skipped=0
+  PASS concurrentRevokePreservesConfirmedWorkflowAndWritesOneAudit
+  PASS revokeIsIdempotentAndPreservesConfirmationHistory
+  PASS signerCannotExtendLifetimeOrBypassRevoke
+  PASS concurrentPublishAndConfirmRemainIdempotent
+  PASS publicationRejectsUnverifiedStatesAndDisabledRecipient
+  PASS multiItemPublicationIsAtomicWhenOneHeadIsMissing
+  PASS httpRejectsForgedFieldsBadTypesNoBodyCsrfAndDisabledSession
+  PASS revokeOrExpiryDuringHeadCannotPublish
+  PASS ownerDemotionDuringHeadPreventsPublication
+  PASS revokeHttpAuditUsesAuthenticatedActorAndServerRequestId
+  PASS failedConfirmationAuditRollsBackAcknowledgementAndAggregateStatus
+  PASS individualRecipientRevocationDuringSigningBlocksTheResponse
+  PASS expiryDuringSigningPreventsReturningAnExpiredUrl
+  PASS draftValidatesOwnershipVersionsRecipientsAndRollsBack
+  PASS httpForeignHandoverAndFileIdsCannotReadOrMutateAnotherProject
+  PASS realTcpWorkflowMatchesOpenApiAndSupportsOutsideRecipient
+  PASS expiryBoundaryRejectsNewAccessAndConfirmation
+  PASS externalRecipientGetsOnlyNamedPackageAndItem
+  PASS failedRevokeAuditRollsBackAccessBeforeSuccessfulRetry
+  PASS completeWorkflowPinsV1AndRecordsEachRecipientOnce
+  PASS publicationHeadFailuresNeverReportReady
+vn.edu.uet.handover.UploadIntegrationTest: tests=13, failures=0, errors=0, skipped=0
+  PASS missingInvalidStorageOutageAndExpiryReleaseOnce
+  PASS rightsCurrentMembershipAndCrossProjectIds
+  PASS databaseRollbackLeavesNoReservationOrMetadata
+  PASS realTcpCookieCsrfUploadCompleteIntegrityAndDownload
+  PASS quotaConcurrentReservationsUseRealSeparateTransactions
+  PASS concurrentCompleteOnlyMovesQuotaAndAuditsOnce
+  PASS staleConcurrentPollCannotOverwriteVerifiedResult
+  PASS initCompleteChecksumDownloadAndVersionHistory
+  PASS checksumMalformedWrongIdentityAndTerminalStates
+  PASS httpCrossProjectUploadAndFileIdsAreHiddenWithoutStateChanges
+  PASS httpStrictInputsCsrfPermissionsAndResponseContract
+  PASS failedPresignCompensatesAndUnsafeReplayableSigningFailsClosed
+  PASS expiryWinsWhileHeadIsInFlightWithoutDoubleRelease
+TOTAL {"tests": 51, "failures": 0, "errors": 0, "skipped": 0}
+BUILD SUCCESS

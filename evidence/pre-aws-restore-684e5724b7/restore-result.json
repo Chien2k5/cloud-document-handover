@@ -1,0 +1,121 @@
+{
+  "status": "PASS",
+  "scope": "LOCAL_POSTGRESQL_ONLY",
+  "aws": "NOT RUN",
+  "sourceDatabase": "handover_restore_20261110_035727_1b56d8d7_src",
+  "targetDatabase": "handover_restore_20261110_035727_1b56d8d7_dst",
+  "targetDemoSeedEnabled": false,
+  "startedAt": "2026-11-10T03:57:27.928080+00:00",
+  "completedAt": "2026-11-10T03:57:40.974636+00:00",
+  "sourceSnapshot": {
+    "app_users": {
+      "rows": 4,
+      "sha256": "ba07db4c284e2dc3d1d9f570678ac1699408369b598811b5c5be609d12638f2d"
+    },
+    "projects": {
+      "rows": 2,
+      "sha256": "a5ad8a8a3cd67cbc683298096059f0ccbd18bbe12b14fcd9e155f66ada3f411f"
+    },
+    "memberships": {
+      "rows": 3,
+      "sha256": "18a5fd6ac032e4a32c3f4804cf5a36d2c71084b044d96647146f046579203105"
+    },
+    "file_metadata": {
+      "rows": 1,
+      "sha256": "9cdc8d14f696386860cb720b3c478b87fa23277d6b662c27e0094e00440ad99f"
+    },
+    "file_versions": {
+      "rows": 3,
+      "sha256": "59bdfed00d0e0b2a97b1e99936e6fc13955e209baa9372ebd732216ec17c2f10"
+    },
+    "upload_sessions": {
+      "rows": 3,
+      "sha256": "eaee1c577184cdd39187812fddf212707153aadb5075b07d526c2cff8a3e9c34"
+    },
+    "handovers": {
+      "rows": 4,
+      "sha256": "174d948956df6414474edfae5f1aedce89c3da336f736fac9714cfbaeac6cde5"
+    },
+    "handover_items": {
+      "rows": 4,
+      "sha256": "e59363a6703cdaed95689bb092eb02a56da2116f976560d7ac7f8c6a1771756e"
+    },
+    "handover_recipients": {
+      "rows": 5,
+      "sha256": "f19a5d88d2bded1184f218adf59eeac22ad8a5bfd0ecc1eab553358c64af09de"
+    },
+    "audit_events": {
+      "rows": 7,
+      "sha256": "f119ab7098993124a452c3effec77bd0550486d6fb0e8599be3c46fac6d0df6a"
+    },
+    "flyway_schema_history": {
+      "rows": 1,
+      "sha256": "15857e4c13ca41932a91fe85fc27743bdaf7d7e786290a004b47fc754c2475f8"
+    }
+  },
+  "restoredSnapshot": {
+    "app_users": {
+      "rows": 4,
+      "sha256": "ba07db4c284e2dc3d1d9f570678ac1699408369b598811b5c5be609d12638f2d"
+    },
+    "projects": {
+      "rows": 2,
+      "sha256": "a5ad8a8a3cd67cbc683298096059f0ccbd18bbe12b14fcd9e155f66ada3f411f"
+    },
+    "memberships": {
+      "rows": 3,
+      "sha256": "18a5fd6ac032e4a32c3f4804cf5a36d2c71084b044d96647146f046579203105"
+    },
+    "file_metadata": {
+      "rows": 1,
+      "sha256": "9cdc8d14f696386860cb720b3c478b87fa23277d6b662c27e0094e00440ad99f"
+    },
+    "file_versions": {
+      "rows": 3,
+      "sha256": "59bdfed00d0e0b2a97b1e99936e6fc13955e209baa9372ebd732216ec17c2f10"
+    },
+    "upload_sessions": {
+      "rows": 3,
+      "sha256": "eaee1c577184cdd39187812fddf212707153aadb5075b07d526c2cff8a3e9c34"
+    },
+    "handovers": {
+      "rows": 4,
+      "sha256": "174d948956df6414474edfae5f1aedce89c3da336f736fac9714cfbaeac6cde5"
+    },
+    "handover_items": {
+      "rows": 4,
+      "sha256": "e59363a6703cdaed95689bb092eb02a56da2116f976560d7ac7f8c6a1771756e"
+    },
+    "handover_recipients": {
+      "rows": 5,
+      "sha256": "f19a5d88d2bded1184f218adf59eeac22ad8a5bfd0ecc1eab553358c64af09de"
+    },
+    "audit_events": {
+      "rows": 7,
+      "sha256": "f119ab7098993124a452c3effec77bd0550486d6fb0e8599be3c46fac6d0df6a"
+    },
+    "flyway_schema_history": {
+      "rows": 1,
+      "sha256": "15857e4c13ca41932a91fe85fc27743bdaf7d7e786290a004b47fc754c2475f8"
+    }
+  },
+  "invariants": {
+    "foreignKeys": 18,
+    "unvalidated": 0,
+    "invalidQuotaProjects": 0,
+    "invalidHandoverLinks": 0
+  },
+  "httpRequestChecks": 51,
+  "dumpSeconds": 0.157,
+  "restoreSeconds": 0.141,
+  "targetBootSeconds": 3.722,
+  "archiveSha256": "fd131f38971e4dfdf89b749ea5b21fdd233df3096ccc1d3f7337a4d962e4ac53",
+  "jarSha256": "72bd9fd701f37bdb4bc22b2dc35763f9cb08eca953d0f6dbda9f00d1292e0ec7",
+  "pinnedVersionPreserved": true,
+  "confirmationTimesPreserved": true,
+  "noUnexpectedDataChanges": true,
+  "failedRestoreRolledBack": true,
+  "rollbackFixtureDatabase": "handover_restore_20261110_035727_1b56d8d7_rollback",
+  "archiveCommitted": false,
+  "fixtureDescription": "Local-profile seeded users; API-created projects/membership; SQL synthetic file/version/handover fixtures; no S3 bytes or Lambda execution"
+}

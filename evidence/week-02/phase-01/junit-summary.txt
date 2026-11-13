@@ -1,0 +1,23 @@
+JUnit from final Maven verify, 2026-10-22 UTC+07
+Base ef79ee3 + uncommitted working tree; Java 25 target 21; PostgreSQL 17.9; RUN_DB_TESTS=true
+
+vn.edu.uet.handover.ActiveAccountFilterTest: tests=2 failures=0 errors=0 skipped=0
+  PASS databaseOutageFailsClosedWithoutDestroyingSession
+  PASS anonymousRequestDoesNotLookupAnAccount
+vn.edu.uet.handover.BackendIntegrationTest: tests=8 failures=0 errors=0 skipped=0
+  PASS membershipMutationRequiresOwnerAndCannotRemoveOwner
+  PASS migrationHealthAndAuthentication
+  PASS projectJsonStringsAndNullsMatchContract
+  PASS databaseConstraintsProtectVersionAndCrossProjectReferences
+  PASS projectsAreIsolatedAndOwnerIsAssignedByServer
+  PASS validationCsrfAndUnimplementedRoutes
+  PASS unsupportedMediaTypeIsAClientError
+  PASS disabledAccountLosesExistingReadAndWriteSessions
+vn.edu.uet.handover.ContractTest: tests=4 failures=0 errors=0 skipped=0
+  PASS phaseOneSchemasRejectInvalidTypesNullsAndVersions
+  PASS checksumSchemaAcceptsResultsAndRejectsMissingIdentityAndFalseSuccess
+  PASS openApiResolvesWithoutErrorsAndMarksScope
+  PASS examplesMatchOpenApiSchemas
+
+BUILD SUCCESS; 14 tests; 0 failures, 0 errors, 0 skipped.
+No raw payload/environment properties retained.

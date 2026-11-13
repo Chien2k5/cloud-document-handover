@@ -1,0 +1,15 @@
+test_T008_01_foreign_resource_is_rejected (test_verify_isolation.IsolationTests.test_T008_01_foreign_resource_is_rejected) ... ok
+test_T008_02_external_sentinel_is_unchanged (test_verify_isolation.IsolationTests.test_T008_02_external_sentinel_is_unchanged) ... ok
+test_T008_03_uses_its_own_disposable_postgres (test_verify_isolation.IsolationTests.test_T008_03_uses_its_own_disposable_postgres) ... ok
+test_T008_04_failure_preserves_external_database (test_verify_isolation.IsolationTests.test_T008_04_failure_preserves_external_database) ... ok
+test_T008_05_runs_have_distinct_resources (test_verify_isolation.IsolationTests.test_T008_05_runs_have_distinct_resources) ... ok
+test_T008_06_cleanup_rechecks_ownership (test_verify_isolation.IsolationTests.test_T008_06_cleanup_rechecks_ownership) ... ok
+test_T008_07_missing_safety_configuration_fails_closed (test_verify_isolation.IsolationTests.test_T008_07_missing_safety_configuration_fails_closed) ... ok
+test_T008_08_no_shared_drop_or_container_fallback (test_verify_isolation.IsolationTests.test_T008_08_no_shared_drop_or_container_fallback) ... ok
+test_local_credentials_do_not_inherit_a_session (test_verify_isolation.IsolationTests.test_local_credentials_do_not_inherit_a_session) ... ok
+test_remote_docker_is_rejected_before_mutation (test_verify_isolation.IsolationTests.test_remote_docker_is_rejected_before_mutation) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.011s
+
+OK

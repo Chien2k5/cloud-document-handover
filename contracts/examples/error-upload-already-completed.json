@@ -1,0 +1,5 @@
+{
+  "code": "UPLOAD_ALREADY_COMPLETED",
+  "message": "Upload already completed with a different version",
+  "requestId": "10000000-0000-0000-0000-000000000099"
+}

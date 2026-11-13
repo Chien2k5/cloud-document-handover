@@ -1,0 +1,5 @@
+{
+  "code": "QUOTA_EXCEEDED",
+  "message": "Project quota would be exceeded",
+  "requestId": "10000000-0000-0000-0000-000000000099"
+}

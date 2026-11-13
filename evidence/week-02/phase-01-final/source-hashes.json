@@ -1,0 +1,27 @@
+{
+  "baseCommit": "ef79ee3e0019e63b030fd5c405e2ac15ef5252b9",
+  "state": "uncommitted working tree after public/logout filter finalization",
+  "scope": "Changed source/test/regression-script/contracts and tested JAR; reports/evidence excluded to avoid self-reference",
+  "sha256": {
+    "backend/src/main/java/vn/edu/uet/handover/auth/ActiveAccountFilter.java": "9211f9cbfc3c605fa30d787552efe6513ca114313213d334a24522bf68b5364b",
+    "backend/src/main/java/vn/edu/uet/handover/auth/SecurityConfig.java": "633abc7da16a67ffc1127caaed75264c63baeddba5193929fd82da2967b1e9ff",
+    "backend/src/main/java/vn/edu/uet/handover/common/ApiExceptionHandler.java": "c50a6228112ce36c796215356aff1b65857c07b7c4f40ddbaba7182d69474e17",
+    "backend/src/main/java/vn/edu/uet/handover/common/StrictStringDeserializer.java": "5eeb9e5331683b737125795703a0fcb92b8811293c59d77eb291f5c767e4029c",
+    "backend/src/main/java/vn/edu/uet/handover/project/ProjectDtos.java": "3c108ed8d8473c53decad57895a9541d67948437c1ce385e096ae6c3e799c2ef",
+    "backend/src/main/java/vn/edu/uet/handover/project/ProjectService.java": "6dad269b68791ca2697207116661d71927add582a51578cb29f720848228abba",
+    "backend/src/test/java/vn/edu/uet/handover/ActiveAccountFilterTest.java": "58c9c2ad877e9714e3cde60ccbad46236179012a7d29e8506c09c0964dd861ff",
+    "backend/src/test/java/vn/edu/uet/handover/BackendIntegrationTest.java": "89cb35da3c59f383d477385fb0a110fbf61e3d075f919f4c166fb6c36707fb92",
+    "backend/src/test/java/vn/edu/uet/handover/ContractTest.java": "0cace28bb4fc7fc0fc5ef773e391b76e6302c6de9a8fcccf1a8d55e9b84ab5da",
+    "backend/tools/run_phase1_http_regression.py": "61ea05019ff998a98465be1395718de6ba3413f8ffa5c211a5fe49d94270ab18",
+    "contracts/README.md": "f7eb4531583dc3a929f5e91dd864ffd7d3bc0405640660f3a6126d370b19c780",
+    "contracts/examples/error-account-disabled.json": "b3e4e21c9de574f292453c36c06855f97a3b0061b99bb41ce28bed65f53a4f8d",
+    "contracts/examples/error-unsupported-media-type.json": "5e8d185fa73468e580fe201b8e2b1ea92c784ad5bf302a115c851f02c75e8849",
+    "contracts/examples/error-upload-already-completed.json": "1a53842aebb7744ed7842330b82606fd50705156c4d1d2ea6af6ff5a06d8d3ff",
+    "contracts/examples/error-upload-expired.json": "ae36ecf97bd7e7ceb3bf813b05d927bedefa165c8c100e00d0483be864d5f5dd",
+    "contracts/examples/upload-new-version.request.json": "b46c505f10445df74fb140bbabd983de62cceeeeb4d60b3bfb6652838a064250",
+    "contracts/openapi.yaml": "5905b4dd5da8a015fea49533fdc81afce7f33578330440c1d12bc18b5b88dce0",
+    "contracts/review/presigned-put-write-once.candidate.json": "412132b64fe13a8caf7a184b48c6de3883bb580c5c348dafbd776c2cbe2fdaf4",
+    "contracts/s3-adapter-contract.md": "b48d62d7f98ce19492a575be0c1e3c057bf75b133894ac2fc5fc4771efdd78de",
+    "backend/target/document-handover-0.1.0-SNAPSHOT.jar": "7e877d23bf7691bbb12bd2f222138e68473ca0cc4515904845b8535757fd2d01"
+  }
+}

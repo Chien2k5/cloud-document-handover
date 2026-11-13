@@ -1,0 +1,8 @@
+2026-10-29T01:28:41.599+07:00  INFO 45884 --- [document-handover] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 1 migration (execution time 00:00.019s)
+2026-10-29T01:28:41.694+07:00  INFO 45884 --- [document-handover] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": << Empty Schema >>
+2026-10-29T01:28:41.717+07:00  INFO 45884 --- [document-handover] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "1 - initial schema"
+2026-10-29T01:28:41.849+07:00  INFO 45884 --- [document-handover] [           main] o.f.core.internal.command.DbMigrate      : Successfully applied 1 migration to schema "public", now at version v1 (execution time 00:00.124s)
+2026-10-29T01:28:51.944+07:00  INFO 45884 --- [document-handover] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 1 migration (execution time 00:00.010s)
+2026-10-29T01:29:02.963+07:00  INFO 45884 --- [document-handover] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 1 migration (execution time 00:00.007s)
+[INFO] Tests run: 51, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Finished at: 2026-10-29T01:29:14+07:00
